@@ -1,0 +1,41 @@
+# THIS REPOSITORY IS PUBLIC. Everything committed here is world-readable and
+# stays world-readable: GitHub serves deleted history for a period, forks keep
+# it indefinitely, and mirrors index it within minutes. A secret pushed here is
+# a secret rotated, not a secret removed.
+#
+# So these patterns are not tidiness. They are the standing guard, and they are
+# deliberately broader than what has gone wrong so far.
+
+# Key material. The production licence signing key is the single most
+# consequential secret in FireFlo -- a database can be restored from backup, a
+# signature cannot be forged -- and it must never be inside this tree. It is
+# kept outside the repository on purpose.
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.der
+id_rsa*
+id_ed25519*
+
+# Environment and configuration carrying real values. conf.example/ inside a
+# release tarball is placeholders and ships intentionally; a loose .env here
+# would be somebody's actual deployment.
+.env
+.env.*
+*.env
+fireflo.env
+credentials.yml
+
+# Unpacked release trees. The tarball beside them already holds every byte, so
+# committing an extracted copy doubles the repository for nothing -- and an
+# unpacked tree is where a prod key gets dropped and forgotten, which is exactly
+# how it nearly happened here.
+*/gateway/
+fireflo-*-linux-*/
+!fireflo-*-linux-*.tar.gz
+
+# Local noise
+.DS_Store
+*.swp
