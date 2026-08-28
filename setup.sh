@@ -84,6 +84,32 @@ run() {
 
 have() { command -v "$1" >/dev/null 2>&1; }
 
+# Enabling a service is not the same as installing one, and only the second is
+# always possible. In a container -- a Docker build, a chroot, an LXC without
+# systemd -- there is no PID 1 to talk to, and 'systemctl enable' fails with
+# "Failed to connect to bus: Host is down".
+#
+# Under 'set -e' that aborted the whole run at the FIRST service, so PostgreSQL
+# installed, and RabbitMQ and Node then did not, and the operator was left with
+# a half-prepared host and a message about a bus. Found by running this in a
+# container rather than by reasoning about it.
+#
+# The package is what this script is really for; enabling it is a convenience
+# that only means anything where something can act on it. So a missing systemd
+# is reported and stepped over, not treated as a failure.
+service_enable() {
+    if [ "$DRY_RUN" = yes ]; then
+        echo "   would run: systemctl enable --now $1"
+        return 0
+    fi
+    if ! have systemctl || [ ! -d /run/systemd/system ]; then
+        echo "   systemd is not running here, so $1 was installed but not enabled."
+        echo "   Start it yourself, or enable it when this image is booted."
+        return 0
+    fi
+    systemctl enable --now "$1"
+}
+
 confirm() {
     [ "$ASSUME_YES" = yes ] && return 0
     [ -t 0 ] || return 0          # a pipe is not a person; --yes is implied
@@ -210,7 +236,7 @@ do_postgres() {
     fi
 
     run apt-get install -y -qq postgresql postgresql-client
-    run systemctl enable --now postgresql
+    service_enable postgresql
     PG_RESULT="installed${_distro:+, $_distro}"
     say "   Installed and enabled. No database, role or password was created -- see the summary."
 }
@@ -227,7 +253,7 @@ do_rabbitmq() {
     # 0-9-1 the gateway uses. A second apt repository and an Erlang pin would
     # buy a version number nothing here needs.
     run apt-get install -y -qq rabbitmq-server
-    run systemctl enable --now rabbitmq-server
+    service_enable rabbitmq-server
     MQ_RESULT="installed"
     say "   Installed and enabled. No user or vhost was created: the default 'guest'"
     say "   account is restricted to loopback by the broker itself, and creating"
