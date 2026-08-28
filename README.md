@@ -12,10 +12,10 @@ starts and carries traffic, but stops adopting configuration changes.
 
 | | |
 |---|---|
-| **Version** | 0.8.8 |
-| **File** | `fireflo-0.8.8-linux-x86_64.tar.gz` |
-| **SHA-256** | `000b8272b5313fab40a62cd6a5769103ce7af19f20791400c495c948f58b2934` |
-| **Built** | 2026-08-28, from gateway commit `899322a` |
+| **Version** | 0.8.9 |
+| **File** | `fireflo-0.8.9-linux-x86_64.tar.gz` |
+| **SHA-256** | `da05383c49f9006409287c8d4947ff3c2e8ba9d1635dccb7d1c6a0399a087298` |
+| **Built** | 2026-08-28, from gateway commit `5018e25` |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
 Verify before installing:
@@ -28,6 +28,33 @@ sha256sum -c SHA256SUMS
 nothing else: anyone able to replace the file can replace the checksum beside
 it. Treat the checksum as an integrity check, not as proof of origin.
 
+## Preparing a host
+
+`setup.sh` installs the services FireFlo talks to, on Ubuntu and Debian. It
+exists because the gateway's own installer does not: `fireflo-install` adds the
+PostgreSQL **client** and no server, and never mentions a broker — so between
+unpacking the tarball and running the installer there is a step that was only
+ever written down in prose.
+
+```
+sudo ./setup.sh --dry-run     # read what it would do first
+sudo ./setup.sh
+```
+
+It installs PostgreSQL (14 or newer), RabbitMQ, and Node 22 for the control
+panel. Java is **not** installed unless you pass `--with-java`: this gateway is
+a native binary and opens no JDK, so a JDK is only wanted for building from
+source.
+
+**It creates no database, no role and no password**, and no RabbitMQ user or
+vhost. Installing a package is impersonal and reversible; minting a credential
+and writing it to disk is neither, and it is not a decision a setup script
+should take for you. It prints the commands to run instead.
+
+It is not signed either. It is one readable file with no network fetch except
+the NodeSource and Adoptium installers it names — read it before you run it as
+root.
+
 ## Retired
 
 `retired/` holds withdrawn builds, kept rather than deleted because a withdrawn
@@ -39,8 +66,13 @@ withdrawn for the same reason, and the difference matters:**
 - **0.8.7 works** and is retired on licensing policy: a fresh install grants
   itself a resettable trial window. Existing 0.8.7 installs are fine. See
   `retired/SUPERSEDED-0.8.7.md`.
+- **0.8.8 works** and is retired on capability: it cannot release a licence, so
+  a machine cannot be transferred without waiting out the tolerance window, and
+  its CLI wrongly says a running gateway picks up an offline activation without
+  a restart. Existing 0.8.8 installs need no emergency upgrade. See
+  `retired/SUPERSEDED-0.8.8.md`.
 
-Install neither; read the note beside whichever you are asking about.
+Install none of them; read the note beside whichever you are asking about.
 
 ## Which signing key a build trusts
 
@@ -56,11 +88,11 @@ the key out of the binary:
 strings -a gateway/fireflo-gateway | grep -o 'MCowBQYDK2VwAyEA[A-Za-z0-9+/=]*'
 ```
 
-0.8.8 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`.
-That is a public value; publishing it is safe and is what makes a build
-identifiable. A mismatch here presents as licences being rejected as MALFORMED,
-which reads like a fault in the licence server rather than in the binary — the
-reason it is worth checking directly.
+0.8.9 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
+that is the only key in it. That is a public value; publishing it is safe and is
+what makes a build identifiable. A mismatch here presents as licences being
+rejected as MALFORMED, which reads like a fault in the licence server rather
+than in the binary — the reason it is worth checking directly.
 
 ## What is not here
 
