@@ -12,10 +12,10 @@ starts and carries traffic, but stops adopting configuration changes.
 
 | | |
 |---|---|
-| **Version** | 0.8.7 |
-| **File** | `fireflo-0.8.7-linux-x86_64.tar.gz` |
-| **SHA-256** | `0d7c80564e5215a654fb684fb6fa10fbc6fb0f2ed7a587c8ed04660dbdba0d90` |
-| **Built** | 2026-08-27, from gateway commit `2a02944` |
+| **Version** | 0.8.8 |
+| **File** | `fireflo-0.8.8-linux-x86_64.tar.gz` |
+| **SHA-256** | `000b8272b5313fab40a62cd6a5769103ce7af19f20791400c495c948f58b2934` |
+| **Built** | 2026-08-28, from gateway commit `899322a` |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
 Verify before installing:
@@ -30,10 +30,17 @@ it. Treat the checksum as an integrity check, not as proof of origin.
 
 ## Retired
 
-`retired/` holds builds that must not be installed, with the reason beside each.
-They are kept rather than deleted because a withdrawn build is sometimes the
-only evidence of what went wrong. Read `retired/DO-NOT-SHIP.md` before touching
-anything in there.
+`retired/` holds withdrawn builds, kept rather than deleted because a withdrawn
+build is sometimes the only evidence of what went wrong. **They are not all
+withdrawn for the same reason, and the difference matters:**
+
+- **0.8.6 is broken** and must never be installed — it rejects every licence the
+  server issues. See `retired/DO-NOT-SHIP.md`.
+- **0.8.7 works** and is retired on licensing policy: a fresh install grants
+  itself a resettable trial window. Existing 0.8.7 installs are fine. See
+  `retired/SUPERSEDED-0.8.7.md`.
+
+Install neither; read the note beside whichever you are asking about.
 
 ## Which signing key a build trusts
 
@@ -49,7 +56,7 @@ the key out of the binary:
 strings -a gateway/fireflo-gateway | grep -o 'MCowBQYDK2VwAyEA[A-Za-z0-9+/=]*'
 ```
 
-0.8.7 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`.
+0.8.8 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`.
 That is a public value; publishing it is safe and is what makes a build
 identifiable. A mismatch here presents as licences being rejected as MALFORMED,
 which reads like a fault in the licence server rather than in the binary — the

@@ -35,9 +35,13 @@ Keep. Never install.
 
 ## What to use instead
 
-    ../fireflo-0.8.7-linux-x86_64.tar.gz
+    ../fireflo-0.8.8-linux-x86_64.tar.gz
 
-Built 2026-08-27 from gateway commit 2a02944, which corrected the compiled-in
-key to the one the licence server actually signs with. Verified by extracting
-the key from the packaged binary rather than by reading the source, because the
-source being right does not prove the artefact is.
+Carries the corrected key — first shipped in 0.8.7, from gateway commit
+2a02944 — verified the same way, by extracting the key from the packaged binary
+rather than by reading the source, because the source being right does not prove
+the artefact is.
+
+0.8.7 itself is now beside this file, retired for an unrelated and much less
+serious reason. See `SUPERSEDED-0.8.7.md`: it works, and is retired on licensing
+policy rather than on a fault.
