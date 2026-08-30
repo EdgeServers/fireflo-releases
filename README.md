@@ -69,6 +69,32 @@ in this repository rather than a build artefact. It is one readable file with no
 network fetch except the NodeSource and Adoptium installers it names, so read it
 before you run it as root.
 
+## Removing an install
+
+`cleanup.sh` removes a FireFlo install from a host — the systemd units, the
+application directory and the configuration directory.
+
+```
+sudo ./cleanup.sh --list                    # what is on this host
+sudo ./cleanup.sh --tenant acme --dry-run   # read what it would do first
+sudo ./cleanup.sh --tenant acme
+```
+
+It reads every path out of the systemd unit rather than deriving it from a
+naming convention, because an install that was relocated keeps its real paths
+there and nowhere else. With more than one install on the host it refuses to act
+without `--tenant` or `--service`, rather than guessing.
+
+**It keeps your data.** The data and log directories survive unless you pass
+`--purge-data` or `--purge-logs`, and it never drops a database or a role — a
+CDR history outlives the software that wrote it. It also leaves PostgreSQL,
+RabbitMQ and Node alone, because `setup.sh` installs those host-wide and a
+second tenant is probably still using them.
+
+**Release the licence in your account before running it, not after.** A licence
+still bound to a host that no longer exists has to wait out the tolerance window
+before another machine can take it.
+
 ## Earlier builds
 
 **Only the current release is published here.** Builds before 0.9.0 have been
