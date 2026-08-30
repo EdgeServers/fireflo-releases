@@ -12,21 +12,34 @@ starts and carries traffic, but stops adopting configuration changes.
 
 | | |
 |---|---|
-| **Version** | 0.8.9 |
-| **File** | `fireflo-0.8.9-linux-x86_64.tar.gz` |
-| **SHA-256** | `da05383c49f9006409287c8d4947ff3c2e8ba9d1635dccb7d1c6a0399a087298` |
-| **Built** | 2026-08-28, from gateway commit `5018e25` |
+| **Version** | 0.9.0 |
+| **File** | `fireflo-0.9.0-linux-x86_64.tar.gz` |
+| **SHA-256** | `494515a24452a7cdbde3345468b07e5f2ed3260ce7d616e21dd6d83927dd7d76` |
+| **Built** | 2026-08-30, from gateway commit `3ddfa1f` |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
-Verify before installing:
+Verify before installing. The checksum proves the download is intact; the
+signature proves it came from us:
 
 ```
+gpg --import SIGNING-KEY.asc
+gpg --verify SHA256SUMS.asc SHA256SUMS
 sha256sum -c SHA256SUMS
 ```
 
-**These tarballs are not signed.** A checksum detects a corrupted download and
-nothing else: anyone able to replace the file can replace the checksum beside
-it. Treat the checksum as an integrity check, not as proof of origin.
+**Check the key fingerprint rather than trusting the file beside the tarball.**
+A signing key published in the same place as the thing it signs is only worth
+as much as that place — anyone who could replace the tarball could replace the
+key. `gpg --verify` must name:
+
+```
+3A9B 256F DE50 75CA 5F76  ADAF 42D7 A01A ED0D 03BA
+FireFlo Releases <anshusah@hotmail.com>
+```
+
+If it names any other fingerprint, stop and ask us before installing.
+
+0.9.0 is the first signed release. Builds before it carry a checksum only.
 
 ## Preparing a host
 
@@ -51,28 +64,25 @@ vhost. Installing a package is impersonal and reversible; minting a credential
 and writing it to disk is neither, and it is not a decision a setup script
 should take for you. It prints the commands to run instead.
 
-It is not signed either. It is one readable file with no network fetch except
-the NodeSource and Adoptium installers it names — read it before you run it as
-root.
+**`setup.sh` is not signed**, unlike the release tarball — it is a plain script
+in this repository rather than a build artefact. It is one readable file with no
+network fetch except the NodeSource and Adoptium installers it names, so read it
+before you run it as root.
 
-## Retired
+## Earlier builds
 
-`retired/` holds withdrawn builds, kept rather than deleted because a withdrawn
-build is sometimes the only evidence of what went wrong. **They are not all
-withdrawn for the same reason, and the difference matters:**
+**Only the current release is published here.** Builds before 0.9.0 have been
+withdrawn and their tarballs removed from this tree.
 
-- **0.8.6 is broken** and must never be installed — it rejects every licence the
-  server issues. See `retired/DO-NOT-SHIP.md`.
-- **0.8.7 works** and is retired on licensing policy: a fresh install grants
-  itself a resettable trial window. Existing 0.8.7 installs are fine. See
-  `retired/SUPERSEDED-0.8.7.md`.
-- **0.8.8 works** and is retired on capability: it cannot release a licence, so
-  a machine cannot be transferred without waiting out the tolerance window, and
-  its CLI wrongly says a running gateway picks up an offline activation without
-  a restart. Existing 0.8.8 installs need no emergency upgrade. See
-  `retired/SUPERSEDED-0.8.8.md`.
+- **Never install 0.8.6.** It rejects every licence this server issues, and the
+  symptom reads as a licensing fault rather than as a broken build.
+- **0.8.7 and 0.8.8 work.** If you are running one, upgrade when convenient —
+  neither is dangerous, and neither needs an emergency change. 0.8.7 grants
+  itself a resettable trial window; 0.8.8 cannot release a licence, so a machine
+  cannot be transferred without waiting out the tolerance window.
 
-Install none of them; read the note beside whichever you are asking about.
+If you need to identify a build you already hold, read its key with the command
+below and ask us — we keep the record even though the file is no longer offered.
 
 ## Which signing key a build trusts
 
@@ -88,8 +98,9 @@ the key out of the binary:
 strings -a gateway/fireflo-gateway | grep -o 'MCowBQYDK2VwAyEA[A-Za-z0-9+/=]*'
 ```
 
-0.8.9 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
-that is the only key in it. That is a public value; publishing it is safe and is
+0.9.0 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
+that is the only key in it — the same key 0.8.9 carried, so an install upgrading
+from it needs no new licence. That is a public value; publishing it is safe and is
 what makes a build identifiable. A mismatch here presents as licences being
 rejected as MALFORMED, which reads like a fault in the licence server rather
 than in the binary — the reason it is worth checking directly.
