@@ -12,10 +12,10 @@ starts and carries traffic, but stops adopting configuration changes.
 
 | | |
 |---|---|
-| **Version** | 0.9.3 |
-| **File** | `fireflo-0.9.3-linux-x86_64.tar.gz` |
-| **SHA-256** | `2d7d0c081311fbe42734f17ae2a3ed925275323394a99ab99efbf99966ae6294` |
-| **Built** | 2026-09-01, from gateway commit `ad3e239` |
+| **Version** | 0.9.5 |
+| **File** | `fireflo-0.9.5-linux-x86_64.tar.gz` |
+| **SHA-256** | `21922be268497f84cf1843040ea10a624fe597a70b93c6c06264ba6311dca323` |
+| **Built** | 2026-09-02, from gateway commit `469869a` |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
 Verify before installing. The checksum proves the download is intact; the
@@ -97,7 +97,7 @@ before another machine can take it.
 
 ## Earlier builds
 
-**Only the current release is published here.** Builds before 0.9.3 have been
+**Only the current release is published here.** Builds before 0.9.5 have been
 withdrawn and their tarballs removed from this tree.
 
 **Do not install 0.9.2 if you still have it.** It bundled the control panel
@@ -106,15 +106,16 @@ panel source, so installing the panel from that tarball fails with a message
 about the checkout not looking like the control panel. 0.9.3 is that fix; the
 gateway half of 0.9.2 was sound.
 
-0.9.3 **carries a database migration** (`V1.46.0`), unlike the binary-only
-releases before it, so an upgrade runs Flyway rather than just swapping a
-file. `fireflo-install update` handles that; plan for it rather than being
-surprised by it.
+**0.9.5 is gateway-only.** The control panel is **not** in this tarball, unlike
+0.9.2 and 0.9.3, which bundled it at `panel/`. The panel is released
+separately and paired by version — its first three numbers name the gateway
+release it was built against. Upgrading the gateway from here does not upgrade
+your panel, and does not remove one you already have.
 
-It also **includes the control panel**, at `panel/`. Install it with
-`panel/scripts/fireflo-panel-install` — that copy, not one under `scripts/`,
-because it locates the panel source relative to itself. `INSTALL.md` in the
-tarball has the steps.
+**The database migration you may still owe is `V1.46.0`**, which arrived in
+0.9.3 — 0.9.5 adds none of its own. Coming from 0.9.3 there is nothing to run;
+coming from 0.9.1 or earlier, the upgrade runs Flyway rather than just
+swapping a file. `fireflo-install update` handles it either way.
 
 - **Never install 0.8.6.** It rejects every licence this server issues, and the
   symptom reads as a licensing fault rather than as a broken build.
@@ -140,7 +141,7 @@ the key out of the binary:
 strings -a gateway/fireflo-gateway | grep -o 'MCowBQYDK2VwAyEA[A-Za-z0-9+/=]*'
 ```
 
-0.9.3 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
+0.9.5 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
 that is the only key in it — unchanged since 0.8.9, so an install upgrading from
 any of those needs no new licence. That is a public value; publishing it is safe and is
 what makes a build identifiable. A mismatch here presents as licences being
@@ -152,6 +153,8 @@ than in the binary — the reason it is worth checking directly.
 The private signing key is **not in this repository and must never be**, in any
 form, in any commit, including history. See `.gitignore`.
 
-The control panel ships **inside this tarball**, as source at `panel/`, built on
-your host by `scripts/fireflo-panel-install`. It is a separate repository
-upstream; you do not need it to install.
+**The control panel is not in this tarball.** It ships from its own repository
+and is installed by its own `fireflo-panel-install`; you do not need it to
+install or run the gateway. 0.9.2 and 0.9.3 carried it at `panel/` — if you are
+upgrading from one of those, the panel you already installed stays where it is
+and is upgraded separately.
