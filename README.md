@@ -12,10 +12,10 @@ starts and carries traffic, but stops adopting configuration changes.
 
 | | |
 |---|---|
-| **Version** | 0.9.2 |
-| **File** | `fireflo-0.9.2-linux-x86_64.tar.gz` |
-| **SHA-256** | `1ea447603f6b20b685c3e06ede5c107a85f06c7220d0a334731783a1ad060744` |
-| **Built** | 2026-09-01, from gateway commit `b4c6dbf` |
+| **Version** | 0.9.3 |
+| **File** | `fireflo-0.9.3-linux-x86_64.tar.gz` |
+| **SHA-256** | `2d7d0c081311fbe42734f17ae2a3ed925275323394a99ab99efbf99966ae6294` |
+| **Built** | 2026-09-01, from gateway commit `ad3e239` |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
 Verify before installing. The checksum proves the download is intact; the
@@ -97,16 +97,24 @@ before another machine can take it.
 
 ## Earlier builds
 
-**Only the current release is published here.** Builds before 0.9.2 have been
+**Only the current release is published here.** Builds before 0.9.3 have been
 withdrawn and their tarballs removed from this tree.
 
-0.9.2 **carries a database migration** (`V1.46.0`), unlike the binary-only
+**Do not install 0.9.2 if you still have it.** It bundled the control panel
+for the first time but placed the panel's installer where it cannot find the
+panel source, so installing the panel from that tarball fails with a message
+about the checkout not looking like the control panel. 0.9.3 is that fix; the
+gateway half of 0.9.2 was sound.
+
+0.9.3 **carries a database migration** (`V1.46.0`), unlike the binary-only
 releases before it, so an upgrade runs Flyway rather than just swapping a
 file. `fireflo-install update` handles that; plan for it rather than being
 surprised by it.
 
-It is also **the first release to include the control panel.** Earlier
-tarballs were gateway-only and the panel had to be obtained separately.
+It also **includes the control panel**, at `panel/`. Install it with
+`panel/scripts/fireflo-panel-install` — that copy, not one under `scripts/`,
+because it locates the panel source relative to itself. `INSTALL.md` in the
+tarball has the steps.
 
 - **Never install 0.8.6.** It rejects every licence this server issues, and the
   symptom reads as a licensing fault rather than as a broken build.
@@ -132,7 +140,7 @@ the key out of the binary:
 strings -a gateway/fireflo-gateway | grep -o 'MCowBQYDK2VwAyEA[A-Za-z0-9+/=]*'
 ```
 
-0.9.2 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
+0.9.3 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
 that is the only key in it — unchanged since 0.8.9, so an install upgrading from
 any of those needs no new licence. That is a public value; publishing it is safe and is
 what makes a build identifiable. A mismatch here presents as licences being
