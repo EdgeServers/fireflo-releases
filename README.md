@@ -12,10 +12,10 @@ starts and carries traffic, but stops adopting configuration changes.
 
 | | |
 |---|---|
-| **Version** | 0.9.0 |
-| **File** | `fireflo-0.9.0-linux-x86_64.tar.gz` |
-| **SHA-256** | `494515a24452a7cdbde3345468b07e5f2ed3260ce7d616e21dd6d83927dd7d76` |
-| **Built** | 2026-08-30, from gateway commit `3ddfa1f` |
+| **Version** | 0.9.2 |
+| **File** | `fireflo-0.9.2-linux-x86_64.tar.gz` |
+| **SHA-256** | `1ea447603f6b20b685c3e06ede5c107a85f06c7220d0a334731783a1ad060744` |
+| **Built** | 2026-09-01, from gateway commit `b4c6dbf` |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
 Verify before installing. The checksum proves the download is intact; the
@@ -97,8 +97,16 @@ before another machine can take it.
 
 ## Earlier builds
 
-**Only the current release is published here.** Builds before 0.9.0 have been
+**Only the current release is published here.** Builds before 0.9.2 have been
 withdrawn and their tarballs removed from this tree.
+
+0.9.2 **carries a database migration** (`V1.46.0`), unlike the binary-only
+releases before it, so an upgrade runs Flyway rather than just swapping a
+file. `fireflo-install update` handles that; plan for it rather than being
+surprised by it.
+
+It is also **the first release to include the control panel.** Earlier
+tarballs were gateway-only and the panel had to be obtained separately.
 
 - **Never install 0.8.6.** It rejects every licence this server issues, and the
   symptom reads as a licensing fault rather than as a broken build.
@@ -124,9 +132,9 @@ the key out of the binary:
 strings -a gateway/fireflo-gateway | grep -o 'MCowBQYDK2VwAyEA[A-Za-z0-9+/=]*'
 ```
 
-0.9.0 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
-that is the only key in it — the same key 0.8.9 carried, so an install upgrading
-from it needs no new licence. That is a public value; publishing it is safe and is
+0.9.2 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
+that is the only key in it — unchanged since 0.8.9, so an install upgrading from
+any of those needs no new licence. That is a public value; publishing it is safe and is
 what makes a build identifiable. A mismatch here presents as licences being
 rejected as MALFORMED, which reads like a fault in the licence server rather
 than in the binary — the reason it is worth checking directly.
@@ -136,5 +144,6 @@ than in the binary — the reason it is worth checking directly.
 The private signing key is **not in this repository and must never be**, in any
 form, in any commit, including history. See `.gitignore`.
 
-The control panel is a separate repository and ships as source; these tarballs
-are gateway-only.
+The control panel ships **inside this tarball**, as source at `panel/`, built on
+your host by `scripts/fireflo-panel-install`. It is a separate repository
+upstream; you do not need it to install.
