@@ -12,10 +12,10 @@ starts and carries traffic, but stops adopting configuration changes.
 
 | | |
 |---|---|
-| **Version** | 0.9.6 |
-| **File** | `fireflo-0.9.6-linux-x86_64.tar.gz` |
-| **SHA-256** | `f6ddc853b845d11f9e1218438a4ebafdd93a9ca260f7607ff5e7fdcd5038f154` |
-| **Built** | 2026-09-03, from gateway commit `3b1fd95` |
+| **Version** | 0.9.7 |
+| **File** | `fireflo-0.9.7-linux-x86_64.tar.gz` |
+| **SHA-256** | `69218ff1e0ebe4ee6af5f927673f6d4b9f6002021d356f86816ab399e0cc4458` |
+| **Built** | 2026-09-03, from gateway commit `bcba1c7` |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
 Verify before installing. The checksum proves the download is intact; the
@@ -97,7 +97,7 @@ before another machine can take it.
 
 ## Earlier builds
 
-**Only the current release is published here.** Builds before 0.9.6 have been
+**Only the current release is published here.** Builds before 0.9.7 have been
 withdrawn and their tarballs removed from this tree.
 
 **Do not install 0.9.2 if you still have it.** It bundled the control panel
@@ -106,21 +106,29 @@ panel source, so installing the panel from that tarball fails with a message
 about the checkout not looking like the control panel. 0.9.3 is that fix; the
 gateway half of 0.9.2 was sound.
 
-**0.9.6 is gateway-only**, as 0.9.5 was. The control panel is **not** in this
+**0.9.7 is gateway-only**, as 0.9.6 and 0.9.5 were. The control panel is **not** in this
 tarball, unlike 0.9.2 and 0.9.3, which bundled it at `panel/`. The panel is released
 separately and paired by version — its first three numbers name the gateway
 release it was built against. Upgrading the gateway from here does not upgrade
 your panel, and does not remove one you already have.
 
-**0.9.6 CARRIES A DATABASE MIGRATION** — `V1.47.0`, which adds
-`cdr_submit.route_rule`. So this upgrade runs Flyway rather than just swapping a
-binary, **including from 0.9.5**, which needed nothing. Plan for it rather than
-being surprised by it; `fireflo-install update` handles it.
+**0.9.7 adds customer-facing registration endpoints.** A caller holding ordinary
+gateway credentials can now ask for a sender ID or a message template over
+`/secure/senders` and `/secure/templates`, instead of that being reachable only
+from the operator's own panel. What they write is stored **awaiting approval and
+is not enforced**: the gateway serves only what an operator has approved, so
+nothing a customer does here changes what the gateway accepts. Existing installs
+are unaffected until somebody calls them.
 
-Coming from 0.9.1 or earlier you also still owe `V1.46.0`, which arrived in
-0.9.3. The column is additive and nothing reads it back to make a decision, so
-the migration is quick and a rollback to the previous binary keeps working
-against the migrated schema.
+**0.9.7 carries NO database migration.** From 0.9.6 this is a binary swap and
+nothing else.
+
+Coming from **0.9.5 or earlier you still owe `V1.47.0`**, which arrived in 0.9.6
+and adds `cdr_submit.route_rule`; from **0.9.1 or earlier you also owe
+`V1.46.0`**, which arrived in 0.9.3. Both columns are additive and nothing reads
+them back to make a decision, so the migrations are quick and a rollback to the
+previous binary keeps working against the migrated schema.
+`fireflo-install update` handles them.
 
 - **Never install 0.8.6.** It rejects every licence this server issues, and the
   symptom reads as a licensing fault rather than as a broken build.
@@ -146,7 +154,7 @@ the key out of the binary:
 strings -a gateway/fireflo-gateway | grep -o 'MCowBQYDK2VwAyEA[A-Za-z0-9+/=]*'
 ```
 
-0.9.6 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
+0.9.7 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
 that is the only key in it — unchanged since 0.8.9, so an install upgrading from
 any of those needs no new licence. That is a public value; publishing it is safe and is
 what makes a build identifiable. A mismatch here presents as licences being
