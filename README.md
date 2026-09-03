@@ -12,10 +12,10 @@ starts and carries traffic, but stops adopting configuration changes.
 
 | | |
 |---|---|
-| **Version** | 0.9.7 |
-| **File** | `fireflo-0.9.7-linux-x86_64.tar.gz` |
-| **SHA-256** | `69218ff1e0ebe4ee6af5f927673f6d4b9f6002021d356f86816ab399e0cc4458` |
-| **Built** | 2026-09-03, from gateway commit `bcba1c7` |
+| **Version** | 0.9.8 |
+| **File** | `fireflo-0.9.8-linux-x86_64.tar.gz` |
+| **SHA-256** | `ecbf5761fd867c33462fc93bd2dd9cc3f719963b491d2ad4738608f2dcfceac3` |
+| **Built** | 2026-09-03, from gateway commit `9aefdf4` |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
 Verify before installing. The checksum proves the download is intact; the
@@ -97,7 +97,7 @@ before another machine can take it.
 
 ## Earlier builds
 
-**Only the current release is published here.** Builds before 0.9.7 have been
+**Only the current release is published here.** Builds before 0.9.8 have been
 withdrawn and their tarballs removed from this tree.
 
 **Do not install 0.9.2 if you still have it.** It bundled the control panel
@@ -106,22 +106,27 @@ panel source, so installing the panel from that tarball fails with a message
 about the checkout not looking like the control panel. 0.9.3 is that fix; the
 gateway half of 0.9.2 was sound.
 
-**0.9.7 is gateway-only**, as 0.9.6 and 0.9.5 were. The control panel is **not** in this
+**0.9.8 is gateway-only**, as 0.9.7, 0.9.6 and 0.9.5 were. The control panel is **not** in this
 tarball, unlike 0.9.2 and 0.9.3, which bundled it at `panel/`. The panel is released
 separately and paired by version — its first three numbers name the gateway
 release it was built against. Upgrading the gateway from here does not upgrade
 your panel, and does not remove one you already have.
 
-**0.9.7 adds customer-facing registration endpoints.** A caller holding ordinary
-gateway credentials can now ask for a sender ID or a message template over
-`/secure/senders` and `/secure/templates`, instead of that being reachable only
-from the operator's own panel. What they write is stored **awaiting approval and
-is not enforced**: the gateway serves only what an operator has approved, so
-nothing a customer does here changes what the gateway accepts. Existing installs
-are unaffected until somebody calls them.
+**0.9.8 corrects what those endpoints report.** 0.9.7 added customer-facing
+registration — a caller holding ordinary gateway credentials can ask for a sender
+ID or a message template over `/secure/senders` and `/secure/templates`, and what
+they write is stored **awaiting approval and is not enforced**.
 
-**0.9.7 carries NO database migration.** From 0.9.6 this is a binary swap and
-nothing else.
+But a registration an operator had **withdrawn** still reported itself as
+`APPROVED` over that API, while the gateway refused its traffic. A customer
+asking "can I send from this" was told yes and then refused. 0.9.8 reports a
+fourth state, `WITHDRAWN`, and only `APPROVED` means usable.
+
+**Upgrade from 0.9.7 if you have enabled these endpoints for anyone.** If nobody
+is calling them the correction is inert, and 0.9.7 is otherwise sound.
+
+**0.9.8 carries NO database migration.** From 0.9.6 onwards this is a binary swap
+and nothing else.
 
 Coming from **0.9.5 or earlier you still owe `V1.47.0`**, which arrived in 0.9.6
 and adds `cdr_submit.route_rule`; from **0.9.1 or earlier you also owe
@@ -154,7 +159,7 @@ the key out of the binary:
 strings -a gateway/fireflo-gateway | grep -o 'MCowBQYDK2VwAyEA[A-Za-z0-9+/=]*'
 ```
 
-0.9.7 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
+0.9.8 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
 that is the only key in it — unchanged since 0.8.9, so an install upgrading from
 any of those needs no new licence. That is a public value; publishing it is safe and is
 what makes a build identifiable. A mismatch here presents as licences being
