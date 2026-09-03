@@ -12,10 +12,12 @@ starts and carries traffic, but stops adopting configuration changes.
 
 | | |
 |---|---|
-| **Version** | 0.9.10 |
-| **File** | `fireflo-0.9.10-linux-x86_64.tar.gz` |
-| **SHA-256** | `535c8e045a901c70e6884217e1d5ad70aec3287532d9496740dd67657e61b16d` |
-| **Built** | 2026-09-03, from gateway commit `744f74e` |
+| **Version** | 0.9.11 |
+| **File** | `fireflo-0.9.11-linux-x86_64.tar.gz` |
+| **SHA-256** | `d1314376f6209597e34cca454c3758e1286ebcf9aa5fd13d52e0a6736bbfcc31` |
+| **Built** | 2026-09-04, from gateway commit `d5299bc` |
+| **Control panel** | 0.9.11.0, included at `panel/` |
+| **REST panel** | 0.9.11.0, included at `rest-panel/` |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
 Verify before installing. The checksum proves the download is intact; the
@@ -97,7 +99,7 @@ before another machine can take it.
 
 ## Earlier builds
 
-**Only the current release is published here.** Builds before 0.9.10 have been
+**Only the current release is published here.** Builds before 0.9.11 have been
 withdrawn and their tarballs removed from this tree.
 
 **Do not install 0.9.2 if you still have it.** It bundled the control panel
@@ -106,21 +108,20 @@ panel source, so installing the panel from that tarball fails with a message
 about the checkout not looking like the control panel. 0.9.3 is that fix; the
 gateway half of 0.9.2 was sound.
 
-**0.9.10 is gateway-only**, as every release since 0.9.5 has been. The control panel is **not** in this
-tarball, unlike 0.9.2 and 0.9.3, which bundled it at `panel/`. The panel is released
-separately and paired by version — its first three numbers name the gateway
-release it was built against. Upgrading the gateway from here does not upgrade
-your panel, and does not remove one you already have.
+**0.9.11 CARRIES BOTH PANELS**, which no release since 0.9.4 has. The operator's
+control panel is at `panel/` and the customer-facing REST panel at `rest-panel/`,
+each as source with its own installer inside its own tree. Neither is required:
+the gateway installs and runs without them.
 
-**0.9.10 changes no gateway behaviour**, and neither did 0.9.9. Both are
-repackages of the same code as 0.9.8, correcting the `README.md` inside the
-tarball: it used to point at a `docs/` directory that is not shipped and route
-support to a public issue tracker, and one of its replacement links then landed
-on the wrong page. It now names this documentation site and support@fireflo.au,
-and every link in it resolves directly.
+They are paired by version — a panel's first three numbers name the gateway
+release it was built against — and both in this tarball are **0.9.11.0**, so they
+match the gateway beside them. A panel you already have is **not** touched by
+upgrading the gateway from here; it is upgraded by its own installer.
 
-Nothing about the running gateway differs from 0.9.8, so there is no reason to
-hurry.
+**The gateway binary is unchanged since 0.9.8.** 0.9.9, 0.9.10 and 0.9.11 all
+carry the same code; what changed is what travels beside it — a corrected README
+in the first two, and the panels in this one. There is no gateway behaviour in
+any of them to hurry for.
 
 **0.9.8 corrected what the registration endpoints report**, and that is worth
 upgrading for. 0.9.7 added customer-facing registration — a caller holding
@@ -136,7 +137,7 @@ reports a fourth state, `WITHDRAWN`, and only `APPROVED` means usable.
 **Upgrade from 0.9.7 if you have enabled those endpoints for anyone.** If nobody
 is calling them the correction is inert, and 0.9.7 is otherwise sound.
 
-**0.9.10 carries NO database migration**, and nor did 0.9.9, 0.9.8 or 0.9.7. From 0.9.6
+**0.9.11 carries NO database migration**, and nor did 0.9.10, 0.9.9, 0.9.8 or 0.9.7. From 0.9.6
 onwards this is a binary swap and nothing else.
 
 Coming from **0.9.5 or earlier you still owe `V1.47.0`**, which arrived in 0.9.6
@@ -170,7 +171,7 @@ the key out of the binary:
 strings -a gateway/fireflo-gateway | grep -o 'MCowBQYDK2VwAyEA[A-Za-z0-9+/=]*'
 ```
 
-0.9.10 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
+0.9.11 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
 that is the only key in it — unchanged since 0.8.9, so an install upgrading from
 any of those needs no new licence. That is a public value; publishing it is safe and is
 what makes a build identifiable. A mismatch here presents as licences being
@@ -182,8 +183,7 @@ than in the binary — the reason it is worth checking directly.
 The private signing key is **not in this repository and must never be**, in any
 form, in any commit, including history. See `.gitignore`.
 
-**The control panel is not in this tarball.** It ships from its own repository
-and is installed by its own `fireflo-panel-install`; you do not need it to
-install or run the gateway. 0.9.2 and 0.9.3 carried it at `panel/` — if you are
-upgrading from one of those, the panel you already installed stays where it is
-and is upgraded separately.
+**Both panels are in this tarball**, at `panel/` and `rest-panel/`. Neither is
+needed to install or run the gateway, and neither is touched by upgrading the
+gateway — each is installed and upgraded by its own installer, which lives inside
+its own directory here.
