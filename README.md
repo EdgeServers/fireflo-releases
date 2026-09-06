@@ -12,12 +12,12 @@ starts and carries traffic, but stops adopting configuration changes.
 
 | | |
 |---|---|
-| **Version** | 0.9.11 |
-| **File** | `fireflo-0.9.11-linux-x86_64.tar.gz` |
-| **SHA-256** | `d1314376f6209597e34cca454c3758e1286ebcf9aa5fd13d52e0a6736bbfcc31` |
-| **Built** | 2026-09-04, from gateway commit `d5299bc` |
-| **Control panel** | 0.9.11.0, included at `panel/` |
-| **REST panel** | 0.9.11.0, included at `rest-panel/` |
+| **Version** | 0.9.20 |
+| **File** | `fireflo-0.9.20-linux-x86_64.tar.gz` |
+| **SHA-256** | `f07c7c4f14f7baf674151cdee025b04e77d453c6f627a785493e0e8409c41e62` |
+| **Built** | 2026-09-07, from gateway commit `589ae8e` |
+| **Control panel** | 0.9.20.0, included at `panel/` |
+| **REST panel** | 0.9.20.0, included at `rest-panel/` |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
 Verify before installing. The checksum proves the download is intact; the
@@ -99,8 +99,19 @@ before another machine can take it.
 
 ## Earlier builds
 
-**Only the current release is published here.** Builds before 0.9.11 have been
-withdrawn and their tarballs removed from this tree.
+**Only the current release is published here.** Builds before 0.9.20 have been
+withdrawn and their tarballs removed from this tree. 0.9.11 was retired on
+capability, not breakage — installs running it are fine, and should upgrade for
+the performance work below rather than out of any urgency.
+
+**0.9.20 is the performance release.** The audited fix set (0.9.17) plus the
+receipt-store rework (0.9.19-0.9.20): the ten-minute 3,000 msg/s sustained run
+now holds flat with a p99 under 20 ms and a receipt store a third of its former
+size, refused SMPP binds are counted by reason on the metrics endpoint, and the
+postpaid credit poll is an order of magnitude lighter. **One default moved**:
+`smsg.dlr.correlation.days` is now `2` (was `3`); an estate that set the key
+explicitly is untouched. **Do not downgrade past 0.9.19 with a live receipt
+store** — the store format gained a value-stamp form older builds cannot read.
 
 **Do not install 0.9.2 if you still have it.** It bundled the control panel
 for the first time but placed the panel's installer where it cannot find the
@@ -108,20 +119,15 @@ panel source, so installing the panel from that tarball fails with a message
 about the checkout not looking like the control panel. 0.9.3 is that fix; the
 gateway half of 0.9.2 was sound.
 
-**0.9.11 CARRIES BOTH PANELS**, which no release since 0.9.4 has. The operator's
+**BOTH PANELS ARE INCLUDED**, as they have been since 0.9.11. The operator's
 control panel is at `panel/` and the customer-facing REST panel at `rest-panel/`,
 each as source with its own installer inside its own tree. Neither is required:
 the gateway installs and runs without them.
 
 They are paired by version — a panel's first three numbers name the gateway
-release it was built against — and both in this tarball are **0.9.11.0**, so they
+release it was built against — and both in this tarball are **0.9.20.0**, so they
 match the gateway beside them. A panel you already have is **not** touched by
 upgrading the gateway from here; it is upgraded by its own installer.
-
-**The gateway binary is unchanged since 0.9.8.** 0.9.9, 0.9.10 and 0.9.11 all
-carry the same code; what changed is what travels beside it — a corrected README
-in the first two, and the panels in this one. There is no gateway behaviour in
-any of them to hurry for.
 
 **0.9.8 corrected what the registration endpoints report**, and that is worth
 upgrading for. 0.9.7 added customer-facing registration — a caller holding
