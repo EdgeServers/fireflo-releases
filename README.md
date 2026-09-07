@@ -12,12 +12,12 @@ starts and carries traffic, but stops adopting configuration changes.
 
 | | |
 |---|---|
-| **Version** | 0.9.20 |
-| **File** | `fireflo-0.9.20-linux-x86_64.tar.gz` |
-| **SHA-256** | `f07c7c4f14f7baf674151cdee025b04e77d453c6f627a785493e0e8409c41e62` |
-| **Built** | 2026-09-07, from gateway commit `589ae8e` |
-| **Control panel** | 0.9.20.0, included at `panel/` |
-| **REST panel** | 0.9.20.0, included at `rest-panel/` |
+| **Version** | 0.9.21 |
+| **File** | `fireflo-0.9.21-linux-x86_64.tar.gz` |
+| **SHA-256** | `7741022dc041e9c303fc11faab70361f3fb592407e34c172a5dfe27f06b33279` |
+| **Built** | 2026-09-07, from gateway commit `7abc7cf` |
+| **Control panel** | 0.9.21.0, included at `panel/` |
+| **REST panel** | 0.9.21.0, included at `rest-panel/` |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
 Verify before installing. The checksum proves the download is intact; the
@@ -99,12 +99,23 @@ before another machine can take it.
 
 ## Earlier builds
 
-**Only the current release is published here.** Builds before 0.9.20 have been
-withdrawn and their tarballs removed from this tree. 0.9.11 was retired on
-capability, not breakage — installs running it are fine, and should upgrade for
-the performance work below rather than out of any urgency.
+**Only the current release is published here.** Builds before 0.9.21 have been
+withdrawn and their tarballs removed from this tree. 0.9.20 was retired on
+capability, not breakage — installs running it are fine.
 
-**0.9.20 is the performance release.** The audited fix set (0.9.17) plus the
+**0.9.21 makes Stop sending and Hold act on a listener's own traffic.** On every
+earlier build both controls paused only the delivery receipts going back to
+bound customers: a listener you had told to stop kept accepting submits and kept
+sending them out. **Upgrade if you rely on either control on a listener.** After
+this release, Stop sending accepts and parks — the message is charged, held
+un-routed, and delivered once when you resume, with receipts flowing throughout
+— while Hold refuses at the door with `ESME_RMSGQFUL` before any charge is
+taken. On a vendor, Stop sending now also stops its retries, and the Hold toggle
+is replaced by a **Restart** that re-dials the connection. Nothing else changes:
+no migration, no new configuration keys, and a vendor carrying a `pause`
+property is still honoured.
+
+**0.9.20 was the performance release.** The audited fix set (0.9.17) plus the
 receipt-store rework (0.9.19-0.9.20): the ten-minute 3,000 msg/s sustained run
 now holds flat with a p99 under 20 ms and a receipt store a third of its former
 size, refused SMPP binds are counted by reason on the metrics endpoint, and the
@@ -125,8 +136,10 @@ each as source with its own installer inside its own tree. Neither is required:
 the gateway installs and runs without them.
 
 They are paired by version — a panel's first three numbers name the gateway
-release it was built against — and both in this tarball are **0.9.20.0**, so they
-match the gateway beside them. A panel you already have is **not** touched by
+release it was built against — and both in this tarball are **0.9.21.0**, so they
+match the gateway beside them. **The control panel is worth upgrading with this
+gateway**: it is what carries the corrected traffic controls, the parked count on
+a suspended listener, and the vendor Restart button. A panel you already have is **not** touched by
 upgrading the gateway from here; it is upgraded by its own installer.
 
 **0.9.8 corrected what the registration endpoints report**, and that is worth
@@ -177,7 +190,7 @@ the key out of the binary:
 strings -a gateway/fireflo-gateway | grep -o 'MCowBQYDK2VwAyEA[A-Za-z0-9+/=]*'
 ```
 
-0.9.11 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
+0.9.21 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
 that is the only key in it — unchanged since 0.8.9, so an install upgrading from
 any of those needs no new licence. That is a public value; publishing it is safe and is
 what makes a build identifiable. A mismatch here presents as licences being
