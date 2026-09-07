@@ -12,12 +12,12 @@ starts and carries traffic, but stops adopting configuration changes.
 
 | | |
 |---|---|
-| **Version** | 0.9.22 |
-| **File** | `fireflo-0.9.22-linux-x86_64.tar.gz` |
-| **SHA-256** | `3f50e2c152eeac79482444a48e2d6a26e0d35a631b832efc6614dc057ca5c468` |
-| **Built** | 2026-09-07, from gateway commit `6856865` |
-| **Control panel** | 0.9.22.0, included at `panel/` |
-| **REST panel** | 0.9.22.0, included at `rest-panel/` |
+| **Version** | 0.9.23 |
+| **File** | `fireflo-0.9.23-linux-x86_64.tar.gz` |
+| **SHA-256** | `343571fc9404968eaf231071120f488ac9cb2194ecc242fe7c1da27671c46aa4` |
+| **Built** | 2026-09-07, from gateway commit `badfdfb` |
+| **Control panel** | 0.9.23.0, included at `panel/` |
+| **REST panel** | 0.9.23.0, included at `rest-panel/` |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
 Verify before installing. The checksum proves the download is intact; the
@@ -99,11 +99,36 @@ before another machine can take it.
 
 ## Earlier builds
 
-**Only the current release is published here.** Builds before 0.9.22 have been
-withdrawn and their tarballs removed from this tree. 0.9.21 was retired on
-capability, not breakage — installs running it are fine.
+**Only the current release is published here.** Builds before 0.9.23 have been
+withdrawn and their tarballs removed from this tree.
 
-**0.9.22 records every refused login, shows them, and can block the address.**
+**0.9.22 is different from the retirements above it, and worth reading before you
+skip this paragraph.** Those were retired on capability — installs running them
+were fine. 0.9.22's headline feature did not work:
+
+- **its blocking could not be switched on at all** on a gateway that already
+  existed, which is every gateway that was updated rather than freshly installed;
+- **`--dry-run` wrote to the host** in that step, so a run meant to preview
+  changes made them;
+- **a reboot did not release a ban**, and a ban covers every port — so a mistake
+  that locked you out of your own SSH stayed locked after a restart.
+
+**If you took 0.9.22 for the blocking, take 0.9.23.** If you took it for the
+`X-Forwarded-For` fix, you already have that and this is not urgent.
+
+**0.9.23 makes it work.** `fireflo-install fail2ban` turns blocking on for an
+install that already exists, without reinstalling; `--dry-run` writes nothing;
+and a boot-time unit releases FireFlo's bans while leaving the host's own `sshd`
+and `postfix` jails alone.
+
+**Bans cover every port of the host, deliberately** — somebody working through
+SMPP passwords has no business anywhere on the box. The cost is that a false
+positive costs that address everything, so
+**fill in `/etc/fireflo/fail2ban-ignore.conf` before you enable a jail**, and know
+where your provider's console is. Changes to that file apply on the next attempt
+with no reload, which is what you want when you are undoing a lockout.
+
+**0.9.22 recorded every refused login, showed them, and could block the address.**
 A refused SMPP bind, a refused API password and a refused panel sign-in now each
 write one line to a log of their own; a new Security page in the control panel
 shows all of them beside whoever fail2ban is currently blocking; and
@@ -162,7 +187,7 @@ each as source with its own installer inside its own tree. Neither is required:
 the gateway installs and runs without them.
 
 They are paired by version — a panel's first three numbers name the gateway
-release it was built against — and both in this tarball are **0.9.22.0**, so they
+release it was built against — and both in this tarball are **0.9.23.0**, so they
 match the gateway beside them. **The control panel is worth upgrading with this
 gateway**: it is what carries the corrected traffic controls, the parked count on
 a suspended listener, and the vendor Restart button. A panel you already have is **not** touched by
@@ -216,7 +241,7 @@ the key out of the binary:
 strings -a gateway/fireflo-gateway | grep -o 'MCowBQYDK2VwAyEA[A-Za-z0-9+/=]*'
 ```
 
-0.9.22 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
+0.9.23 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
 that is the only key in it — unchanged since 0.8.9, so an install upgrading from
 any of those needs no new licence. That is a public value; publishing it is safe and is
 what makes a build identifiable. A mismatch here presents as licences being
