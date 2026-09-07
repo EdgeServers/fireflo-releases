@@ -12,12 +12,12 @@ starts and carries traffic, but stops adopting configuration changes.
 
 | | |
 |---|---|
-| **Version** | 0.9.21 |
-| **File** | `fireflo-0.9.21-linux-x86_64.tar.gz` |
-| **SHA-256** | `7741022dc041e9c303fc11faab70361f3fb592407e34c172a5dfe27f06b33279` |
-| **Built** | 2026-09-07, from gateway commit `7abc7cf` |
-| **Control panel** | 0.9.21.0, included at `panel/` |
-| **REST panel** | 0.9.21.0, included at `rest-panel/` |
+| **Version** | 0.9.22 |
+| **File** | `fireflo-0.9.22-linux-x86_64.tar.gz` |
+| **SHA-256** | `3f50e2c152eeac79482444a48e2d6a26e0d35a631b832efc6614dc057ca5c468` |
+| **Built** | 2026-09-07, from gateway commit `6856865` |
+| **Control panel** | 0.9.22.0, included at `panel/` |
+| **REST panel** | 0.9.22.0, included at `rest-panel/` |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
 Verify before installing. The checksum proves the download is intact; the
@@ -99,11 +99,37 @@ before another machine can take it.
 
 ## Earlier builds
 
-**Only the current release is published here.** Builds before 0.9.21 have been
-withdrawn and their tarballs removed from this tree. 0.9.20 was retired on
+**Only the current release is published here.** Builds before 0.9.22 have been
+withdrawn and their tarballs removed from this tree. 0.9.21 was retired on
 capability, not breakage — installs running it are fine.
 
-**0.9.21 makes Stop sending and Hold act on a listener's own traffic.** On every
+**0.9.22 records every refused login, shows them, and can block the address.**
+A refused SMPP bind, a refused API password and a refused panel sign-in now each
+write one line to a log of their own; a new Security page in the control panel
+shows all of them beside whoever fail2ban is currently blocking; and
+`fireflo-install --with-fail2ban` ships the jails that do the blocking — **off by
+default**, because it edits host security configuration and grants the panel one
+narrow sudo rule.
+
+**It carries a security fix worth taking on its own.** With proxy forwarding
+enabled, the REST API read the **left-most** `X-Forwarded-For` entry. The common
+nginx recipe appends rather than overwrites, so that entry is whatever the client
+sent — meaning a credential's allowed-addresses list could be satisfied with a
+forged header. It now counts from the right under `smsg.restapi.proxy.hops`
+(default 1) and otherwise uses the socket address, which cannot be forged. An
+estate behind a single proxy needs no change; behind a CDN and a proxy, set the
+key to 2.
+
+**One new log file**, `auth-failed.log`, on by default and empty unless somebody
+is failing to log in. It is deliberately not governed by `QUARKUS_LOG_FILE_ENABLE`
+— a gateway with file logging off would otherwise record nothing and leave jails
+that look configured and protect nothing.
+
+**Nothing blocks anybody until you pass `--with-fail2ban`**, and before you do,
+fill in `/etc/fireflo/fail2ban-ignore.conf`: a ban is on an address, and an
+address usually carries a whole customer.
+
+**0.9.21 made Stop sending and Hold act on a listener's own traffic.** On every
 earlier build both controls paused only the delivery receipts going back to
 bound customers: a listener you had told to stop kept accepting submits and kept
 sending them out. **Upgrade if you rely on either control on a listener.** After
@@ -136,7 +162,7 @@ each as source with its own installer inside its own tree. Neither is required:
 the gateway installs and runs without them.
 
 They are paired by version — a panel's first three numbers name the gateway
-release it was built against — and both in this tarball are **0.9.21.0**, so they
+release it was built against — and both in this tarball are **0.9.22.0**, so they
 match the gateway beside them. **The control panel is worth upgrading with this
 gateway**: it is what carries the corrected traffic controls, the parked count on
 a suspended listener, and the vendor Restart button. A panel you already have is **not** touched by
@@ -190,7 +216,7 @@ the key out of the binary:
 strings -a gateway/fireflo-gateway | grep -o 'MCowBQYDK2VwAyEA[A-Za-z0-9+/=]*'
 ```
 
-0.9.21 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
+0.9.22 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
 that is the only key in it — unchanged since 0.8.9, so an install upgrading from
 any of those needs no new licence. That is a public value; publishing it is safe and is
 what makes a build identifiable. A mismatch here presents as licences being
