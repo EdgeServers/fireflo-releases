@@ -16,12 +16,12 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.9.23 |
-| **File** | `fireflo-0.9.23-linux-x86_64.tar.gz` |
-| **SHA-256** | `343571fc9404968eaf231071120f488ac9cb2194ecc242fe7c1da27671c46aa4` |
-| **Built** | 2026-09-07, from gateway commit `badfdfb` |
-| **Control panel** | 0.9.23.0, included at `panel/` |
-| **REST panel** | 0.9.23.0, included at `rest-panel/` |
+| **Version** | 0.10.0 |
+| **File** | `fireflo-0.10.0-linux-x86_64.tar.gz` |
+| **SHA-256** | `1f3cb83165b3dccfcd76fb2079811ab8539128e629f940f13660b626b7c307bf` |
+| **Built** | 2026-09-11, from gateway commit `6915297` |
+| **Control panel** | 0.10.0.0, included at `panel/` |
+| **REST panel** | 0.10.0.0, included at `rest-panel/` |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
 Verify before installing. The checksum proves the download is intact; the
@@ -299,8 +299,49 @@ before another machine can take it.
 
 ## Earlier builds
 
-**Only the current release is published here.** Builds before 0.9.23 have been
+**Only the current release is published here.** Builds before 0.10.0 have been
 withdrawn and their tarballs removed from this tree.
+
+**0.10.0 CARRIES A DATABASE MIGRATION, and it is the first thing to plan for.**
+`V1.51.0` moves the gateway's own credit-reservation bookkeeping out of
+`balance_ledger` into a table of its own, **deleting those rows** as it goes, and
+adds a trigger that refuses `DELETE` on `balance_ledger` from then on. The point
+is that the record of money becomes append-only: nothing in it can be removed,
+by anybody, without deliberately disabling that trigger.
+
+Nothing is lost that anybody computes money from — the rows it removes net to
+zero and no balance is derived from them — and `balance + reserved` is unchanged
+on every account. But migrations are **forward-only**, so the rollback path is a
+restore rather than a reverse migration. **Take the backup before, not after.**
+`fireflo-install update` runs it.
+
+**TWO SHIPPED DEFAULTS MOVE, and both change behaviour on an estate that never
+set them.** Read these before upgrading a busy gateway:
+
+- **A vendor group now actually fails over.** Its liveness test never fired when
+  a vendor lost its connections, so traffic kept queueing on a dead carrier while
+  a healthy one sat idle — measured at 2,837 messages piled up against 0 delivered
+  to the alternative. If you run more than one vendor in a group, this is the
+  release to take.
+- **`maxRetries` ships as 3, not 1.** At 1 the first refusal failed the message,
+  so nothing retryable was ever retried; a carrier throttling at peak cost a fifth
+  of the traffic offered to it. Expect slightly more submit_sm per message and
+  materially fewer lost ones. An estate that set the key explicitly is untouched.
+
+**The SMPP ingress rate limit now binds where it did not.** `conf.maxRate` was
+enforced per *session*, so a customer with four binds got four times their limit.
+It is now per account, and a throttled submit is answered with a proper
+`submit_sm_resp ESME_RTHROTTLED` rather than a `generic_nack` their client
+probably ignored. **If you sell a rate, check what your customers were actually
+getting before this** — some may be sending above their plan today.
+
+**New: resellers can move credit over the API.** `POST /secure/transfers` and two
+companions let an account that holds others fund them, or take credit back, with
+the gateway credentials it already has. See
+[Moving credit to your accounts](https://docs.fireflo.au/developers/billing/credit-transfers).
+
+**0.9.23 is withdrawn on capability** — installs running it are fine, and nothing
+in it is dangerous.
 
 **0.9.22 is different from the retirements above it, and worth reading before you
 skip this paragraph.** Those were retired on capability — installs running them
@@ -441,7 +482,7 @@ the key out of the binary:
 strings -a gateway/fireflo-gateway | grep -o 'MCowBQYDK2VwAyEA[A-Za-z0-9+/=]*'
 ```
 
-0.9.23 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
+0.10.0 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
 that is the only key in it — unchanged since 0.8.9, so an install upgrading from
 any of those needs no new licence. That is a public value; publishing it is safe and is
 what makes a build identifiable. A mismatch here presents as licences being
