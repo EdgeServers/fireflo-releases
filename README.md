@@ -16,12 +16,12 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.10.0 |
-| **File** | `fireflo-0.10.0-linux-x86_64.tar.gz` |
-| **SHA-256** | `1f3cb83165b3dccfcd76fb2079811ab8539128e629f940f13660b626b7c307bf` |
-| **Built** | 2026-09-11, from gateway commit `6915297` |
-| **Control panel** | 0.10.0.0, included at `panel/` |
-| **REST panel** | 0.10.0.0, included at `rest-panel/` |
+| **Version** | 0.11.0 |
+| **File** | `fireflo-0.11.0-linux-x86_64.tar.gz` |
+| **SHA-256** | `b87c94d969043362a815db624257d2fd78ce82341fedebf26ab40df882435f33` |
+| **Built** | 2026-09-20, from gateway commit `18d449c` |
+| **Control panel** | 0.11.0.0, included at `panel/` |
+| **REST panel** | 0.11.0.0, included at `rest-panel/` |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
 Verify before installing. The checksum proves the download is intact; the
@@ -89,7 +89,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.9.23-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.11.0-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -130,8 +130,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.9.23-linux-x86_64.tar.gz
-cd fireflo-0.9.23-linux-x86_64
+tar xzf fireflo-0.11.0-linux-x86_64.tar.gz
+cd fireflo-0.11.0-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -299,10 +299,108 @@ before another machine can take it.
 
 ## Earlier builds
 
-**Only the current release is published here.** Builds before 0.10.0 have been
+**Only the current release is published here.** Builds before 0.11.0 have been
 withdrawn and their tarballs removed from this tree.
 
-**0.10.0 CARRIES A DATABASE MIGRATION, and it is the first thing to plan for.**
+**0.11.0 CARRIES NO DATABASE MIGRATION.** From 0.10.0 it is a binary swap and
+each panel's own installer. Coming from 0.9.x you still owe `V1.51.0`, described
+under 0.10.0 below, and that is still the first thing to plan for.
+
+**TWO WEBHOOK DEFAULTS CHANGE, and both change what a stock install does.** Read
+these before upgrading a gateway that posts receipts anywhere:
+
+- **A receipt target that resolves to a private, loopback or link-local address
+  is now refused.** `smsg.webhook.private.targets` ships as `deny`; it was
+  `allow`. The case `allow` existed for — posting receipts to an application on
+  your own network — is the same case that let any customer's `dlr-url` reach
+  whatever the gateway can reach, including this host's own management port or a
+  cloud metadata endpoint, on a stock install. **If you post receipts inward, set
+  the key to `allow` before you upgrade, or those calls stop.** An estate that
+  set it explicitly is untouched. Where you can, name the permitted targets in
+  egress firewall rules and leave this at `deny`: resolving a name and then
+  connecting to it raises the cost of the attack rather than closing it.
+- **`smsg.webhook.retry.interval.ms` keeps its name and its `120000` default and
+  changes meaning**, from the wait between every attempt to the wait before the
+  first one. Each wait after it doubles, held at an hour, and is drawn with full
+  jitter. Ten attempts now span up to 5h 2m — about two and a half on average —
+  where the flat reading gave up 18 minutes after the first failure and lost
+  every receipt for an endpoint that was down over a lunchtime deploy. A first
+  wait set longer than an hour is honoured rather than cut down to the cap.
+
+**A 3xx from a customer's endpoint no longer counts as delivered.** We do not
+follow redirects — `smsg.webhook.redirects` defaults to `never` — so a 301 meant
+the customer got no payload, no retry, and a delivered receipt in their CDR. The
+success window is 2xx on both the DLR and MO paths. **An endpoint that redirects
+will now show retries and failures where it used to show successes**, which is
+what was happening all along.
+
+**Callbacks to one host are capped at ten in flight**, so a single slow endpoint
+no longer absorbs threads and sockets without limit. A receipt waiting out a
+retry holds no slot.
+
+**Messages in flight when a vendor's socket dies are no longer lost.** A
+`submit_sm` sits in the bind's send window until the vendor answers it; when the
+socket died abruptly — peer killed, crashed, network dropped — the window went
+with the session and those messages were lost outright: no retry, no CDR row, no
+refund, no receipt. At a full window that is everything in flight at that
+instant; staging reproduced 22 of 1,199. They are now drained back through the
+vendor's normal nack handling, so `maxRetries` and the `status.*` lists decide
+what happens to them exactly as they would for an expiry, with the usual unbilled
+`cdr_submit` row for the dead attempt. Look for `message.vendor.inflight.reclaimed`
+in the log. Two new keys document the quiet-vendor case beside it:
+`request.tout` and `window.monitor.interval.millis`, both per vendor instance.
+
+**Delivery receipts are written once, at the provider's answer.** The centrepiece
+of this release, and a throughput fix as much as a correctness one. A row was
+written at ingress before the provider id was known, then read back to link that
+id in — and at rate the vendor's `submit_sm_resp` regularly beat our own write:
+a measured 1,532,933 links of 2,777,015 accepted, 55% of the traffic, abandoned,
+while the sustained rate sagged from 3,000/s to about 2,350/s on the write
+amplification alone. State and correlation are now created together when the
+provider id returns, so there is no link step and no race to retry. **If you
+alert on `dlr.link.abandoned`, that warning is gone**, along with the link retry
+behind it.
+
+**Margin stops being a subtraction across two currencies.** In database mode
+`app_rate_rule.currency` is a per-row column, so a customer can be priced in one
+currency while the vendor is costed in another. The CDR recorded the customer's
+currency on both sides — price arrives first, at ingress — so a USD cost was
+stored, rendered and subtracted as though it were AUD. Cost and price now each
+carry their own currency, and margin refuses when the two disagree rather than
+reporting a number. **Margin over mixed-currency rules was wrong before this and
+is worth re-reading.**
+
+**A vendor removed from a weighted group no longer leaves its credit behind.**
+Weighted credit is held per member inside the group, and the prune cleared only
+the outer map, so a member removed and later added back resumed on the credit it
+had left rather than starting level. The timing is what made it bite: a member's
+credit is at its most negative immediately after it has won a round, which is
+also when an operator is most likely to pull it out. Put back a week later, it
+owed that debt before carrying a single message.
+
+**Two hot paths get cheaper.** The sell-side rate merge is memoised, so REST
+ingress stops rebuilding it per message — SMPP was never affected, it holds a
+binding — and two per-message configuration reads on the SMPP path become cached
+fields.
+
+**Both panels are 0.11.0.0, and the control panel carries two fixes past that
+stamp.** The session cookie is no longer marked `Secure` on a panel served over
+plain http, which is what stopped sign-in working on one; and a sign-in link that
+has already been used stops reporting success. **The control panel is worth
+upgrading with this gateway if you serve it over http or use emailed sign-in
+links.**
+
+**This tarball corresponds to commits, not to a disk.** The packager used to
+rsync each panel's working directory in, carrying whatever happened to be
+uncommitted on the machine that built it; each panel is now staged with
+`git archive HEAD`, and anything uncommitted is named in the build output rather
+than shipped. `MANIFEST` records uncommitted changes in the gateway checkout that
+built this binary: they were that packaging script itself, still being written.
+No gateway or panel source was among them — the only commits between `18d449c`
+and this build's own history touch `scripts/make-release` and `docs/`.
+
+**0.10.0 CARRIED A DATABASE MIGRATION, and coming from 0.9.x it is still the
+first thing to plan for.**
 `V1.51.0` moves the gateway's own credit-reservation bookkeeping out of
 `balance_ledger` into a table of its own, **deleting those rows** as it goes, and
 adds a trigger that refuses `DELETE` on `balance_ledger` from then on. The point
@@ -315,8 +413,8 @@ on every account. But migrations are **forward-only**, so the rollback path is a
 restore rather than a reverse migration. **Take the backup before, not after.**
 `fireflo-install update` runs it.
 
-**TWO SHIPPED DEFAULTS MOVE, and both change behaviour on an estate that never
-set them.** Read these before upgrading a busy gateway:
+**0.10.0 MOVED TWO SHIPPED DEFAULTS, and both change behaviour on an estate
+that never set them.** Read these before upgrading a busy gateway from 0.9.x:
 
 - **A vendor group now actually fails over.** Its liveness test never fired when
   a vendor lost its connections, so traffic kept queueing on a dead carrier while
@@ -328,14 +426,15 @@ set them.** Read these before upgrading a busy gateway:
   of the traffic offered to it. Expect slightly more submit_sm per message and
   materially fewer lost ones. An estate that set the key explicitly is untouched.
 
-**The SMPP ingress rate limit now binds where it did not.** `conf.maxRate` was
+**0.10.0 also made the SMPP ingress rate limit bind where it did not.**
+`conf.maxRate` was
 enforced per *session*, so a customer with four binds got four times their limit.
 It is now per account, and a throttled submit is answered with a proper
 `submit_sm_resp ESME_RTHROTTLED` rather than a `generic_nack` their client
 probably ignored. **If you sell a rate, check what your customers were actually
 getting before this** — some may be sending above their plan today.
 
-**New: resellers can move credit over the API.** `POST /secure/transfers` and two
+**0.10.0 gave resellers credit transfers over the API.** `POST /secure/transfers` and two
 companions let an account that holds others fund them, or take credit back, with
 the gateway credentials it already has. See
 [Moving credit to your accounts](https://docs.fireflo.au/developers/billing/credit-transfers).
@@ -428,10 +527,8 @@ each as source with its own installer inside its own tree. Neither is required:
 the gateway installs and runs without them.
 
 They are paired by version — a panel's first three numbers name the gateway
-release it was built against — and both in this tarball are **0.9.23.0**, so they
-match the gateway beside them. **The control panel is worth upgrading with this
-gateway**: it is what carries the corrected traffic controls, the parked count on
-a suspended listener, and the vendor Restart button. A panel you already have is **not** touched by
+release it was built against — and both in this tarball are **0.11.0.0**, so they
+match the gateway beside them. A panel you already have is **not** touched by
 upgrading the gateway from here; it is upgraded by its own installer.
 
 **0.9.8 corrected what the registration endpoints report**, and that is worth
@@ -482,7 +579,7 @@ the key out of the binary:
 strings -a gateway/fireflo-gateway | grep -o 'MCowBQYDK2VwAyEA[A-Za-z0-9+/=]*'
 ```
 
-0.10.0 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
+0.11.0 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
 that is the only key in it — unchanged since 0.8.9, so an install upgrading from
 any of those needs no new licence. That is a public value; publishing it is safe and is
 what makes a build identifiable. A mismatch here presents as licences being
