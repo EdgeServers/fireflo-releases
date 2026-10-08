@@ -16,12 +16,12 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.11.0 |
-| **File** | `fireflo-0.11.0-linux-x86_64.tar.gz` |
-| **SHA-256** | `b87c94d969043362a815db624257d2fd78ce82341fedebf26ab40df882435f33` |
-| **Built** | 2026-09-20, from gateway commit `18d449c` |
-| **Control panel** | 0.11.0.0, included at `panel/` |
-| **REST panel** | 0.11.0.0, included at `rest-panel/` |
+| **Version** | 0.11.3 |
+| **File** | `fireflo-0.11.3-linux-x86_64.tar.gz` |
+| **SHA-256** | `76318825cda9d165d15fb933afa097764579b590ccf35d0e1f7cfa684ceeec50` |
+| **Built** | 2026-10-09, from gateway commit `da4a838` |
+| **Control panel** | 0.11.3.1, included at `panel/` |
+| **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
 Verify before installing. The checksum proves the download is intact; the
@@ -89,7 +89,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.11.0-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.11.3-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -130,8 +130,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.11.0-linux-x86_64.tar.gz
-cd fireflo-0.11.0-linux-x86_64
+tar xzf fireflo-0.11.3-linux-x86_64.tar.gz
+cd fireflo-0.11.3-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -228,7 +228,9 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. It needs its **own** database — never the gateway's,
+`rest-panel/scripts/`. **0.11.3 does not carry it**: take it from the 0.11.0
+tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
+unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
 
 ### When the next release arrives
@@ -299,8 +301,66 @@ before another machine can take it.
 
 ## Earlier builds
 
-**Only the current release is published here.** Builds before 0.11.0 have been
-withdrawn and their tarballs removed from this tree.
+**Only the current release is published here.** Builds before 0.11.3 have been
+withdrawn and their tarballs removed from this tree. 0.11.0's is still in this
+repository's history, at commit `42d506e`, and is where the REST panel lives
+for now.
+
+**0.11.3 CARRIES NO DATABASE MIGRATION**, and nor did 0.11.2 or 0.11.1, which
+were never published here. From 0.11.0 it is a binary swap and the control
+panel's own installer; coming from 0.10.0 or 0.9.x, read the 0.11.0 notes below
+first.
+
+**Ship the control panel with it; the REST panel is not in this tarball.**
+`panel/` is the control panel 0.11.3.1, matched to this gateway. The REST panel
+has not changed since 0.11.0.0, carries no version check against the gateway,
+and keeps running beside 0.11.3 as it is. A host that does not have it yet takes
+it from the 0.11.0 tarball.
+
+**With RabbitMQ, accepted work now survives a restart.** With
+`smsg.queue.provider=rabbitmq`, a `/secure/sendbatch` batch is published whole
+to `fireflo.batch.in` and answered only once the broker confirms it; it is split
+into one message per recipient on `fireflo.batch` and each is acknowledged after
+it is sent and its caller called back. A receipt on its way to a customer sits
+on `fireflo.dlr.forward` until it is delivered, given up on, or its retry is
+safely queued. Before this, both lived in memory and a restart lost them — a
+10,000-message pilot restarted once lost 1,139 receipts. **The gateway declares
+these queues itself; its broker user needs configure rights on its vhost, as it
+already does for `fireflo.submit`.** A batch the broker cannot take is refused
+with 503 rather than accepted into memory. Without a broker nothing changes:
+batches and receipts run in memory as before.
+
+**A restart no longer sends anyone a message twice.** Shutdown used to close the
+broker connection while each batch consumer still held a message it had sent
+but not acknowledged; after the restart the broker handed those out again. The
+batch service now stops first, and waits up to 15 seconds for what is in hand
+to be sent and acknowledged before the connection closes. Receipts keep going
+onto the broker for as long as the SMPP sessions hand them in.
+
+**Batches really do run side by side.** They ran one after another on a single
+thread whatever `smsg.restapi.batch.concurrency` said, so a sendbatch customer
+was held to one message per callback round trip — about 15 a second against a
+real web application. Each now runs on its own thread, up to that setting
+(default 4). **A sendbatch caller will see its messages leave faster, and its
+callback endpoint called faster**, after this upgrade.
+
+**Bulk callbacks, opt in, per account.** Name an account in
+`smsg.callback.bulk.accounts` and its JSON receipts and batch results go as one
+POSTed JSON array per address — up to `smsg.callback.bulk.max` items (500), or
+`smsg.callback.bulk.linger.ms` after the first (200) — instead of one request
+each. Measured on a 10,000-message pilot against a web application: 50 seconds
+where one-per-request took about 190, in 91 requests instead of about 20,000.
+Each receipt keeps its own retry ladder and callback record. **Turn it on only
+for a receiver that accepts a JSON array**; the list ships empty, so nothing
+changes until you name an account, and the kannel format is never batched. The
+control panel 0.11.3.1 shows the three keys under Settings.
+
+**JSON MO forwarding works from the native binary.** Every JSON MO forward from
+a native gateway failed with "Failed to serialize MoContext to JSON" and retried
+until it gave up; FORM forwards and the JVM build were unaffected.
+
+The licence key compiled into the binary is unchanged, so no install upgrading
+to 0.11.3 needs a new licence.
 
 **0.11.0 CARRIES NO DATABASE MIGRATION.** From 0.10.0 it is a binary swap and
 each panel's own installer. Coming from 0.9.x you still owe `V1.51.0`, described
@@ -521,14 +581,14 @@ panel source, so installing the panel from that tarball fails with a message
 about the checkout not looking like the control panel. 0.9.3 is that fix; the
 gateway half of 0.9.2 was sound.
 
-**BOTH PANELS ARE INCLUDED**, as they have been since 0.9.11. The operator's
-control panel is at `panel/` and the customer-facing REST panel at `rest-panel/`,
-each as source with its own installer inside its own tree. Neither is required:
-the gateway installs and runs without them.
+**THE CONTROL PANEL IS INCLUDED**, at `panel/`, as source with its own
+installer inside its own tree. The customer-facing REST panel was included from
+0.9.11 to 0.11.0 and is not in 0.11.3 (see above). Neither is required: the
+gateway installs and runs without them.
 
-They are paired by version — a panel's first three numbers name the gateway
-release it was built against — and both in this tarball are **0.11.0.0**, so they
-match the gateway beside them. A panel you already have is **not** touched by
+The control panel is paired by version — its first three numbers name the
+gateway release it was built against — and the one in this tarball is
+**0.11.3.1**, so it matches the gateway beside it. A panel you already have is **not** touched by
 upgrading the gateway from here; it is upgraded by its own installer.
 
 **0.9.8 corrected what the registration endpoints report**, and that is worth
@@ -579,7 +639,7 @@ the key out of the binary:
 strings -a gateway/fireflo-gateway | grep -o 'MCowBQYDK2VwAyEA[A-Za-z0-9+/=]*'
 ```
 
-0.11.0 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
+0.11.3 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
 that is the only key in it — unchanged since 0.8.9, so an install upgrading from
 any of those needs no new licence. That is a public value; publishing it is safe and is
 what makes a build identifiable. A mismatch here presents as licences being
@@ -591,7 +651,8 @@ than in the binary — the reason it is worth checking directly.
 The private signing key is **not in this repository and must never be**, in any
 form, in any commit, including history. See `.gitignore`.
 
-**Both panels are in this tarball**, at `panel/` and `rest-panel/`. Neither is
-needed to install or run the gateway, and neither is touched by upgrading the
-gateway — each is installed and upgraded by its own installer, which lives inside
-its own directory here.
+**The REST panel is not in this tarball.** The control panel is, at `panel/`;
+the REST panel 0.11.0.0 is in the 0.11.0 tarball, in this repository's history
+at `42d506e`. Neither is needed to install or run the gateway, and neither is
+touched by upgrading the gateway — each is installed and upgraded by its own
+installer, which lives inside its own directory.
