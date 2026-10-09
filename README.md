@@ -18,9 +18,9 @@ empty box to a running gateway, in order.
 |---|---|
 | **Version** | 0.11.3 |
 | **File** | `fireflo-0.11.3-linux-x86_64.tar.gz` |
-| **SHA-256** | `c159d6d996048cfbc9b82881ab48a76cefa3ee6d14e4926ef44ae26f6e10799b` |
+| **SHA-256** | `50892fe6792121ea417a0ad07ede79fc741ba8a31c50abe28f378a3dc19df79c` |
 | **Built** | 2026-10-09, from gateway commit `6b0cc26` — re-cut with installer fixes, see [the 0.11.3 notes](#earlier-builds) |
-| **Control panel** | 0.11.3.1, included at `panel/`, from commit `1bf7a03` |
+| **Control panel** | 0.11.3.1, included at `panel/`, from commit `4fb90c8` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
@@ -321,6 +321,13 @@ with `--vhost` already given, that refusal suggested a second one, nesting the
 install. And the panel's `install` refused a host without Node, the very thing
 its package step adds. A host already running the first 0.11.3 tarball has
 nothing to update: only the installers changed.
+
+**And re-cut once more the same day**, for one more panel installer fault:
+`fireflo-panel-install passwd` used the default account rather than the one the
+panel was installed with, so on an install made with `--user` it stopped with
+`install: invalid user: 'fireflo'` and changed nothing. The second tarball
+(SHA-256 `c159d6d9…0799b`, panel commit `1bf7a03`) has that fault; on a host
+installed from it, `passwd --user <the panel's account>` works around it.
 
 **Ship the control panel with it; the REST panel is not in this tarball.**
 `panel/` is the control panel 0.11.3.1, matched to this gateway. The REST panel
