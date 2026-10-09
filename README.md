@@ -18,9 +18,9 @@ empty box to a running gateway, in order.
 |---|---|
 | **Version** | 0.11.3 |
 | **File** | `fireflo-0.11.3-linux-x86_64.tar.gz` |
-| **SHA-256** | `50892fe6792121ea417a0ad07ede79fc741ba8a31c50abe28f378a3dc19df79c` |
+| **SHA-256** | `4d30810511f0cf3da5bae1b79fdeee4c46fe941d6c9905fed5447023748ca9e9` |
 | **Built** | 2026-10-09, from gateway commit `6b0cc26` — re-cut with installer fixes, see [the 0.11.3 notes](#earlier-builds) |
-| **Control panel** | 0.11.3.1, included at `panel/`, from commit `4fb90c8` |
+| **Control panel** | 0.11.3.2, included at `panel/`, from commit `c900dcc` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
@@ -329,8 +329,17 @@ panel was installed with, so on an install made with `--user` it stopped with
 (SHA-256 `c159d6d9…0799b`, panel commit `1bf7a03`) has that fault; on a host
 installed from it, `passwd --user <the panel's account>` works around it.
 
+**And a third time, with control panel 0.11.3.2**, whose sign-in page says why
+a sign-in failed when the password was never the cause. A panel reached over
+plain `http://` with an `https://` `AUTH_URL` drops its sign-in cookie, and every
+attempt was reported as "Check the credentials" — the real reason, `MissingCSRF`,
+was only in the service log. It now says the password was not checked and, on
+plain HTTP, names the two `panel.env` lines that fix it for that address. The
+third tarball (SHA-256 `50892fe6…df79c`, panel 0.11.3.1 at `4fb90c8`) is
+otherwise the same; the gateway binary is unchanged in all four.
+
 **Ship the control panel with it; the REST panel is not in this tarball.**
-`panel/` is the control panel 0.11.3.1, matched to this gateway. The REST panel
+`panel/` is the control panel 0.11.3.2, matched to this gateway. The REST panel
 has not changed since 0.11.0.0, carries no version check against the gateway,
 and keeps running beside 0.11.3 as it is. A host that does not have it yet takes
 it from the 0.11.0 tarball.
@@ -371,7 +380,7 @@ where one-per-request took about 190, in 91 requests instead of about 20,000.
 Each receipt keeps its own retry ladder and callback record. **Turn it on only
 for a receiver that accepts a JSON array**; the list ships empty, so nothing
 changes until you name an account, and the kannel format is never batched. The
-control panel 0.11.3.1 shows the three keys under Settings.
+control panel 0.11.3.1 and later shows the three keys under Settings.
 
 **JSON MO forwarding works from the native binary.** Every JSON MO forward from
 a native gateway failed with "Failed to serialize MoContext to JSON" and retried
@@ -606,7 +615,7 @@ gateway installs and runs without them.
 
 The control panel is paired by version — its first three numbers name the
 gateway release it was built against — and the one in this tarball is
-**0.11.3.1**, so it matches the gateway beside it. A panel you already have is **not** touched by
+**0.11.3.2**, so it matches the gateway beside it. A panel you already have is **not** touched by
 upgrading the gateway from here; it is upgraded by its own installer.
 
 **0.9.8 corrected what the registration endpoints report**, and that is worth
