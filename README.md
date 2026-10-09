@@ -18,9 +18,9 @@ empty box to a running gateway, in order.
 |---|---|
 | **Version** | 0.11.3 |
 | **File** | `fireflo-0.11.3-linux-x86_64.tar.gz` |
-| **SHA-256** | `76318825cda9d165d15fb933afa097764579b590ccf35d0e1f7cfa684ceeec50` |
-| **Built** | 2026-10-09, from gateway commit `da4a838` |
-| **Control panel** | 0.11.3.1, included at `panel/` |
+| **SHA-256** | `c159d6d996048cfbc9b82881ab48a76cefa3ee6d14e4926ef44ae26f6e10799b` |
+| **Built** | 2026-10-09, from gateway commit `6b0cc26` — re-cut with installer fixes, see [the 0.11.3 notes](#earlier-builds) |
+| **Control panel** | 0.11.3.1, included at `panel/`, from commit `1bf7a03` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
@@ -310,6 +310,17 @@ for now.
 were never published here. From 0.11.0 it is a binary swap and the control
 panel's own installer; coming from 0.10.0 or 0.9.x, read the 0.11.0 notes below
 first.
+
+**This 0.11.3 tarball was re-cut on 2026-10-09 to fix both installers; the
+gateway binary in it is byte for byte the one first published.** The first
+0.11.3 tarball (SHA-256 `76318825…eec50`, gateway commit `da4a838`, panel commit
+`db0fcf9`) had three installer faults. A first `--vhost` install under `/home`
+for a service account that did not exist yet was refused as "the application
+directory is the account's home", by the gateway and the panel installer alike;
+with `--vhost` already given, that refusal suggested a second one, nesting the
+install. And the panel's `install` refused a host without Node, the very thing
+its package step adds. A host already running the first 0.11.3 tarball has
+nothing to update: only the installers changed.
 
 **Ship the control panel with it; the REST panel is not in this tarball.**
 `panel/` is the control panel 0.11.3.1, matched to this gateway. The REST panel
