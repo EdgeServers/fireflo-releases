@@ -18,9 +18,9 @@ empty box to a running gateway, in order.
 |---|---|
 | **Version** | 0.11.5 — **carries nine database migrations that can refuse to run**, read [the 0.11.5 notes](#earlier-builds) and take a backup before upgrading |
 | **File** | `fireflo-0.11.5-linux-x86_64.tar.gz` |
-| **SHA-256** | `3ab073eb1978efd464eeb342d78de49f47db4abe460a9fb5a4c8dcb4fe28a754` |
-| **Built** | 2026-10-12, from gateway commit `ccfebae` — re-cut with control panel 0.11.5.1, see [the 0.11.5 notes](#earlier-builds) |
-| **Control panel** | 0.11.5.1, included at `panel/`, from commit `0541e43` |
+| **SHA-256** | `a538dbb68c03b78fd24a105e42cbd41505790dcdba8e6e7a48b4a84ef4955640` |
+| **Built** | 2026-10-12, from gateway commit `ccfebae` — re-cut with control panel 0.11.5.2, see [the 0.11.5 notes](#earlier-builds) |
+| **Control panel** | 0.11.5.2, included at `panel/`, from commit `3fa2b62` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
@@ -429,6 +429,28 @@ screens and nothing else:
 No migration, no new grant and no new setting. A panel on 0.11.5.0 upgrades
 with `fireflo-panel-install update`; the gateway is not touched.
 
+**And re-cut once more the same day, with control panel 0.11.5.2**; the gateway
+binary is again the one first published. The 0.11.5.1 tarball (SHA-256
+`3ab073eb…a28a754`) is in this repository's history at commit `9fbcecf`.
+0.11.5.2 changes two operator screens and nothing else:
+
+- **Filters** are grouped in a column on the left by what they match
+  (destination, sender ID, product and login, account, message content), with
+  Unused, Off or empty and Duplicates groups. Each filter reads as a sentence
+  and is badged with the routing and pricing rules that use it. A new filter is
+  made in three guided steps, and the panel says when one would test exactly
+  what another already does.
+- **Routing** lists the routing tables in a column on the left, beside the one
+  open. Rules read as sentences ("When destination starts with +91 → smppsim"),
+  the rules default routing wrote fold into one line, and a rule below a
+  catch-all is marked as never reached. A rule is edited in a dialog using the
+  same guided fields as filters; edits, reorders and on/off switches wait for
+  one Save bar. Start here shows how a message travels from `default`, and the
+  routing tester and the delivery check share one page.
+
+No migration, no new grant and no new setting. A panel on 0.11.5.0 or 0.11.5.1
+upgrades with `fireflo-panel-install update`; the gateway is not touched.
+
 ### 0.11.4
 
 **0.11.4 CARRIES A DATABASE MIGRATION, `V1.52.0`.** It is the first since
@@ -822,7 +844,7 @@ gateway installs and runs without them.
 
 The control panel is paired by version — its first three numbers name the
 gateway release it was built against — and the one in this tarball is
-**0.11.5.1**, so it matches the gateway beside it. A panel you already have is **not** touched by
+**0.11.5.2**, so it matches the gateway beside it. A panel you already have is **not** touched by
 upgrading the gateway from here; it is upgraded by its own installer.
 
 **0.9.8 corrected what the registration endpoints report**, and that is worth
