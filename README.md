@@ -18,9 +18,9 @@ empty box to a running gateway, in order.
 |---|---|
 | **Version** | 0.11.5 — **carries nine database migrations that can refuse to run**, read [the 0.11.5 notes](#earlier-builds) and take a backup before upgrading |
 | **File** | `fireflo-0.11.5-linux-x86_64.tar.gz` |
-| **SHA-256** | `a538dbb68c03b78fd24a105e42cbd41505790dcdba8e6e7a48b4a84ef4955640` |
-| **Built** | 2026-10-12, from gateway commit `ccfebae` — re-cut with control panel 0.11.5.2, see [the 0.11.5 notes](#earlier-builds) |
-| **Control panel** | 0.11.5.2, included at `panel/`, from commit `3fa2b62` |
+| **SHA-256** | `ab0ca6d4ee88b5f3b0e8bbd4aeaaea5b234330a566052b5bb8fa9d7a699c4424` |
+| **Built** | 2026-10-13, from gateway commit `ccfebae` — re-cut with control panel 0.11.5.3, see [the 0.11.5 notes](#earlier-builds) |
+| **Control panel** | 0.11.5.3, included at `panel/`, from commit `18e05df` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
@@ -451,6 +451,30 @@ binary is again the one first published. The 0.11.5.1 tarball (SHA-256
 No migration, no new grant and no new setting. A panel on 0.11.5.0 or 0.11.5.1
 upgrades with `fireflo-panel-install update`; the gateway is not touched.
 
+**And re-cut again on 2026-10-13, with control panel 0.11.5.3**; the gateway
+binary is still the one first published. The 0.11.5.2 tarball (SHA-256
+`a538dbb6…4955640`) is in this repository's history at commit `08467dc`.
+0.11.5.3 changes operator screens and nothing else:
+
+- **Vendors and Servers** open with a live traffic chart for the last fifteen
+  minutes: MT/s and DLR/s from the call records, and messages queued from the
+  gateway's live health, in three colours. It totals every vendor, or every
+  account on Servers, and narrows to one; an account is found by typing part of
+  its id or name. Queued is drawn from when the page is opened, because the
+  gateway does not store queue depth.
+- **Queues** is rebuilt as the path a message takes: broker, router, then each
+  vendor with what is waiting and what is scheduled to retry, and whether it grew
+  since the last read. Choosing a stage lists its messages below.
+- **A vendor's page** keeps Messages, Error codes, Edit and Disable in the card's
+  footer, with Stop sending and Restart at its right.
+- **Pricing export and import** explain a header-only file: an export taken
+  while nothing is priced has no rows, and is offered as a template to fill in.
+
+No migration, no new grant and no new setting. The chart reads `cdr_submit`
+and `cdr_final` through indexes they already have. A panel on 0.11.5.0 to
+0.11.5.2 upgrades with `fireflo-panel-install update`; the gateway is not
+touched.
+
 ### 0.11.4
 
 **0.11.4 CARRIES A DATABASE MIGRATION, `V1.52.0`.** It is the first since
@@ -844,7 +868,7 @@ gateway installs and runs without them.
 
 The control panel is paired by version — its first three numbers name the
 gateway release it was built against — and the one in this tarball is
-**0.11.5.2**, so it matches the gateway beside it. A panel you already have is **not** touched by
+**0.11.5.3**, so it matches the gateway beside it. A panel you already have is **not** touched by
 upgrading the gateway from here; it is upgraded by its own installer.
 
 **0.9.8 corrected what the registration endpoints report**, and that is worth
