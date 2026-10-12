@@ -16,11 +16,11 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.11.3 |
-| **File** | `fireflo-0.11.3-linux-x86_64.tar.gz` |
-| **SHA-256** | `4d30810511f0cf3da5bae1b79fdeee4c46fe941d6c9905fed5447023748ca9e9` |
-| **Built** | 2026-10-09, from gateway commit `6b0cc26` — re-cut with installer fixes, see [the 0.11.3 notes](#earlier-builds) |
-| **Control panel** | 0.11.3.2, included at `panel/`, from commit `c900dcc` |
+| **Version** | 0.11.4 — **carries a database migration**, read [the 0.11.4 notes](#earlier-builds) before upgrading |
+| **File** | `fireflo-0.11.4-linux-x86_64.tar.gz` |
+| **SHA-256** | `df32b47de4fa32bdf81d2585101641b1572db4769a9c3b0ec1e9b89d2f0e86d7` |
+| **Built** | 2026-10-12, from gateway commit `533c48e` |
+| **Control panel** | 0.11.4.5, included at `panel/`, from commit `59ccfb3` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
@@ -89,7 +89,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.11.3-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.11.4-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -130,8 +130,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.11.3-linux-x86_64.tar.gz
-cd fireflo-0.11.3-linux-x86_64
+tar xzf fireflo-0.11.4-linux-x86_64.tar.gz
+cd fireflo-0.11.4-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -228,7 +228,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.11.3 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.11.4 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -301,10 +301,74 @@ before another machine can take it.
 
 ## Earlier builds
 
-**Only the current release is published here.** Builds before 0.11.3 have been
-withdrawn and their tarballs removed from this tree. 0.11.0's is still in this
+**Only the current release is published here.** Builds before 0.11.4 have been
+withdrawn and their tarballs removed from this tree. 0.11.3's last tarball is in
+this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.11.4
+
+**0.11.4 CARRIES A DATABASE MIGRATION, `V1.52.0`.** It is the first since
+0.10.0. `fireflo-install update` runs it before it starts the new binary, as it
+always has; on a gateway you migrate by hand it is `fireflo db migrate`. What
+it does to an existing database:
+
+- **New table `app_user`** — who may sign in, as `admin`, `operator` or
+  `customer`, with a PBKDF2-SHA256 password hash. A reseller is not a role: it
+  is a customer user on an account that resells.
+- **Every account with an email address becomes a customer user** with no
+  password, so the sign-in link it already had keeps working. Nothing else
+  about the account changes.
+- **`app_login_token` gains `user_id`** (required) and its `account_id` becomes
+  optional, because operators can now be sent a link too. Unspent tokens for an
+  account with no address are deleted; they were never redeemable and live
+  fifteen minutes.
+- **`app_customer_access_log` gains `user_id`** and accepts the new sign-in
+  events; **new table `app_operator_access_log`** records operator sign-ins,
+  failures and links. Both are insert-only by grant.
+
+It is additive, so rolling the **gateway** back to 0.11.3 still works against a
+migrated schema. **The control panel cannot go back**: a 0.11.3.x panel writes
+sign-in links without a `user_id` and every one fails.
+
+**THE PANEL'S DATABASE ROLE NEEDS NEW GRANTS, or nobody can sign in.** Run the
+grant block in `panel/README.md` as the database owner, or at least:
+
+```
+GRANT SELECT, INSERT, UPDATE ON app_user TO fireflo_rw;
+GRANT INSERT, SELECT ON app_operator_access_log TO fireflo_rw;
+GRANT USAGE, SELECT ON SEQUENCE app_user_id_seq, app_operator_access_log_id_seq TO fireflo_rw;
+```
+
+(with your panel role in place of `fireflo_rw`).
+
+**Upgrade the gateway first, then the panel.** `fireflo-panel-install update`
+moves the operator from `OPERATOR_USERNAME` / `OPERATOR_PASSWORD` in
+`panel.env` into `app_user` as an admin **with the same password**, and removes
+the two keys. If the gateway has not migrated yet it says so and leaves them,
+and the old sign-in keeps working until you run it again. A new install creates
+the first admin itself and prints the password once.
+
+**Users and passwords live in the gateway's database.** `fireflo user add`,
+`passwd`, `list`, `disable` and `enable` manage them from the command line; an
+admin manages them in the panel under Security → Users. An account can have
+many users. The emailed link stays, as the way back in for anyone who forgets a
+password, and operators can now ask for one from the sign-in page. Ten failed
+attempts from one address for one user lock that pair out for fifteen minutes.
+Every sign-in, failed or not, on either door, is under Reports → Access log.
+
+**Control panel 0.11.4.5** is a reworked interface on the same pages: slate and
+the FireFlo green, one type scale and one spacing scale on every page, vendors
+and listeners as cards with a page each, routing and pricing organised under
+tabs with an **Advanced** switch for the rarely-used fields, a date range on
+Messages, and no page that scrolls sideways on a phone.
+
+The licence key compiled into the binary is unchanged, so no install upgrading
+to 0.11.4 needs a new licence. The REST panel is still not in this tarball;
+the 0.11.3 notes below say where it is.
+
+### 0.11.3
 
 **0.11.3 CARRIES NO DATABASE MIGRATION**, and nor did 0.11.2 or 0.11.1, which
 were never published here. From 0.11.0 it is a binary swap and the control
@@ -610,12 +674,12 @@ gateway half of 0.9.2 was sound.
 
 **THE CONTROL PANEL IS INCLUDED**, at `panel/`, as source with its own
 installer inside its own tree. The customer-facing REST panel was included from
-0.9.11 to 0.11.0 and is not in 0.11.3 (see above). Neither is required: the
+0.9.11 to 0.11.0 and is not in 0.11.3 or 0.11.4 (see above). Neither is required: the
 gateway installs and runs without them.
 
 The control panel is paired by version — its first three numbers name the
 gateway release it was built against — and the one in this tarball is
-**0.11.3.2**, so it matches the gateway beside it. A panel you already have is **not** touched by
+**0.11.4.5**, so it matches the gateway beside it. A panel you already have is **not** touched by
 upgrading the gateway from here; it is upgraded by its own installer.
 
 **0.9.8 corrected what the registration endpoints report**, and that is worth
@@ -666,7 +730,7 @@ the key out of the binary:
 strings -a gateway/fireflo-gateway | grep -o 'MCowBQYDK2VwAyEA[A-Za-z0-9+/=]*'
 ```
 
-0.11.3 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
+0.11.4 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
 that is the only key in it — unchanged since 0.8.9, so an install upgrading from
 any of those needs no new licence. That is a public value; publishing it is safe and is
 what makes a build identifiable. A mismatch here presents as licences being
