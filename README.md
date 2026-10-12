@@ -18,9 +18,9 @@ empty box to a running gateway, in order.
 |---|---|
 | **Version** | 0.11.5 — **carries nine database migrations that can refuse to run**, read [the 0.11.5 notes](#earlier-builds) and take a backup before upgrading |
 | **File** | `fireflo-0.11.5-linux-x86_64.tar.gz` |
-| **SHA-256** | `b5c5e09762fbdcc174fec2337556810f96169d1ca03acb78e54e36a97d26ea63` |
-| **Built** | 2026-10-12, from gateway commit `ccfebae` |
-| **Control panel** | 0.11.5.0, included at `panel/`, from commit `26a8a90` |
+| **SHA-256** | `3ab073eb1978efd464eeb342d78de49f47db4abe460a9fb5a4c8dcb4fe28a754` |
+| **Built** | 2026-10-12, from gateway commit `ccfebae` — re-cut with control panel 0.11.5.1, see [the 0.11.5 notes](#earlier-builds) |
+| **Control panel** | 0.11.5.1, included at `panel/`, from commit `0541e43` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
@@ -407,6 +407,27 @@ with its money once.
 The licence key compiled into the binary is unchanged, so no install upgrading
 to 0.11.5 needs a new licence. The REST panel is still not in this tarball; the
 0.11.3 notes below say where it is.
+
+**This 0.11.5 tarball was re-cut on 2026-10-12 with control panel 0.11.5.1;
+the gateway binary in it is byte for byte the one first published.** The first
+0.11.5 tarball (SHA-256 `b5c5e097…7d26ea63`, panel 0.11.5.0 at `26a8a90`) is in
+this repository's history at commit `5a6079c`. 0.11.5.1 changes three operator
+screens and nothing else:
+
+- **Gateway settings** are sections by task (approval and pricing, the REST
+  API, receipts and callbacks, call records, diagnostics, vendor and listener
+  defaults) of compact rows: switches, two- and three-way choices, numbers with
+  their unit, lists as chips. Each row says where its value comes from, and
+  whether the running gateway has picked up a saved value yet. Diagnostics moves
+  from its own tab into Settings, and every edit waits for one Save bar.
+- **Error codes** shows every list in a column on the left (the Every vendor
+  list, and each vendor marked Inherits or Own list) beside the one being
+  edited. A vendor's answer for unmapped codes is a three-way choice: inherit,
+  as sent, or as 018. Edits, the passthrough switch included, wait for Save.
+- **The bar above each page** no longer repeats the page's title and subtitle.
+
+No migration, no new grant and no new setting. A panel on 0.11.5.0 upgrades
+with `fireflo-panel-install update`; the gateway is not touched.
 
 ### 0.11.4
 
@@ -801,7 +822,7 @@ gateway installs and runs without them.
 
 The control panel is paired by version — its first three numbers name the
 gateway release it was built against — and the one in this tarball is
-**0.11.5.0**, so it matches the gateway beside it. A panel you already have is **not** touched by
+**0.11.5.1**, so it matches the gateway beside it. A panel you already have is **not** touched by
 upgrading the gateway from here; it is upgraded by its own installer.
 
 **0.9.8 corrected what the registration endpoints report**, and that is worth
