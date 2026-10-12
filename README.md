@@ -18,9 +18,9 @@ empty box to a running gateway, in order.
 |---|---|
 | **Version** | 0.11.4 — **carries a database migration**, read [the 0.11.4 notes](#earlier-builds) before upgrading |
 | **File** | `fireflo-0.11.4-linux-x86_64.tar.gz` |
-| **SHA-256** | `df32b47de4fa32bdf81d2585101641b1572db4769a9c3b0ec1e9b89d2f0e86d7` |
-| **Built** | 2026-10-12, from gateway commit `533c48e` |
-| **Control panel** | 0.11.4.5, included at `panel/`, from commit `59ccfb3` |
+| **SHA-256** | `02b6cf50ebe69febc389a12ef9f168751e5c2449b70d2cba002ba14f18fea458` |
+| **Built** | 2026-10-12, from gateway commit `533c48e` — re-cut with control panel 0.11.4.6, see [the 0.11.4 notes](#earlier-builds) |
+| **Control panel** | 0.11.4.6, included at `panel/`, from commit `27630b9` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
@@ -358,7 +358,7 @@ password, and operators can now ask for one from the sign-in page. Ten failed
 attempts from one address for one user lock that pair out for fifteen minutes.
 Every sign-in, failed or not, on either door, is under Reports → Access log.
 
-**Control panel 0.11.4.5** is a reworked interface on the same pages: slate and
+**Control panel 0.11.4.6** is a reworked interface on the same pages: slate and
 the FireFlo green, one type scale and one spacing scale on every page, vendors
 and listeners as cards with a page each, routing and pricing organised under
 tabs with an **Advanced** switch for the rarely-used fields, a date range on
@@ -367,6 +367,18 @@ Messages, and no page that scrolls sideways on a phone.
 The licence key compiled into the binary is unchanged, so no install upgrading
 to 0.11.4 needs a new licence. The REST panel is still not in this tarball;
 the 0.11.3 notes below say where it is.
+
+**This 0.11.4 tarball was re-cut on 2026-10-12 with control panel 0.11.4.6;
+the gateway binary in it is byte for byte the one first published.** The first
+0.11.4 tarball (SHA-256 `df32b47d…f0e86d7`, panel 0.11.4.5 at `59ccfb3`) had
+the reworked operator pages but not yet the customer portal's. 0.11.4.6 brings
+the portal to the same type and spacing, and fixes its phone layout: the
+navigation and the account card no longer stack above every page, pushing the
+page itself below the first screen — the navigation is behind a Menu button and
+the balance stays in view as one line. The portal also **no longer shows the
+platform's version** on its sign-in page or in its header, which a white-labelled
+portal should never have done. A host on the first 0.11.4 tarball upgrades the
+panel only, with `fireflo-panel-install update`; the gateway has nothing to do.
 
 ### 0.11.3
 
@@ -679,7 +691,7 @@ gateway installs and runs without them.
 
 The control panel is paired by version — its first three numbers name the
 gateway release it was built against — and the one in this tarball is
-**0.11.4.5**, so it matches the gateway beside it. A panel you already have is **not** touched by
+**0.11.4.6**, so it matches the gateway beside it. A panel you already have is **not** touched by
 upgrading the gateway from here; it is upgraded by its own installer.
 
 **0.9.8 corrected what the registration endpoints report**, and that is worth
