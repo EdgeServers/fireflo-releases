@@ -18,9 +18,9 @@ empty box to a running gateway, in order.
 |---|---|
 | **Version** | 0.11.4 — **carries a database migration**, read [the 0.11.4 notes](#earlier-builds) before upgrading |
 | **File** | `fireflo-0.11.4-linux-x86_64.tar.gz` |
-| **SHA-256** | `02b6cf50ebe69febc389a12ef9f168751e5c2449b70d2cba002ba14f18fea458` |
-| **Built** | 2026-10-12, from gateway commit `533c48e` — re-cut with control panel 0.11.4.6, see [the 0.11.4 notes](#earlier-builds) |
-| **Control panel** | 0.11.4.6, included at `panel/`, from commit `27630b9` |
+| **SHA-256** | `6e839410c07c213e5c3efd58003d9ad746ba66f20768861788fcfe5ae281da3a` |
+| **Built** | 2026-10-12, from gateway commit `533c48e` — re-cut with control panel 0.11.4.7, see [the 0.11.4 notes](#earlier-builds) |
+| **Control panel** | 0.11.4.7, included at `panel/`, from commit `d29fb7e` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
@@ -358,7 +358,7 @@ password, and operators can now ask for one from the sign-in page. Ten failed
 attempts from one address for one user lock that pair out for fifteen minutes.
 Every sign-in, failed or not, on either door, is under Reports → Access log.
 
-**Control panel 0.11.4.6** is a reworked interface on the same pages: slate and
+**Control panel 0.11.4.7** is a reworked interface on the same pages: slate and
 the FireFlo green, one type scale and one spacing scale on every page, vendors
 and listeners as cards with a page each, routing and pricing organised under
 tabs with an **Advanced** switch for the rarely-used fields, a date range on
@@ -379,6 +379,15 @@ the balance stays in view as one line. The portal also **no longer shows the
 platform's version** on its sign-in page or in its header, which a white-labelled
 portal should never have done. A host on the first 0.11.4 tarball upgrades the
 panel only, with `fireflo-panel-install update`; the gateway has nothing to do.
+
+**And re-cut once more the same day, with control panel 0.11.4.7**, for one
+portal fault. A customer whose account, or whose own user, had been disabled
+still got the whole portal frame — navigation, balance, page titles — and only
+the panels inside it failed to load. Nothing was exposed: every request for
+data was already refused. The portal now answers such a session with a 404, as
+its data routes did. The second tarball (SHA-256 `02b6cf50…18fea458`, panel
+0.11.4.6 at `27630b9`) has that fault; the gateway binary is unchanged in all
+three, and a host on either earlier tarball updates the panel only.
 
 ### 0.11.3
 
@@ -691,7 +700,7 @@ gateway installs and runs without them.
 
 The control panel is paired by version — its first three numbers name the
 gateway release it was built against — and the one in this tarball is
-**0.11.4.6**, so it matches the gateway beside it. A panel you already have is **not** touched by
+**0.11.4.7**, so it matches the gateway beside it. A panel you already have is **not** touched by
 upgrading the gateway from here; it is upgraded by its own installer.
 
 **0.9.8 corrected what the registration endpoints report**, and that is worth
