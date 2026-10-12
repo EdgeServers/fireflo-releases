@@ -16,11 +16,11 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.11.4 — **carries a database migration**, read [the 0.11.4 notes](#earlier-builds) before upgrading |
-| **File** | `fireflo-0.11.4-linux-x86_64.tar.gz` |
-| **SHA-256** | `6e839410c07c213e5c3efd58003d9ad746ba66f20768861788fcfe5ae281da3a` |
-| **Built** | 2026-10-12, from gateway commit `533c48e` — re-cut with control panel 0.11.4.7, see [the 0.11.4 notes](#earlier-builds) |
-| **Control panel** | 0.11.4.7, included at `panel/`, from commit `d29fb7e` |
+| **Version** | 0.11.5 — **carries nine database migrations that can refuse to run**, read [the 0.11.5 notes](#earlier-builds) and take a backup before upgrading |
+| **File** | `fireflo-0.11.5-linux-x86_64.tar.gz` |
+| **SHA-256** | `b5c5e09762fbdcc174fec2337556810f96169d1ca03acb78e54e36a97d26ea63` |
+| **Built** | 2026-10-12, from gateway commit `ccfebae` |
+| **Control panel** | 0.11.5.0, included at `panel/`, from commit `26a8a90` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
@@ -89,7 +89,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.11.4-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.11.5-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -130,8 +130,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.11.4-linux-x86_64.tar.gz
-cd fireflo-0.11.4-linux-x86_64
+tar xzf fireflo-0.11.5-linux-x86_64.tar.gz
+cd fireflo-0.11.5-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -228,7 +228,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.11.4 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.11.5 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -301,11 +301,112 @@ before another machine can take it.
 
 ## Earlier builds
 
-**Only the current release is published here.** Builds before 0.11.4 have been
-withdrawn and their tarballs removed from this tree. 0.11.3's last tarball is in
+**Only the current release is published here.** Builds before 0.11.5 have been
+withdrawn and their tarballs removed from this tree. 0.11.4's last tarball is in
+this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.11.5
+
+**0.11.5 CARRIES NINE DATABASE MIGRATIONS, `V1.53.0` to `V1.61.0`.** They
+normalise the configuration tables: the references that were plain text become
+foreign keys, so a mistyped account, product, vendor or route can no longer be
+saved. `fireflo-install update` runs them before it starts the new binary; on a
+gateway you migrate by hand it is `fireflo db migrate`.
+
+**Take a backup first, and ideally rehearse on a copy.** Every migration that
+could meet data it cannot keep **refuses** instead of rewriting it: the
+upgrade stops, the old binary keeps running, and the message lists each row in
+the way and what to do about it. Nothing is changed silently. They refuse on:
+
+- account ids with leading or trailing spaces, or blank;
+- product names with leading or trailing spaces;
+- rows still in the legacy `app_route` or `app_rate` tables (the message prints
+  the export and `fireflo import routing|rates` commands that move them);
+- a vendor group member that names no vendor;
+- a routing rule whose target is not a route table, a vendor group or a vendor;
+- a rate rule or balance in a currency other than the platform's;
+- a setting whose stored value its key does not accept.
+
+What they do to an existing database:
+
+- **Accounts and products are real rows.** Every account id and product named
+  in the configuration tables gets an `app_account` or `app_product` row
+  (products added this way are created disabled, so pricing is unchanged).
+  Account and product references become foreign keys `ON DELETE RESTRICT`;
+  deleting an account or product that is still in use is refused, and the
+  panel says what is in the way.
+- **A login's allowed products** move from an array to the table
+  `app_credential_product`, kept in step by a trigger.
+- **Routing rules point at typed targets** (`target_table`, `target_group` or
+  `target_worker`, exactly one), and a vendor group member must name a vendor.
+- **Who requested and reviewed** a sender ID or template, and who last changed
+  a TLV, is also recorded as an `app_user` id.
+- **One platform currency.** A rate rule or balance that restates it is stored
+  as "the platform currency", and changing it while rules name another is
+  refused.
+- **`app_config_key`** lists every configuration key: its type, its allowed
+  values, whether it is a secret, and whether the panel may edit it. The
+  gateway and the panel both read it, and a value the key does not accept is
+  refused when it is written.
+- **The legacy tables `app_route` and `app_rate` are dropped**, and duplicate
+  indexes are replaced by the ones the foreign keys need.
+
+Call records (`cdr_*`) and `usage_daily` are not touched.
+
+**Rolling the gateway back to 0.11.4 is not supported after migrating.** 0.11.4
+still reads the dropped legacy tables. Restore the backup instead.
+
+**THE PANEL'S DATABASE ROLE NEEDS ONE NEW GRANT.** Without it the panel cannot
+read `app_config_key`, falls back to its built-in key list, and logs a warning:
+
+```
+GRANT SELECT ON app_config_key TO fireflo_rw;
+```
+
+A role built from an older copy of the grant block may also lack the vendor
+group tables, without which Routing → Vendor groups cannot open:
+
+```
+GRANT SELECT, INSERT, UPDATE, DELETE ON app_route_group, app_route_group_member TO fireflo_rw;
+```
+
+(with your panel role in place of `fireflo_rw`; the full block is in
+`panel/README.md`).
+
+**Fixed: the native gateway discarded every message sent through RabbitMQ.**
+With `smsg.queue.provider=rabbitmq`, every native build since 0.4.1 accepted
+REST messages with a 200 and then dropped them on the way off the broker,
+logging `Discarding an undecodable AMQP payload`. Nothing reached a vendor or
+the call records. The in-memory queue was not affected. If you run RabbitMQ on
+a native build, upgrade.
+
+**Usage figures count messages, not vendor attempts.** A message that failed
+over to a second vendor was counted, and its price summed, once per attempt in
+the daily rollup and on several panel pages. Each message is now counted once,
+with its money once.
+
+**Control panel 0.11.5.0:**
+
+- **Send connection instructions** on every login card mails the customer the
+  server address, the chosen SMPP listeners' ports, their system ID and
+  password (untick to leave it out), their allowed IP addresses and their
+  limits. HTTP logins get the API address and a curl example. The preview masks
+  the password, each send is in the operator audit log, and without SMTP the
+  dialog offers Copy text instead. Two settings prefill the address:
+  `FIREFLO_PUBLIC_HOST` (new) and `GATEWAY_API_URL` (existing).
+- **Deleting something still in use is refused in a sentence** naming what
+  uses it: an account, a product, a vendor, a route table or a vendor group.
+- **Every sample env file is complete.** `conf.example/fireflo.env`,
+  `panel/conf.example/panel.env` and `panel/.env.local.example` now list every
+  setting the gateway and panel read, commented out at its default. Existing
+  env files keep working unchanged.
+
+The licence key compiled into the binary is unchanged, so no install upgrading
+to 0.11.5 needs a new licence. The REST panel is still not in this tarball; the
+0.11.3 notes below say where it is.
 
 ### 0.11.4
 
@@ -695,12 +796,12 @@ gateway half of 0.9.2 was sound.
 
 **THE CONTROL PANEL IS INCLUDED**, at `panel/`, as source with its own
 installer inside its own tree. The customer-facing REST panel was included from
-0.9.11 to 0.11.0 and is not in 0.11.3 or 0.11.4 (see above). Neither is required: the
+0.9.11 to 0.11.0 and is not in 0.11.3, 0.11.4 or 0.11.5 (see above). Neither is required: the
 gateway installs and runs without them.
 
 The control panel is paired by version — its first three numbers name the
 gateway release it was built against — and the one in this tarball is
-**0.11.4.7**, so it matches the gateway beside it. A panel you already have is **not** touched by
+**0.11.5.0**, so it matches the gateway beside it. A panel you already have is **not** touched by
 upgrading the gateway from here; it is upgraded by its own installer.
 
 **0.9.8 corrected what the registration endpoints report**, and that is worth
@@ -751,7 +852,7 @@ the key out of the binary:
 strings -a gateway/fireflo-gateway | grep -o 'MCowBQYDK2VwAyEA[A-Za-z0-9+/=]*'
 ```
 
-0.11.4 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
+0.11.5 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
 that is the only key in it — unchanged since 0.8.9, so an install upgrading from
 any of those needs no new licence. That is a public value; publishing it is safe and is
 what makes a build identifiable. A mismatch here presents as licences being
