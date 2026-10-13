@@ -18,9 +18,9 @@ empty box to a running gateway, in order.
 |---|---|
 | **Version** | 0.12.1 — sender IDs, templates and products match whatever their case, portal passwords, a live SMPP watch, and one additive migration (`V1.65.0`). **Coming from 0.11.4 or earlier it also runs 0.11.5's nine, which can refuse**: read [the 0.11.5 notes](#earlier-builds) and take a backup first |
 | **File** | `fireflo-0.12.1-linux-x86_64.tar.gz` |
-| **SHA-256** | `bbb775657cf707554653b7545340bf6e95feb31bc1165a11c033c442cb50d054` |
+| **SHA-256** | `c3879e0b47f3a178e148d2543f77802bca9404b9315967a6fdd8b14b791d4cf7` |
 | **Built** | 2026-10-13, from gateway commit `b907317`, see [the 0.12.1 notes](#earlier-builds) |
-| **Control panel** | 0.12.1.0, included at `panel/`, from commit `d9e89db` |
+| **Control panel** | 0.12.1.1, included at `panel/`, from commit `04db984` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
@@ -384,6 +384,25 @@ was approved.
   Stop sending and Hold in the card's footer. The preprocessor workbench edits
   and checks bash.
 - The footer reads **FireFlo by RemotIQ**.
+
+**This 0.12.1 tarball was re-cut on 2026-10-13 with control panel 0.12.1.1; the
+gateway binary in it is byte for byte the one first published.** The first
+0.12.1 tarball (SHA-256 `bbb77565…50d054`, panel 0.12.1.0 at `d9e89db`) is in
+this repository's history at commit `e01f068`. 0.12.1.1 changes the panel
+installer and nothing else:
+
+- **`fireflo-panel-install update` asks for the public URL (`AUTH_URL`).** A
+  panel installed without `--public-url`, or with the development value
+  `http://localhost:3000`, sends every sign-out to localhost and cannot finish a
+  sign-in behind a proxy, and until now no update ever changed it. `update` now
+  shows the current value, offers it back unless it is localhost (then the
+  portal's `MIS_PANEL_BASE_URL`), refuses one with a path, and writes it before
+  restarting. `--public-url https://…` answers without asking; `--yes` keeps
+  what is there and warns when it is localhost or missing.
+- **Already installed?** Nothing else changed, so you can fix it by hand
+  instead: set `AUTH_URL=https://<the panel's host>` (no path, no trailing
+  slash) in the panel's `panel.env`, remove any `AUTH_URL=http://localhost:3000`
+  or `NEXTAUTH_URL` line, and restart the panel's service.
 
 ### 0.12.0
 
@@ -1041,7 +1060,7 @@ gateway installs and runs without them.
 
 The control panel is paired by version — its first three numbers name the
 gateway release it was built against — and the one in this tarball is
-**0.12.1.0**, so it matches the gateway beside it. A panel you already have is **not** touched by
+**0.12.1.1**, so it matches the gateway beside it. A panel you already have is **not** touched by
 upgrading the gateway from here; it is upgraded by its own installer.
 
 **0.9.8 corrected what the registration endpoints report**, and that is worth
