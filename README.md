@@ -16,11 +16,11 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.5 — peak throughput kept per vendor and listener, an optional lock of SMPP logins to their first address, and honest receipt badges on Messages; two small additive migrations (`V1.69.0`, `V1.70.0`). **Coming from 0.11.4 or earlier it also runs 0.11.5's nine, which can refuse**: read [the 0.11.5 notes](#earlier-builds) and take a backup first |
+| **Version** | 0.12.5, re-cut with control panel 0.12.5.1 (same gateway binary) — peak throughput kept per vendor and listener, an optional lock of SMPP logins to their first address, and honest receipt badges on Messages; two small additive migrations (`V1.69.0`, `V1.70.0`). **Coming from 0.11.4 or earlier it also runs 0.11.5's nine, which can refuse**: read [the 0.11.5 notes](#earlier-builds) and take a backup first |
 | **File** | `fireflo-0.12.5-linux-x86_64.tar.gz` |
-| **SHA-256** | `95702e8ed90d3f080caa7999d1f7296c3c482012a486273ab2778e3f4b46be16` |
+| **SHA-256** | `723f37bc4740170426960393cf88733c82666aff431390f80962da056f1cb2e9` |
 | **Built** | 2026-10-14, from gateway commit `f3ac6eb`, see [the 0.12.5 notes](#earlier-builds) |
-| **Control panel** | 0.12.5.0, included at `panel/`, from commit `59a02d5` |
+| **Control panel** | 0.12.5.1, included at `panel/`, from commit `47c6f5a` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
@@ -302,7 +302,8 @@ before another machine can take it.
 ## Earlier builds
 
 **Only the current release is published here.** Builds before 0.12.5 have been
-withdrawn and their tarballs removed from this tree. 0.12.4's tarball is in this
+withdrawn and their tarballs removed from this tree. 0.12.5's first tarball (with
+control panel 0.12.5.0) is in this repository's history at commit `1a8f540`. 0.12.4's tarball is in this
 repository's history at commit `9d0ef1f`. 0.12.3's last tarball (with
 control panel 0.12.3.1) is in this repository's history at commit `4bc5ec8`; its first (with
 control panel 0.12.3.0) at commit `43d3446`. 0.12.2's tarball is in this
@@ -317,6 +318,17 @@ repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
 
 ### 0.12.5
+
+**Re-cut with control panel 0.12.5.1.** The gateway binary is the same as the
+first 0.12.5 tarball, byte for byte, so a gateway already on 0.12.5 needs
+nothing. Only the panel changed; upgrade it with its own installer.
+
+**Control panel 0.12.5.1**: the Queues page's "Where messages are waiting" card
+keeps its shape however many vendors there are. Only queues with messages
+waiting or retries scheduled are listed, busiest first; the idle ones fold into
+one line ("+ 15 idle vendors, 2 idle servers · show") that opens in place, in a
+list that scrolls rather than stretching the card. Each row is one line, and the
+arrows stay level with the Broker and Router tiles.
 
 **0.12.5 carries two database migrations, and both are additive.**
 - **`V1.69.0`** adds a table, `tps_peak`: the highest throughput each vendor and
@@ -1256,7 +1268,7 @@ gateway installs and runs without them.
 
 The control panel is paired by version — its first three numbers name the
 gateway release it was built against — and the one in this tarball is
-**0.12.5.0**, so it matches the gateway beside it. A panel you already have is **not** touched by
+**0.12.5.1**, so it matches the gateway beside it. A panel you already have is **not** touched by
 upgrading the gateway from here; it is upgraded by its own installer.
 
 **0.9.8 corrected what the registration endpoints report**, and that is worth
