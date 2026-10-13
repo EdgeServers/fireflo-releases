@@ -16,11 +16,11 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.0 — preprocessors, and three additive migrations (`V1.62.0`–`V1.64.0`). **Coming from 0.11.4 or earlier it also runs 0.11.5's nine, which can refuse**: read [the 0.11.5 notes](#earlier-builds) and take a backup first |
-| **File** | `fireflo-0.12.0-linux-x86_64.tar.gz` |
-| **SHA-256** | `dfc58b0339cbca73e6ec7196b76148bd4a43633c0a20060ad0e26cc443cf6357` |
-| **Built** | 2026-10-13, from gateway commit `d835594`, see [the 0.12.0 notes](#earlier-builds) |
-| **Control panel** | 0.12.0.0, included at `panel/`, from commit `9c810e3` |
+| **Version** | 0.12.1 — sender IDs, templates and products match whatever their case, portal passwords, a live SMPP watch, and one additive migration (`V1.65.0`). **Coming from 0.11.4 or earlier it also runs 0.11.5's nine, which can refuse**: read [the 0.11.5 notes](#earlier-builds) and take a backup first |
+| **File** | `fireflo-0.12.1-linux-x86_64.tar.gz` |
+| **SHA-256** | `bbb775657cf707554653b7545340bf6e95feb31bc1165a11c033c442cb50d054` |
+| **Built** | 2026-10-13, from gateway commit `b907317`, see [the 0.12.1 notes](#earlier-builds) |
+| **Control panel** | 0.12.1.0, included at `panel/`, from commit `d9e89db` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
@@ -89,7 +89,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.12.0-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.12.1-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -130,8 +130,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.12.0-linux-x86_64.tar.gz
-cd fireflo-0.12.0-linux-x86_64
+tar xzf fireflo-0.12.1-linux-x86_64.tar.gz
+cd fireflo-0.12.1-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -228,7 +228,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.12.0 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.12.1 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -301,14 +301,89 @@ before another machine can take it.
 
 ## Earlier builds
 
-**Only the current release is published here.** Builds before 0.12.0 have been
-withdrawn and their tarballs removed from this tree. 0.11.5's last tarball (with
+**Only the current release is published here.** Builds before 0.12.1 have been
+withdrawn and their tarballs removed from this tree. 0.12.0's tarball is in this
+repository's history at commit `25983af`. 0.11.5's last tarball (with
 control panel 0.11.5.3) is in this repository's history at commit `e33fd0e`.
 0.11.4's last tarball is in
 this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.12.1
+
+**0.12.1 carries one database migration, `V1.65.0`, and it is additive.** It
+lets the operator access log keep one more kind of event, `account_updated`,
+which the control panel now writes when an operator changes an account. It
+cannot refuse on existing data. `fireflo-install update` runs it before
+starting the new binary; by hand it is `fireflo db migrate`. The licence key in
+the binary is unchanged, so no new licence is needed.
+
+**Sender IDs, templates and products now match whatever their case.** This
+fixes messages being refused as "not an approved sender ID" when the sender ID
+was approved.
+- **The cause.** Approved sender IDs are filed by account *and product*, and
+  the product a session sends under is its SMPP bind's `system_type`, or the
+  product a REST call names. That was compared exactly, so a session bound as
+  `otp` found nothing approved under the product `OTP`, and every message was
+  refused. The sender ID itself already matched in any case.
+- **Now.**
+  - A `system_type` or REST product in any case is the catalogue's product of
+    that name, and is recorded under its catalogue spelling in CDRs and rates.
+  - A login allowed a product may name it in any case.
+  - An approval given to one login applies to that login in any case.
+  - Template wording matches in any case: `Your OTP is {#num#}` accepts
+    `YOUR OTP IS 1234`. `{#num#}` still accepts only digits.
+- **A refusal now names the product it looked under**, for example `'MYBANK' is
+  not an approved sender ID for this account under product 'otp'`, so the next
+  mismatch can be read off the error.
+- Nothing is rewritten: stored sender IDs, templates and product names keep
+  their case. Only the comparison changes.
+
+**Also in the gateway.**
+- **A live SMPP watch.** Watch one client address on a listener port and see
+  every PDU it sends and is sent, as it happens, including binds refused for a
+  wrong password, an address not allowed or a limit, which never become
+  sessions. Admin token; at most three watches, 30 minutes each; starting one is
+  logged.
+- **A vendor's connection test reports each step:** name lookup, TCP connect,
+  bind, three timed `enquire_link`s and unbind. A vendor that is already bound
+  is no longer refused; its live sessions are timed instead of a second bind
+  being opened.
+- **Bash preprocessors.** `.sh` files run with `bash` (`smsg.preprocessor.bash`
+  to change it), with a helper and a do-not-disturb example in
+  `conf.example/preprocessors/`.
+- **Fixed: a vendor could stop for good after its SMSC restarted under a large
+  backlog.** A failed send that was retried while the vendor's queue was full
+  could block the connection's own network thread, and reconnects never
+  completed until the gateway was restarted. A retry now never waits for room.
+- **Faster RabbitMQ intake.** Publisher confirms are shared and batched, acks
+  are batched, and batch submissions skip a second broker hop. Measured locally
+  on 20,000-message batches: acceptance went from about 800 to about 5,600
+  messages a second, with RabbitMQ using a third of the CPU and nothing lost.
+
+**Control panel 0.12.1.0**, included at `panel/`, pairs with it.
+- **Portal passwords that show and work.**
+  - An account's Settings tab has a **Portal access** card listing every
+    portal login, how it signs in, its last sign-in, and set, change or remove
+    password and on or off.
+  - The **portal signs in with a password**, with the emailed link one click
+    away, and ten failed attempts in a quarter of an hour lock that address out
+    from that IP.
+  - Customers set or change their own password at **Password** in the portal
+    header.
+- **Account activity.** An account's Settings tab shows portal sign-ins,
+  changes made by operators and customers, and money movements, newest first.
+  Changes to an account's name, notes, address or hierarchy are recorded with
+  before and after.
+- **Security** is two columns: refusals and bans on the left, the live SMPP
+  watch on the right. **Fixed: the gateway's refused SMPP and REST logins never
+  reached this page**; only the panel's and portal's did.
+- **Vendors** show the connection test's steps. **Servers** keep Edit, Disable,
+  Stop sending and Hold in the card's footer. The preprocessor workbench edits
+  and checks bash.
+- The footer reads **FireFlo by RemotIQ**.
 
 ### 0.12.0
 
@@ -966,7 +1041,7 @@ gateway installs and runs without them.
 
 The control panel is paired by version — its first three numbers name the
 gateway release it was built against — and the one in this tarball is
-**0.12.0.0**, so it matches the gateway beside it. A panel you already have is **not** touched by
+**0.12.1.0**, so it matches the gateway beside it. A panel you already have is **not** touched by
 upgrading the gateway from here; it is upgraded by its own installer.
 
 **0.9.8 corrected what the registration endpoints report**, and that is worth
@@ -1017,7 +1092,7 @@ the key out of the binary:
 strings -a gateway/fireflo-gateway | grep -o 'MCowBQYDK2VwAyEA[A-Za-z0-9+/=]*'
 ```
 
-0.12.0 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
+0.12.1 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
 that is the only key in it — unchanged since 0.8.9, so an install upgrading from
 any of those needs no new licence. That is a public value; publishing it is safe and is
 what makes a build identifiable. A mismatch here presents as licences being
