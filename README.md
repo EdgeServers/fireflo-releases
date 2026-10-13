@@ -16,11 +16,11 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.2 — per-login session, bind-type and TPS limits, a Security page that leads with who is attacking, and a pcap download from the live SMPP watch; one additive migration (`V1.66.0`). **Coming from 0.11.4 or earlier it also runs 0.11.5's nine, which can refuse**: read [the 0.11.5 notes](#earlier-builds) and take a backup first |
-| **File** | `fireflo-0.12.2-linux-x86_64.tar.gz` |
-| **SHA-256** | `df5943cb9f77f180d475d8a9854e7a0e2e2f392f9f9cf370c312f82ff64dabfc` |
-| **Built** | 2026-10-13, from gateway commit `4730907`, see [the 0.12.2 notes](#earlier-builds) |
-| **Control panel** | 0.12.2.0, included at `panel/`, from commit `82490e6` |
+| **Version** | 0.12.3 — the message broker is set and tested from the Queues page, and the panel says when a saved broker needs a restart; one small migration (`V1.67.0`). **Coming from 0.11.4 or earlier it also runs 0.11.5's nine, which can refuse**: read [the 0.11.5 notes](#earlier-builds) and take a backup first |
+| **File** | `fireflo-0.12.3-linux-x86_64.tar.gz` |
+| **SHA-256** | `3a10d455992160c6f2f045652052b4ee26cf703133b9ad1e708d15fe3ac29205` |
+| **Built** | 2026-10-13, from gateway commit `39ad296`, see [the 0.12.3 notes](#earlier-builds) |
+| **Control panel** | 0.12.3.0, included at `panel/`, from commit `8763575` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
@@ -89,7 +89,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.12.2-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.12.3-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -130,8 +130,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.12.2-linux-x86_64.tar.gz
-cd fireflo-0.12.2-linux-x86_64
+tar xzf fireflo-0.12.3-linux-x86_64.tar.gz
+cd fireflo-0.12.3-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -228,7 +228,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.12.2 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.12.3 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -301,8 +301,9 @@ before another machine can take it.
 
 ## Earlier builds
 
-**Only the current release is published here.** Builds before 0.12.2 have been
-withdrawn and their tarballs removed from this tree. 0.12.1's last tarball (with
+**Only the current release is published here.** Builds before 0.12.3 have been
+withdrawn and their tarballs removed from this tree. 0.12.2's tarball is in this
+repository's history at commit `dc1022b`. 0.12.1's last tarball (with
 control panel 0.12.1.1) is in this repository's history at commit `357f19b`. 0.12.0's tarball is in this
 repository's history at commit `25983af`. 0.11.5's last tarball (with
 control panel 0.11.5.3) is in this repository's history at commit `e33fd0e`.
@@ -311,6 +312,51 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.12.3
+
+**0.12.3 carries one database migration, `V1.67.0`, and it changes no data.** It
+updates one row of `app_config_key`: `smsg.queue.provider` now takes only
+`memory` or `rabbitmq`, checked when it is written, and is marked as set on the
+control panel's Queues page. **It refuses, and changes nothing, if
+`smsg.queue.provider` already holds anything else** (the gateway reads such a
+value as `memory` today): correct or remove it, then migrate again.
+`fireflo-install update` migrates before starting the new binary; by hand, run
+`fireflo db migrate` first. The licence key in the binary is unchanged, so no
+new licence is needed.
+
+**Testing a message broker from the gateway.** A new admin endpoint,
+`POST /ops/queue/test`, takes an AMQP address and a queue name, connects once on
+a connection of its own, and reports each step: TCP, login, virtual host, queue.
+It changes nothing on the broker, and a queue that does not exist yet is
+reported rather than failed, because the gateway creates it when it starts.
+
+**The gateway says when a saved broker is waiting for a restart.** The broker
+is connected once, at startup. `/ops/queues` now carries
+`broker_restart_needed` when the saved provider, address, queue, prefetch or
+channels differ from the ones in force. Health now reports the broker the
+gateway is actually running on. Before, a broker that had been saved but not
+yet restarted into could show as not answering.
+
+**Control panel 0.12.3.0**, included at `panel/`, pairs with it.
+- **Queues: edit and test the message broker** (admins). Choose in-process or
+  RabbitMQ and set host, port, virtual host, queue, user, password, TLS and
+  tuning. **Test connection** runs from the gateway with what is in the form,
+  saved or not. The password never reaches the browser. A save says "restart
+  the gateway to apply" until the gateway runs on it. With no broker in use,
+  the Broker tile opens the same card to set one up.
+- **Servers:** a listener has an optional **Public IP** beside its port, the
+  address customers are told in connection instructions. The gateway does not
+  bind to it. **Listener enabled** sits under the port.
+- **Connection instructions** name one listener, at its Public IP, then its own
+  address, then the panel's `FIREFLO_PUBLIC_HOST`. The password is masked in
+  the preview and sent in full in the email and the copy.
+- **Logins: an SMPP client test tool** (admins) binds as a login from the panel,
+  sends a test message and shows the receipts.
+- **Accounts:** counts, and "Open an account by id", above the table. **Portal
+  access** uses the account's email instead of asking for another.
+- **Messages:** the server a message arrived on, **Ingress server**, is shown
+  by default.
 
 ### 0.12.2
 
@@ -1106,7 +1152,7 @@ gateway installs and runs without them.
 
 The control panel is paired by version — its first three numbers name the
 gateway release it was built against — and the one in this tarball is
-**0.12.2.0**, so it matches the gateway beside it. A panel you already have is **not** touched by
+**0.12.3.0**, so it matches the gateway beside it. A panel you already have is **not** touched by
 upgrading the gateway from here; it is upgraded by its own installer.
 
 **0.9.8 corrected what the registration endpoints report**, and that is worth
@@ -1157,7 +1203,7 @@ the key out of the binary:
 strings -a gateway/fireflo-gateway | grep -o 'MCowBQYDK2VwAyEA[A-Za-z0-9+/=]*'
 ```
 
-0.12.2 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
+0.12.3 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
 that is the only key in it — unchanged since 0.8.9, so an install upgrading from
 any of those needs no new licence. That is a public value; publishing it is safe and is
 what makes a build identifiable. A mismatch here presents as licences being
