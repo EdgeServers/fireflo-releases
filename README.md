@@ -16,11 +16,11 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.11.5 — **carries nine database migrations that can refuse to run**, read [the 0.11.5 notes](#earlier-builds) and take a backup before upgrading |
-| **File** | `fireflo-0.11.5-linux-x86_64.tar.gz` |
-| **SHA-256** | `ab0ca6d4ee88b5f3b0e8bbd4aeaaea5b234330a566052b5bb8fa9d7a699c4424` |
-| **Built** | 2026-10-13, from gateway commit `ccfebae` — re-cut with control panel 0.11.5.3, see [the 0.11.5 notes](#earlier-builds) |
-| **Control panel** | 0.11.5.3, included at `panel/`, from commit `18e05df` |
+| **Version** | 0.12.0 — preprocessors, and three additive migrations (`V1.62.0`–`V1.64.0`). **Coming from 0.11.4 or earlier it also runs 0.11.5's nine, which can refuse**: read [the 0.11.5 notes](#earlier-builds) and take a backup first |
+| **File** | `fireflo-0.12.0-linux-x86_64.tar.gz` |
+| **SHA-256** | `dfc58b0339cbca73e6ec7196b76148bd4a43633c0a20060ad0e26cc443cf6357` |
+| **Built** | 2026-10-13, from gateway commit `d835594`, see [the 0.12.0 notes](#earlier-builds) |
+| **Control panel** | 0.12.0.0, included at `panel/`, from commit `9c810e3` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
@@ -89,7 +89,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.11.5-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.12.0-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -130,8 +130,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.11.5-linux-x86_64.tar.gz
-cd fireflo-0.11.5-linux-x86_64
+tar xzf fireflo-0.12.0-linux-x86_64.tar.gz
+cd fireflo-0.12.0-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -228,7 +228,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.11.5 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.12.0 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -301,12 +301,110 @@ before another machine can take it.
 
 ## Earlier builds
 
-**Only the current release is published here.** Builds before 0.11.5 have been
-withdrawn and their tarballs removed from this tree. 0.11.4's last tarball is in
+**Only the current release is published here.** Builds before 0.12.0 have been
+withdrawn and their tarballs removed from this tree. 0.11.5's last tarball (with
+control panel 0.11.5.3) is in this repository's history at commit `e33fd0e`.
+0.11.4's last tarball is in
 this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.12.0
+
+**0.12.0 carries three database migrations, `V1.62.0` to `V1.64.0`, and all
+three are additive.**
+- **`V1.62.0`** creates the empty table `app_preprocessor`. It also adds a column
+  to routing rules that stays empty until a rule sends to a preprocessor.
+- **`V1.63.0`** lets the operator access log keep three more kinds of event.
+  One of them, `connection_instructions_sent`, the panel has written since it
+  began mailing connection details, and until now the database refused it.
+- **`V1.64.0`** registers the two new settings.
+
+None of them can refuse on existing data, and nothing that routes today
+changes. `fireflo-install update` runs them before starting the new binary;
+by hand it is `fireflo db migrate`. **From 0.11.4 or earlier the update also
+runs 0.11.5's nine migrations**, which can refuse. Read the 0.11.5 notes below
+and take a backup first. All thirteen from 0.11.3's schema, `V1.52.0` to
+`V1.64.0`, were rehearsed together on a copy of a real trial database: they
+applied in two seconds with nothing refused.
+
+**Preprocessors: your own program, for the messages a routing rule selects.**
+A preprocessor is a Python, Java or other program the gateway keeps running
+beside itself.
+- **Wiring it in.** A routing rule hands messages to one by naming it with a
+  leading `@` as its target, and only the messages that rule matches reach it.
+- **What it can answer.**
+  - carry on;
+  - change fields (`from`, `to`, `product`, `field1`–`field10`);
+  - attach or remove TLVs (vendor tags `0x1400`–`0x3FFF`; a vendor sends a tag
+    only when its `registered.tlvs.submit` names it);
+  - send to a specific vendor or table;
+  - refuse, which is refunded and sends a failure receipt;
+  - drop;
+  - try again later.
+
+  Routing then carries on below the rule.
+- **It doesn't slow routing down.**
+  - The router hands a message over without waiting, and the answer comes back
+    through the router queue.
+  - A program that is slow, full, not yet started or crashed gives its messages
+    a fallback you choose. The default is to carry on as if the rule were not
+    there.
+  - A crashed program is restarted.
+  - A program that is replaced finishes what it holds first.
+  - Measured: a rule that doesn't select a message adds about 34 ns to routing
+    it, and a Python answer takes 0.05–0.08 ms.
+- **Where the program lives.** In `/etc/fireflo/preprocessors`
+  (`smsg.preprocessor.dir`). Each file must be owned by root or the gateway's
+  user and writable only by its owner.
+  - `.py` runs with `python3`.
+  - `.java` runs as a single-file program with `java`.
+  - `.jar` runs with `java -jar`.
+  - Anything else must be executable.
+
+  The host needs that interpreter; the gateway itself still needs no Java.
+- **Setting one up.**
+  - **File mode:** a `[preprocessor:name]` block in `routingTable.conf`.
+  - **Database mode:** the panel's Preprocessors page.
+
+  The database only ever names a file and never holds code.
+- **Off until switched on.** "Run preprocessors" under Gateway settings
+  (`smsg.preprocessor.enabled`). Upgrading changes nothing until you turn it on.
+- **Getting started.** `conf.example/preprocessors/` has a Python helper and
+  two samples:
+  - a do-not-disturb list in Python;
+  - a sender rewrite in Java.
+
+  The helper's notes show the TLV answer.
+
+  `docs/05-routing-engine.md` has the guide.
+
+**Control panel 0.12.0.0**, included at `panel/`, pairs with it.
+- **A Preprocessors page** under Configuration. It shows each preprocessor's
+  live state and its answer times, and the gateway's own reason when one
+  cannot run.
+- **A workbench for each one:**
+  - the code in an editor on the left;
+  - **Check**, which parses it with the gateway host's own `python3` or `javac`
+    and marks the line at fault;
+  - **Test**, which runs the draft against sample messages in a throwaway copy,
+    never the live one;
+  - **Save and run**, live within five seconds, with running copies finishing
+    what they hold first;
+  - **History**, with restore.
+- **Who can change code.**
+  - Saving and testing need an admin.
+  - Every save is kept on the gateway host and recorded in the access log.
+  - "Edit preprocessor code from the panel" (`smsg.preprocessor.editable`)
+    turns editing off, for hosts where code is deployed by hand.
+- **Routing.** Preprocessors are offered as rule targets, and rules that send
+  to one read as "hands matching messages to …, then carries on".
+- **Queues** shows what each preprocessor holds.
+- **New grant:** `SELECT, INSERT, UPDATE, DELETE ON app_preprocessor` for the
+  panel's database role. The panel README lists it.
+
+0.12.0 also carries everything in control panel 0.11.5.1 to 0.11.5.3 below.
 
 ### 0.11.5
 
@@ -868,7 +966,7 @@ gateway installs and runs without them.
 
 The control panel is paired by version — its first three numbers name the
 gateway release it was built against — and the one in this tarball is
-**0.11.5.3**, so it matches the gateway beside it. A panel you already have is **not** touched by
+**0.12.0.0**, so it matches the gateway beside it. A panel you already have is **not** touched by
 upgrading the gateway from here; it is upgraded by its own installer.
 
 **0.9.8 corrected what the registration endpoints report**, and that is worth
@@ -919,7 +1017,7 @@ the key out of the binary:
 strings -a gateway/fireflo-gateway | grep -o 'MCowBQYDK2VwAyEA[A-Za-z0-9+/=]*'
 ```
 
-0.11.5 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
+0.12.0 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
 that is the only key in it — unchanged since 0.8.9, so an install upgrading from
 any of those needs no new licence. That is a public value; publishing it is safe and is
 what makes a build identifiable. A mismatch here presents as licences being
