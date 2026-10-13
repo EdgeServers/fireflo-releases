@@ -16,11 +16,11 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.1 — sender IDs, templates and products match whatever their case, portal passwords, a live SMPP watch, and one additive migration (`V1.65.0`). **Coming from 0.11.4 or earlier it also runs 0.11.5's nine, which can refuse**: read [the 0.11.5 notes](#earlier-builds) and take a backup first |
-| **File** | `fireflo-0.12.1-linux-x86_64.tar.gz` |
-| **SHA-256** | `c3879e0b47f3a178e148d2543f77802bca9404b9315967a6fdd8b14b791d4cf7` |
-| **Built** | 2026-10-13, from gateway commit `b907317`, see [the 0.12.1 notes](#earlier-builds) |
-| **Control panel** | 0.12.1.1, included at `panel/`, from commit `04db984` |
+| **Version** | 0.12.2 — per-login session, bind-type and TPS limits, a Security page that leads with who is attacking, and a pcap download from the live SMPP watch; one additive migration (`V1.66.0`). **Coming from 0.11.4 or earlier it also runs 0.11.5's nine, which can refuse**: read [the 0.11.5 notes](#earlier-builds) and take a backup first |
+| **File** | `fireflo-0.12.2-linux-x86_64.tar.gz` |
+| **SHA-256** | `df5943cb9f77f180d475d8a9854e7a0e2e2f392f9f9cf370c312f82ff64dabfc` |
+| **Built** | 2026-10-13, from gateway commit `4730907`, see [the 0.12.2 notes](#earlier-builds) |
+| **Control panel** | 0.12.2.0, included at `panel/`, from commit `82490e6` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
@@ -89,7 +89,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.12.1-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.12.2-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -130,8 +130,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.12.1-linux-x86_64.tar.gz
-cd fireflo-0.12.1-linux-x86_64
+tar xzf fireflo-0.12.2-linux-x86_64.tar.gz
+cd fireflo-0.12.2-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -228,7 +228,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.12.1 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.12.2 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -301,8 +301,9 @@ before another machine can take it.
 
 ## Earlier builds
 
-**Only the current release is published here.** Builds before 0.12.1 have been
-withdrawn and their tarballs removed from this tree. 0.12.0's tarball is in this
+**Only the current release is published here.** Builds before 0.12.2 have been
+withdrawn and their tarballs removed from this tree. 0.12.1's last tarball (with
+control panel 0.12.1.1) is in this repository's history at commit `357f19b`. 0.12.0's tarball is in this
 repository's history at commit `25983af`. 0.11.5's last tarball (with
 control panel 0.11.5.3) is in this repository's history at commit `e33fd0e`.
 0.11.4's last tarball is in
@@ -310,6 +311,51 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.12.2
+
+**0.12.2 carries one database migration, `V1.66.0`, and it is additive.** It adds
+five empty columns to `app_credential` for per-login limits; every existing login
+gets none, which is today's behaviour. **The gateway reads those columns, so the
+database must be migrated before the new binary starts** — `fireflo-install
+update` does it in that order; by hand, run `fireflo db migrate` first. The
+licence key in the binary is unchanged, so no new licence is needed.
+
+**Per-login limits for SMPP logins.** Each login may now have its own:
+- **sessions** in total, of any bind type, on one listener;
+- **transmitter, receiver and transceiver** sessions, each separately;
+- **TPS** across all of its sessions on one listener.
+
+Empty means none of its own. They only narrow: the account's connection limit
+and TPS still apply on top, so a login can be held below its account but never
+lifted above it. A bind past a session limit is refused as too many sessions
+(`ESME_RMAXCONSPERUSER`); a message past the TPS is answered throttled. A
+changed TPS reaches the login's sessions from their next bind. In file mode they
+are a `limits:` block in `credentials.yml`.
+
+**Also in the gateway.**
+- **The live SMPP watch downloads as a pcap** for Wireshark
+  (`GET /ops/watches/{id}/watch.pcap`, admin token), each client connection its
+  own TCP stream. Like a capture's, the TCP framing is rebuilt around the PDUs:
+  it shows exactly what SMPP was said, not how the network carried it.
+
+**Control panel 0.12.2.0**, included at `panel/`, pairs with it.
+- **Logins:** session, bind-type and TPS limits in a login's form, and its
+  address list, are edited only with **Advanced** on; with it off, one line says
+  what is in force. The login card shows a login's limits when it has any. The
+  portal never sets them.
+- **Security, redesigned around who is attacking:**
+  - one range for the whole page: 24 hours, 7 days or 30 days;
+  - refused logins grouped by address (attempts, the names tried, last seen,
+    blocked or not), with **Watch** and **Unban**, or every attempt; both page by
+    25;
+  - refusals over time, stacked by surface;
+  - a rail with what is blocked, sign-ins for the same range, and the live watch.
+- **The live SMPP watch** runs in a window that fits the screen, with **Download
+  pcap**.
+
+0.12.2 also carries control panel 0.12.1.1's installer change below: `update`
+asks for the public URL.
 
 ### 0.12.1
 
@@ -1060,7 +1106,7 @@ gateway installs and runs without them.
 
 The control panel is paired by version — its first three numbers name the
 gateway release it was built against — and the one in this tarball is
-**0.12.1.1**, so it matches the gateway beside it. A panel you already have is **not** touched by
+**0.12.2.0**, so it matches the gateway beside it. A panel you already have is **not** touched by
 upgrading the gateway from here; it is upgraded by its own installer.
 
 **0.9.8 corrected what the registration endpoints report**, and that is worth
@@ -1111,7 +1157,7 @@ the key out of the binary:
 strings -a gateway/fireflo-gateway | grep -o 'MCowBQYDK2VwAyEA[A-Za-z0-9+/=]*'
 ```
 
-0.12.1 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
+0.12.2 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
 that is the only key in it — unchanged since 0.8.9, so an install upgrading from
 any of those needs no new licence. That is a public value; publishing it is safe and is
 what makes a build identifiable. A mismatch here presents as licences being
