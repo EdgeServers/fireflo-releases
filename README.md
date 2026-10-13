@@ -16,11 +16,11 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.3 — the message broker is set and tested from the Queues page, and the panel says when a saved broker needs a restart; one small migration (`V1.67.0`). **Coming from 0.11.4 or earlier it also runs 0.11.5's nine, which can refuse**: read [the 0.11.5 notes](#earlier-builds) and take a backup first |
+| **Version** | 0.12.3, re-cut with control panel 0.12.3.1 (same gateway binary) — the message broker is set and tested from the Queues page, and the panel says when a saved broker needs a restart; one small migration (`V1.67.0`). **Coming from 0.11.4 or earlier it also runs 0.11.5's nine, which can refuse**: read [the 0.11.5 notes](#earlier-builds) and take a backup first |
 | **File** | `fireflo-0.12.3-linux-x86_64.tar.gz` |
-| **SHA-256** | `3a10d455992160c6f2f045652052b4ee26cf703133b9ad1e708d15fe3ac29205` |
+| **SHA-256** | `41a837561e16d524a0facdc27820a4f719f0605c947de8d8e1752fc377f37d66` |
 | **Built** | 2026-10-13, from gateway commit `39ad296`, see [the 0.12.3 notes](#earlier-builds) |
-| **Control panel** | 0.12.3.0, included at `panel/`, from commit `8763575` |
+| **Control panel** | 0.12.3.1, included at `panel/`, from commit `0b26495` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
@@ -302,7 +302,8 @@ before another machine can take it.
 ## Earlier builds
 
 **Only the current release is published here.** Builds before 0.12.3 have been
-withdrawn and their tarballs removed from this tree. 0.12.2's tarball is in this
+withdrawn and their tarballs removed from this tree. 0.12.3's first tarball (with
+control panel 0.12.3.0) is in this repository's history at commit `43d3446`. 0.12.2's tarball is in this
 repository's history at commit `dc1022b`. 0.12.1's last tarball (with
 control panel 0.12.1.1) is in this repository's history at commit `357f19b`. 0.12.0's tarball is in this
 repository's history at commit `25983af`. 0.11.5's last tarball (with
@@ -314,6 +315,33 @@ repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
 
 ### 0.12.3
+
+**Re-cut with control panel 0.12.3.1.** The gateway binary is the same as the
+first 0.12.3 tarball, byte for byte, so a gateway already on 0.12.3 needs
+nothing. Only the panel changed. Upgrade it with its own installer.
+
+**Control panel 0.12.3.1**, a look-and-feel release:
+- **Sign-in pages, rebuilt.**
+  - The operator sign-in is one card, with show/hide on the password and a
+    proper Remember me checkbox.
+  - The customer portal's sign-in is one wide card. Its left side says what the
+    portal is for, and on a white-labelled portal it names no platform.
+  - The password now has show/hide there too, and only "Email me a sign-in
+    link" is a link.
+- **One type scale across the panel.**
+  - Tailwind's default font.
+  - Body text and every control at 14px, labels and help at 12px, card titles at
+    16px and page titles at 24px.
+  - Every textarea matches the inputs.
+  - Numbers are no longer set in monospace, and no monospace text is smaller
+    than 12px.
+- **Page sidebars are cards** on Pricing, Gateway, Error codes and Filters.
+- **Refused:** the Why column's message opens in a popover, so each refusal is
+  one line.
+- **Accounts:** the stat cards and the id card are the same height, with bigger
+  counts.
+- **Dark mode:** browser-drawn controls (checkboxes, select menus, scrollbars)
+  are dark too.
 
 **0.12.3 carries one database migration, `V1.67.0`, and it changes no data.** It
 updates one row of `app_config_key`: `smsg.queue.provider` now takes only
@@ -1152,7 +1180,7 @@ gateway installs and runs without them.
 
 The control panel is paired by version — its first three numbers name the
 gateway release it was built against — and the one in this tarball is
-**0.12.3.0**, so it matches the gateway beside it. A panel you already have is **not** touched by
+**0.12.3.1**, so it matches the gateway beside it. A panel you already have is **not** touched by
 upgrading the gateway from here; it is upgraded by its own installer.
 
 **0.9.8 corrected what the registration endpoints report**, and that is worth
