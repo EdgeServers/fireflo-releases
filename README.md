@@ -16,11 +16,11 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.3, re-cut with control panel 0.12.3.1 (same gateway binary) — the message broker is set and tested from the Queues page, and the panel says when a saved broker needs a restart; one small migration (`V1.67.0`). **Coming from 0.11.4 or earlier it also runs 0.11.5's nine, which can refuse**: read [the 0.11.5 notes](#earlier-builds) and take a backup first |
-| **File** | `fireflo-0.12.3-linux-x86_64.tar.gz` |
-| **SHA-256** | `41a837561e16d524a0facdc27820a4f719f0605c947de8d8e1752fc377f37d66` |
-| **Built** | 2026-10-13, from gateway commit `39ad296`, see [the 0.12.3 notes](#earlier-builds) |
-| **Control panel** | 0.12.3.1, included at `panel/`, from commit `0b26495` |
+| **Version** | 0.12.4 — MT parts counted per account and shown on the Billing tab beside the balance, and amounts shown without trailing zeros; one additive migration (`V1.68.0`). **Coming from 0.11.4 or earlier it also runs 0.11.5's nine, which can refuse**: read [the 0.11.5 notes](#earlier-builds) and take a backup first |
+| **File** | `fireflo-0.12.4-linux-x86_64.tar.gz` |
+| **SHA-256** | `8f6749cd1fc9f9ef85e8a6576e691e17e25d5b4cc6ca70af780afa00590e835d` |
+| **Built** | 2026-10-13, from gateway commit `f78bb03`, see [the 0.12.4 notes](#earlier-builds) |
+| **Control panel** | 0.12.4.0, included at `panel/`, from commit `1032fad` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
@@ -89,7 +89,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.12.3-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.12.4-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -130,8 +130,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.12.3-linux-x86_64.tar.gz
-cd fireflo-0.12.3-linux-x86_64
+tar xzf fireflo-0.12.4-linux-x86_64.tar.gz
+cd fireflo-0.12.4-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -228,7 +228,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.12.3 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.12.4 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -301,9 +301,10 @@ before another machine can take it.
 
 ## Earlier builds
 
-**Only the current release is published here.** Builds before 0.12.3 have been
-withdrawn and their tarballs removed from this tree. 0.12.3's first tarball (with
-control panel 0.12.3.0) is in this repository's history at commit `43d3446`. 0.12.2's tarball is in this
+**Only the current release is published here.** Builds before 0.12.4 have been
+withdrawn and their tarballs removed from this tree. 0.12.3's last tarball (with
+control panel 0.12.3.1) is in this repository's history at commit `4bc5ec8`; its first (with
+control panel 0.12.3.0) at commit `43d3446`. 0.12.2's tarball is in this
 repository's history at commit `dc1022b`. 0.12.1's last tarball (with
 control panel 0.12.1.1) is in this repository's history at commit `357f19b`. 0.12.0's tarball is in this
 repository's history at commit `25983af`. 0.11.5's last tarball (with
@@ -313,6 +314,42 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.12.4
+
+**0.12.4 carries one database migration, `V1.68.0`, and it is additive.** It adds
+one nullable column, `usage_daily.mt_parts`: how many SMS parts each day's
+messages were sent as, per account and product. A three-part message counts
+three; a message every vendor refused counts none. Existing rows get NULL,
+meaning "not counted", not zero. No data changes and no configuration keys move.
+`fireflo-install update` migrates before starting the new binary; by hand, run
+`fireflo db migrate` first. The licence key in the binary is unchanged, so no new
+licence is needed.
+
+**After upgrading, fill the part counts for past days:**
+
+```
+fireflo usage rollup --catch-up
+```
+
+It fills every day whose call records are still kept, and a re-run never lowers
+a count. Days already purged stay uncounted, and the control panel says how
+many there are rather than counting them as zero. Nothing on the message path
+changes.
+
+**Control panel 0.12.4.0**, included at `panel/`, pairs with it.
+- **Billing tab, rebuilt.** One card across the top: the balance and the
+  actions that change it on the left, and MT parts sent on the right (lifetime,
+  this month, last 7 days, today so far). Beneath it, MT parts per day over 7,
+  30 or 90 days with a table by product (messages, parts, charged), beside the
+  reconciliation, and the ledger across the full width. Resellers see the same
+  for their own accounts.
+- **Amounts without trailing zeros.** Every amount on screen keeps at least one
+  decimal place and drops the zeros after it: `0.0000` reads `0.0`, `0.0100`
+  reads `0.01`, a `0.0450` rate reads `0.045`. Display only: the API, the
+  database and CSV exports keep all four places.
+- Against a gateway older than 0.12.4 the panel still works; days already
+  summarised then read as not counted.
 
 ### 0.12.3
 
@@ -1180,7 +1217,7 @@ gateway installs and runs without them.
 
 The control panel is paired by version — its first three numbers name the
 gateway release it was built against — and the one in this tarball is
-**0.12.3.1**, so it matches the gateway beside it. A panel you already have is **not** touched by
+**0.12.4.0**, so it matches the gateway beside it. A panel you already have is **not** touched by
 upgrading the gateway from here; it is upgraded by its own installer.
 
 **0.9.8 corrected what the registration endpoints report**, and that is worth
@@ -1231,7 +1268,7 @@ the key out of the binary:
 strings -a gateway/fireflo-gateway | grep -o 'MCowBQYDK2VwAyEA[A-Za-z0-9+/=]*'
 ```
 
-0.12.3 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
+0.12.4 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
 that is the only key in it — unchanged since 0.8.9, so an install upgrading from
 any of those needs no new licence. That is a public value; publishing it is safe and is
 what makes a build identifiable. A mismatch here presents as licences being
