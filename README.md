@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.9, with control panel 0.12.9.0 — delivery receipts can no longer be lost to a missing routing rule: each SMPP listener gets its own receipt rule, created with it and locked, and the gateway returns any receipt no rule placed to the listener it belongs to. **No migration** from 0.12.8. **Coming from 0.11.4 or earlier it also runs 0.11.5's nine, which can refuse**: read [the 0.11.5 notes](#earlier-builds) and take a backup first |
-| **File** | `fireflo-0.12.9-linux-x86_64.tar.gz` |
-| **SHA-256** | `8cc94fb65a6dbed4b45919d9efaf5a3682e5961a14156292036c451ecd9e1cbe` |
-| **Built** | 2026-10-14, from gateway commit `a2d1f7e`, see [the 0.12.9 notes](#earlier-builds) |
-| **Control panel** | 0.12.9.0, included at `panel/`, from commit `6d9d182` |
+| **Version** | 0.12.10, with control panel 0.12.10.0 — the groundwork for 0.13: call records partitioned by month with retention as a partition drop; customer passwords encrypted at rest with `FIREFLO_SECRETS_KEY`; a listener that answers from every out thread; nothing on the message path waiting for the database or the broker. **Eight migrations, V1.74.0–V1.81.0. V1.80.0 partitions the call record tables and the previous binary cannot run against the result: `fireflo-install update` takes a backup and asks first, and rollback is that backup.** Coming from 0.11.4 or earlier it also runs 0.11.5's nine: read [the 0.11.5 notes](#earlier-builds) |
+| **File** | `fireflo-0.12.10-linux-x86_64.tar.gz` |
+| **SHA-256** | `773a7d23e6c2b1cfe0e9796b4d672b1dddf25e60625ae77060cc709197623f75` |
+| **Built** | 2026-10-14, from gateway commit `b633200`, see [the 0.12.10 notes](#earlier-builds) |
+| **Control panel** | 0.12.10.0, included at `panel/`, from commit `de69e90` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.12.9-linux-jvm.tar.gz`, SHA-256 `c58499663f9fae5fb844acd7ef5e9e605cf97eb601ccc7c253bdde932b748011`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.12.10-linux-jvm.tar.gz`, SHA-256 `41626d8d11ce959295c76ba2f69ebce655a1d89913c2ddf78e80a076714debc1`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -52,7 +52,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.12.9-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.12.10-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -71,7 +71,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.12.9-linux-jvm.tar.gz && cd fireflo-0.12.9-linux-jvm
+tar xzf fireflo-0.12.10-linux-jvm.tar.gz && cd fireflo-0.12.10-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -123,7 +123,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.12.9-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.12.10-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -164,8 +164,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.12.9-linux-x86_64.tar.gz
-cd fireflo-0.12.9-linux-x86_64
+tar xzf fireflo-0.12.10-linux-x86_64.tar.gz
+cd fireflo-0.12.10-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -272,7 +272,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.12.9 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.12.10 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -354,8 +354,9 @@ before another machine can take it.
 
 ## Earlier builds
 
-**Only the current release is published here.** Builds before 0.12.9 have been
-withdrawn and their tarballs removed from this tree. 0.12.8's last tarballs (with
+**Only the current release is published here.** Builds before 0.12.10 have been
+withdrawn and their tarballs removed from this tree. 0.12.9's tarballs (with
+control panel 0.12.9.0) are in this repository's history at commit `d39e2df`. 0.12.8's last tarballs (with
 control panel 0.12.8.2) are in this repository's history at commit `0463a83`; its first
 (with control panel 0.12.8.1) at commit `d1e0f81`. 0.12.7's tarballs (x86-64, and
 the Java build for ARM) are in this repository's history at commit `3d945dc`. 0.12.6's tarball (with
@@ -374,6 +375,56 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.12.10
+
+**Eight database migrations, V1.74.0 to V1.81.0.** Seven are additive. **V1.80.0 is
+not: it turns `cdr_submit`, `cdr_final`, `cdr_interim` and `cdr_event` into tables
+partitioned by month**, attaching the existing rows as the first partition without
+copying them but building two indexes over all of them while the gateway is stopped
+(seconds on a small install, up to an hour on a hundred million rows). The 0.12.9
+binary cannot run against the result -- its INSERT names a unique key that no longer
+exists -- so **rollback after this upgrade is a database restore.** `fireflo-install
+update` says so before migrating and asks; take the backup it suggests. The licence
+key in the binary is unchanged.
+
+**Retention is a partition drop.** `fireflo usage purge` drops whole months (after the
+same rollup check as before); `cdr_interim` and `cdr_event` are dropped by month on
+their own windows (`smsg.cdr.event.retention.days`, 90); `cdr_rejected` is pruned by
+age (`smsg.cdr.rejected.retention.days`, 90). The gateway creates the coming months'
+partitions itself.
+
+**Customer passwords encrypted at rest.** With `FIREFLO_SECRETS_KEY` set in the
+gateway's `fireflo.env` *and* the control panel's `panel.env` (the same value), every
+password either writes is stored as `enc:v1:...` (AES-256-GCM). A fresh install gets
+a key from the installer; an upgraded install keeps plaintext until you set the key on
+both, restart both, and run `fireflo db secrets seal` once. `fireflo db secrets
+status|seal|open`; `FIREFLO_SECRETS_KEY_NEXT` for rotation. The API key of an HTTP login
+is its name and stays readable.
+
+**Listener and router.** `srv.out.threads` now runs as many out threads as it says
+(it ran one), over a bounded queue (`srv.out.queue`, 100000); a receipt waits for a
+slot in the customer's receive window for `conf.window.wait.ms` (2000) rather than the
+30 s response timeout, so one full window no longer holds everyone else's responses;
+the segments of one receipt go out as one task. The router defaults to two threads
+and offers a message to its target for 250 ms before re-queueing it with the backoff
+(`fireflo_routing_target_full_total`). The call record writer never blocks the message
+path (200 ms, then spill or count; queue default 100000). A receipt's broker publish
+is confirmed on a hand-off thread, never the vendor's I/O thread. The receipt store no
+longer commits per receipt and sweeps in bounded passes every ten minutes.
+
+**Also:** a prepaid block names the gateway holding it (`account_balance.reserved_by`,
+`FIREFLO_INSTANCE_ID`) and is reclaimed by that gateway's next start; the inbound-message
+webhook carries `messageId` (`message_id` in form encoding); name-keyed foreign keys
+cascade on update and rule positions are deferrable, so the panel reorders in place;
+`bind_hold` is `app_bind_hold`; `app_config` refuses new `outSms.instance.*` rows (the
+worker's own table holds them); the address allow list is checked before the password on
+SMPP and REST, the SMPP compare is constant-time, and four ops routes carry a body limit.
+
+**Control panel 0.12.10.0**, included at `panel/`: writes and reads sealed passwords
+(the installer copies the key from the gateway's `fireflo.env`); reorders rules under
+the deferred constraint; the two new retention settings and the two new listener
+settings on their forms.
 
 ### 0.12.9
 
@@ -1509,7 +1560,7 @@ gateway installs and runs without them.
 
 The control panel is paired by version — its first three numbers name the
 gateway release it was built against — and the one in this tarball is
-**0.12.9.0**, so it matches the gateway beside it. A panel you already have is **not** touched by
+**0.12.10.0**, so it matches the gateway beside it. A panel you already have is **not** touched by
 upgrading the gateway from here; it is upgraded by its own installer.
 
 **0.9.8 corrected what the registration endpoints report**, and that is worth
@@ -1560,7 +1611,7 @@ the key out of the binary:
 strings -a gateway/fireflo-gateway | grep -o 'MCowBQYDK2VwAyEA[A-Za-z0-9+/=]*'
 ```
 
-0.12.9 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
+0.12.10 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
 that is the only key in it — unchanged since 0.8.9, so an install upgrading from
 any of those needs no new licence. That is a public value; publishing it is safe and is
 what makes a build identifiable. A mismatch here presents as licences being
