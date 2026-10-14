@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.7, with control panel 0.12.7.0 — an optional SMPPSim test SMSC and `fireflo selftest`, so a fresh install proves its first message routed, priced, delivered and debited; billed and cost units recorded on every message. **No migration**: from 0.12.6 it is a binary swap. **Coming from 0.11.4 or earlier it also runs 0.11.5's nine, which can refuse**: read [the 0.11.5 notes](#earlier-builds) and take a backup first |
-| **File** | `fireflo-0.12.7-linux-x86_64.tar.gz` |
-| **SHA-256** | `2da13947c83b57d692f6f5d975aac265404b44ebd0f4ce8ce022fc230b03592c` |
-| **Built** | 2026-10-14, from gateway commit `e3a01c4`, see [the 0.12.7 notes](#earlier-builds) |
-| **Control panel** | 0.12.7.0, included at `panel/`, from commit `7891b36` |
+| **Version** | 0.12.8, with control panel 0.12.8.1 — force disconnect by IP, account or login with an optional hold-out; `fireflo-install smppsim` for existing installs; receipts returned to the right listener when there are two or more. **One small additive migration** (`V1.73.0`, a new empty table). **Coming from 0.11.4 or earlier it also runs 0.11.5's nine, which can refuse**: read [the 0.11.5 notes](#earlier-builds) and take a backup first |
+| **File** | `fireflo-0.12.8-linux-x86_64.tar.gz` |
+| **SHA-256** | `91d513def897daa73f8a750c6de23bd86c3dbb9f23497323dea325260de620a7` |
+| **Built** | 2026-10-14, from gateway commit `abd1c6f`, see [the 0.12.8 notes](#earlier-builds) |
+| **Control panel** | 0.12.8.1, included at `panel/`, from commit `2ec6e83` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.12.7-linux-jvm.tar.gz`, SHA-256 `b57680bd0ea33cd682085747382ac18ad1aab13b300b0e90889694fb81c5bfd7`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway, from commit `85e92b5`. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.12.8-linux-jvm.tar.gz`, SHA-256 `6ad2d6cc590ffc8f8144141b3c98bde955ce1105d0b44fc0f8c2fbe372241d45`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -52,7 +52,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.12.7-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.12.8-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -71,7 +71,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.12.7-linux-jvm.tar.gz && cd fireflo-0.12.7-linux-jvm
+tar xzf fireflo-0.12.8-linux-jvm.tar.gz && cd fireflo-0.12.8-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -123,7 +123,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.12.7-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.12.8-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -164,8 +164,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.12.7-linux-x86_64.tar.gz
-cd fireflo-0.12.7-linux-x86_64
+tar xzf fireflo-0.12.8-linux-x86_64.tar.gz
+cd fireflo-0.12.8-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -272,7 +272,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.12.7 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.12.8 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -354,8 +354,9 @@ before another machine can take it.
 
 ## Earlier builds
 
-**Only the current release is published here.** Builds before 0.12.7 have been
-withdrawn and their tarballs removed from this tree. 0.12.6's tarball (with
+**Only the current release is published here.** Builds before 0.12.8 have been
+withdrawn and their tarballs removed from this tree. 0.12.7's tarballs (x86-64, and
+the Java build for ARM) are in this repository's history at commit `3d945dc`. 0.12.6's tarball (with
 control panel 0.12.6.1) is in this repository's history at commit `4f8cea3`. 0.12.5's last tarball (with
 control panel 0.12.5.1) is in this repository's history at commit `23ca28b`; its first (with
 control panel 0.12.5.0) at commit `1a8f540`. 0.12.4's tarball is in this
@@ -371,6 +372,47 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.12.8
+
+**One database migration, `V1.73.0`, and it is additive:** a new, empty table,
+`bind_hold`, for the hold-outs below. No existing data changes and no setting is
+added. `fireflo-install update` migrates before starting the new binary; by hand,
+run `fireflo db migrate` first. The licence key in the binary is unchanged.
+
+**Force disconnect, and holding a client out.** Drop every SMPP session of an
+IP address, an account or a login — matched exactly, never by prefix — on every
+listener or one, with a preview of who would go first. Optionally refuse that
+target's binds afterwards for 15 minutes, 1 hour, 24 hours or until lifted.
+- Holds are kept in `bind_hold` and re-read by every node at most every ten
+  seconds at bind time; the gateway fails open if it cannot read them.
+- A held-out bind is refused and logged with `reason=heldOut`, which the
+  fail2ban filter now ignores, so a client retrying against a hold is never
+  turned into a host-wide ban. Installs with fail2ban pick up the new filter on
+  their next `fireflo-install fail2ban`.
+- Ops endpoints: `GET /ops/sessions/match` (read), `POST /ops/sessions/disconnect`
+  (admin, `hold=SECONDS|forever`), `GET /ops/bind-holds` (read) and
+  `DELETE /ops/bind-holds/{id}` (admin).
+
+**`fireflo-install smppsim --tenant NAME [--account ID]`** adds SMPPSim to an
+install that already exists: the simulator as its own service, the vendor
+`smppsim`, a catch-all to it in `MESSAGE` **only when `MESSAGE` has none**, a test
+login `fireflo-selftest`, a gateway restart, then `fireflo selftest`. Database
+mode, safe to run again, and it refuses an SMPPSim folder it did not make. The
+database half is the new `fireflo smppsim-setup`.
+
+**Control panel 0.12.8.1**, included at `panel/`:
+- **Force disconnect** on a server's page, on a connected login's live sessions,
+  and on **Security**, which also lists the holds in force with **Lift**.
+  Disabling a login now drops its sessions in one gateway call.
+- **Receipts with two or more listeners.** The receipt rule bootstrap writes
+  sends type 18 to the one listener with no listener condition, so after a
+  second listener was added it took every receipt and clients on the second never
+  got their DLRs — while **Rebuild default routing** reported nothing to fix. It
+  now narrows that rule in place to its own listener and adds one for each
+  listener still without, and the routing page flags the condition. **After
+  upgrading a gateway with more than one SMPP listener, open Routing and run
+  Rebuild default routing once.**
 
 ### 0.12.7
 
@@ -1423,7 +1465,7 @@ gateway installs and runs without them.
 
 The control panel is paired by version — its first three numbers name the
 gateway release it was built against — and the one in this tarball is
-**0.12.7.0**, so it matches the gateway beside it. A panel you already have is **not** touched by
+**0.12.8.1**, so it matches the gateway beside it. A panel you already have is **not** touched by
 upgrading the gateway from here; it is upgraded by its own installer.
 
 **0.9.8 corrected what the registration endpoints report**, and that is worth
@@ -1474,7 +1516,7 @@ the key out of the binary:
 strings -a gateway/fireflo-gateway | grep -o 'MCowBQYDK2VwAyEA[A-Za-z0-9+/=]*'
 ```
 
-0.12.7 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
+0.12.8 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
 that is the only key in it — unchanged since 0.8.9, so an install upgrading from
 any of those needs no new licence. That is a public value; publishing it is safe and is
 what makes a build identifiable. A mismatch here presents as licences being
