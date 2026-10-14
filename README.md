@@ -24,6 +24,7 @@ empty box to a running gateway, in order.
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
+| **ARM (aarch64)** | `fireflo-0.12.7-linux-jvm.tar.gz`, SHA-256 `b57680bd0ea33cd682085747382ac18ad1aab13b300b0e90889694fb81c5bfd7`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway, from commit `85e92b5`. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -48,6 +49,37 @@ If it names any other fingerprint, stop and ask us before installing.
 
 0.9.0 is the first signed release. Builds before it carry a checksum only.
 
+## ARM servers: the Java build
+
+The native gateway is compiled for x86-64; on an ARM server it fails at once with
+`Exec format error`. `fireflo-0.12.7-linux-jvm.tar.gz` is the same release —
+control panel, SMPPSim, scripts — with the **Java build** of the gateway in
+`gateway/`, which runs on any 64-bit Linux.
+
+**Install Java 25 before anything else.** The installer's own checks already run
+the gateway's commands, so Java must be there before `fireflo-install check`:
+
+```
+sudo mkdir -p /etc/apt/keyrings
+wget -qO- https://packages.adoptium.net/artifactory/api/gpg/key/public | sudo tee /etc/apt/keyrings/adoptium.asc >/dev/null
+echo "deb [signed-by=/etc/apt/keyrings/adoptium.asc] https://packages.adoptium.net/artifactory/deb $(. /etc/os-release; echo $VERSION_CODENAME) main" | sudo tee /etc/apt/sources.list.d/adoptium.list
+sudo apt-get update && sudo apt-get install -y temurin-25-jdk
+```
+
+Then verify it the same way, against its own checksum file:
+
+```
+gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
+sha256sum -c SHA256SUMS-jvm
+tar xzf fireflo-0.12.7-linux-jvm.tar.gz && cd fireflo-0.12.7-linux-jvm
+```
+
+and follow [Install on a blank server](#install-on-a-blank-server) from step 3
+with every command unchanged: `--from ./gateway` finds the Java build, and the
+unit runs it with `java -jar`. Expect a start of a few seconds rather than a
+fraction of one, and 1–2 GB more memory than the native build. Only the optional
+Brotli response compression is x86-only; on ARM responses fall back to gzip.
+
 ## Install on a blank server
 
 The whole sequence, in order, for a host with nothing on it. Each step points at
@@ -63,7 +95,7 @@ than discovering at step three.
 
 | | Requirement |
 |---|---|
-| **Architecture** | **linux-x86_64.** The gateway is a native binary and will not run on ARM |
+| **Architecture** | **linux-x86_64** for the native release. On ARM (aarch64, e.g. AWS Graviton) use the Java build instead — see [ARM servers](#arm-servers-the-java-build) |
 | **Operating system** | Ubuntu or Debian. Nothing else is handled by `setup.sh` |
 | **Release** | Ubuntu focal, jammy, noble, plucky — Debian bullseye, bookworm, trixie |
 | **PostgreSQL** | **14 or newer** |
