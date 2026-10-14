@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.10, with control panel 0.12.10.0 — the groundwork for 0.13: call records partitioned by month with retention as a partition drop; customer passwords encrypted at rest with `FIREFLO_SECRETS_KEY`; a listener that answers from every out thread; nothing on the message path waiting for the database or the broker. **Eight migrations, V1.74.0–V1.81.0. V1.80.0 partitions the call record tables and the previous binary cannot run against the result: `fireflo-install update` takes a backup and asks first, and rollback is that backup.** Coming from 0.11.4 or earlier it also runs 0.11.5's nine: read [the 0.11.5 notes](#earlier-builds) |
-| **File** | `fireflo-0.12.10-linux-x86_64.tar.gz` |
-| **SHA-256** | `773a7d23e6c2b1cfe0e9796b4d672b1dddf25e60625ae77060cc709197623f75` |
-| **Built** | 2026-10-14, from gateway commit `b633200`, see [the 0.12.10 notes](#earlier-builds) |
-| **Control panel** | 0.12.10.0, included at `panel/`, from commit `de69e90` |
+| **Version** | 0.12.11, with control panel 0.12.11.0 — the message tester asks what a real message asks: a blank product is filled from the account's login, every tab says which product it ran as, and a missing price says whether rules exist for another product. The Everyone pricing scope warns when a rule's product is carried by no login. **No migration** from 0.12.10; coming from 0.12.9 or earlier read [the 0.12.10 notes](#earlier-builds) first: that upgrade partitions the call record tables and rollback is a database restore |
+| **File** | `fireflo-0.12.11-linux-x86_64.tar.gz` |
+| **SHA-256** | `c26f7cadd73626e54d063d94fff89efe53d585b8825fab9c477160cfdace2a2a` |
+| **Built** | 2026-10-14, from gateway commit `7b2486e`, see [the 0.12.11 notes](#earlier-builds) |
+| **Control panel** | 0.12.11.0, included at `panel/`, from commit `bd0e1a6` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.12.10-linux-jvm.tar.gz`, SHA-256 `41626d8d11ce959295c76ba2f69ebce655a1d89913c2ddf78e80a076714debc1`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.12.11-linux-jvm.tar.gz`, SHA-256 `3816dccb6848442524012c432569775bee3f30e44d9fa4910fca8fc6d3ea6565`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -52,7 +52,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.12.10-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.12.11-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -71,7 +71,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.12.10-linux-jvm.tar.gz && cd fireflo-0.12.10-linux-jvm
+tar xzf fireflo-0.12.11-linux-jvm.tar.gz && cd fireflo-0.12.11-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -123,7 +123,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.12.10-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.12.11-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -164,8 +164,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.12.10-linux-x86_64.tar.gz
-cd fireflo-0.12.10-linux-x86_64
+tar xzf fireflo-0.12.11-linux-x86_64.tar.gz
+cd fireflo-0.12.11-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -272,7 +272,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.12.10 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.12.11 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -375,6 +375,25 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.12.11
+
+**The message tester asks what a real message asks.** A price rule saved under a
+product prices only messages carrying that product -- and every real message carries
+one: its login's, or the `system_type` it bound with. The tester sent whatever was in
+its Product box, blank by default, so "everything else on *product*" showed no price,
+and a routing rule or filter on product missed the same way. It now fills a blank
+Product from the account's login, says on every tab which product it tested as, and
+when there is no price says whether rules exist for another product and what to do
+about it. The **Everyone** pricing scope warns when a rule's product is carried by no
+login on any account, as account scopes already did.
+
+If live messages are recorded with a blank price under such a rule, the cause is the
+same: they carry no product, or another one. Set the product on the login under
+Accounts, or have the customer bind with that `system_type`; past rows stay unrated.
+
+**No migration** from 0.12.10. The licence key in the binary is unchanged. 0.12.10's
+tarballs are in this repository's history at commit `5895370`.
 
 ### 0.12.10
 
