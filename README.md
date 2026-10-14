@@ -16,11 +16,11 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.5, re-cut with control panel 0.12.5.1 (same gateway binary) — peak throughput kept per vendor and listener, an optional lock of SMPP logins to their first address, and honest receipt badges on Messages; two small additive migrations (`V1.69.0`, `V1.70.0`). **Coming from 0.11.4 or earlier it also runs 0.11.5's nine, which can refuse**: read [the 0.11.5 notes](#earlier-builds) and take a backup first |
-| **File** | `fireflo-0.12.5-linux-x86_64.tar.gz` |
-| **SHA-256** | `723f37bc4740170426960393cf88733c82666aff431390f80962da056f1cb2e9` |
-| **Built** | 2026-10-14, from gateway commit `f3ac6eb`, see [the 0.12.5 notes](#earlier-builds) |
-| **Control panel** | 0.12.5.1, included at `panel/`, from commit `47c6f5a` |
+| **Version** | 0.12.6, with control panel 0.12.6.1 — "any of these prefixes" routing that matches, a message tester for routing, pricing and filters, live SMPP sessions per login, and a redesigned Products page; two small migrations (`V1.71.0`, `V1.72.0`), the second rewriting broken prefix conditions. **Coming from 0.11.4 or earlier it also runs 0.11.5's nine, which can refuse**: read [the 0.11.5 notes](#earlier-builds) and take a backup first |
+| **File** | `fireflo-0.12.6-linux-x86_64.tar.gz` |
+| **SHA-256** | `648c65b1ece6230a37884e42f213a4b7d327808fe7f4eb0bb42ca09f24c9171b` |
+| **Built** | 2026-10-14, from gateway commit `1964360`, see [the 0.12.6 notes](#earlier-builds) |
+| **Control panel** | 0.12.6.1, included at `panel/`, from commit `89f1052` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
@@ -89,7 +89,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.12.5-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.12.6-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -130,8 +130,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.12.5-linux-x86_64.tar.gz
-cd fireflo-0.12.5-linux-x86_64
+tar xzf fireflo-0.12.6-linux-x86_64.tar.gz
+cd fireflo-0.12.6-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -228,7 +228,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.12.5 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.12.6 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -301,9 +301,10 @@ before another machine can take it.
 
 ## Earlier builds
 
-**Only the current release is published here.** Builds before 0.12.5 have been
-withdrawn and their tarballs removed from this tree. 0.12.5's first tarball (with
-control panel 0.12.5.0) is in this repository's history at commit `1a8f540`. 0.12.4's tarball is in this
+**Only the current release is published here.** Builds before 0.12.6 have been
+withdrawn and their tarballs removed from this tree. 0.12.5's last tarball (with
+control panel 0.12.5.1) is in this repository's history at commit `23ca28b`; its first (with
+control panel 0.12.5.0) at commit `1a8f540`. 0.12.4's tarball is in this
 repository's history at commit `9d0ef1f`. 0.12.3's last tarball (with
 control panel 0.12.3.1) is in this repository's history at commit `4bc5ec8`; its first (with
 control panel 0.12.3.0) at commit `43d3446`. 0.12.2's tarball is in this
@@ -316,6 +317,59 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.12.6
+
+**0.12.6 carries two database migrations.**
+- **`V1.71.0`** registers two REST settings, `smsg.restapi.token.ttl` (default
+  3600 seconds) and `smsg.restapi.token.plain.http.allowed` (off). No data changes.
+- **`V1.72.0`** rewrites prefix-list conditions. The control panel's "Any of these
+  prefixes" saved a destination condition as `matches ^(\+91|91)`; the gateway's
+  `matches` is a whole-value match, so it only ever matched a number that *was*
+  `91` or `+91`, and every real number missed. The migration rewrites exactly
+  that shape — in routing, filter and price conditions — to the new
+  `startsWithAny` operator (`+91,91`). Hand-written regular expressions are left
+  alone. **Rules that never matched start matching as written**: read your
+  prefix rules before upgrading if any of them was worked around.
+
+`fireflo-install update` migrates before starting the new binary; by hand, run
+`fireflo db migrate` first. The licence key in the binary is unchanged, so no new
+licence is needed.
+
+**`startsWithAny`.** A comma-separated list of literal prefixes, matched with one
+lookup per distinct prefix length rather than a regular expression. Numbers are
+compared exactly as given: list `91` and `+91` if both arrive.
+
+**Testing a message.** Three read-only endpoints on the read token answer what
+the gateway would do with a message nobody sends: `GET /ops/rating/explain`
+(the account's price, the vendor's cost and the margin), `GET /ops/filters/test`
+(every named filter, and the rules that use it), and `/ops/routing/explain`,
+which now takes `account`.
+
+**Sessions per login.** `GET /ops/sessions/summary?system_id=a,b` reports each
+login's sessions by bind type on every listener and per listener, with hosts
+and the oldest bind. It matches system IDs exactly.
+
+**A management API**, off unless `FIREFLO_MANAGEMENT_TOKEN` is set (at least 32
+characters): HMAC-signed requests that provision an account with an HTTP login
+and a prepaid balance, top it up idempotently, and issue short-lived bearer
+tokens. Requests must arrive over TLS or loopback, or over plain HTTP from an
+allow-listed address when that is switched on. Database configuration only.
+
+**Control panel 0.12.6.1**, included at `panel/`, pairs with it.
+- **Test a message** on the Routing, Pricing and Filters pages: which rule routes
+  it, what the account pays and the vendor costs, which filters it meets — and,
+  when nothing matches, the rule to create, pre-filled.
+- **Logins**: an SMPP login shows Connected or Not connected, its sessions by TX,
+  RX and TRX against its own limits, where they come from, and how long they
+  have been bound. Every ten seconds.
+- **Routing**: a table nothing routes to says so on its page, in the rail and in
+  the tester. The rail uses the same cards as Pricing.
+- **Products** is two columns: every product on the left, the open one on the
+  right with a pricing summary and the logins that select it. **Pricing** can be
+  narrowed to one product from a picker on its rail; the separate product
+  pricing page is gone.
+- "Any of these prefixes" now saves `startsWithAny`.
 
 ### 0.12.5
 
@@ -1268,7 +1322,7 @@ gateway installs and runs without them.
 
 The control panel is paired by version — its first three numbers name the
 gateway release it was built against — and the one in this tarball is
-**0.12.5.1**, so it matches the gateway beside it. A panel you already have is **not** touched by
+**0.12.6.1**, so it matches the gateway beside it. A panel you already have is **not** touched by
 upgrading the gateway from here; it is upgraded by its own installer.
 
 **0.9.8 corrected what the registration endpoints report**, and that is worth
@@ -1319,7 +1373,7 @@ the key out of the binary:
 strings -a gateway/fireflo-gateway | grep -o 'MCowBQYDK2VwAyEA[A-Za-z0-9+/=]*'
 ```
 
-0.12.5 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
+0.12.6 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
 that is the only key in it — unchanged since 0.8.9, so an install upgrading from
 any of those needs no new licence. That is a public value; publishing it is safe and is
 what makes a build identifiable. A mismatch here presents as licences being
