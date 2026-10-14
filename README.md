@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.8, with control panel 0.12.8.1 — force disconnect by IP, account or login with an optional hold-out; `fireflo-install smppsim` for existing installs; receipts returned to the right listener when there are two or more. **One small additive migration** (`V1.73.0`, a new empty table). **Coming from 0.11.4 or earlier it also runs 0.11.5's nine, which can refuse**: read [the 0.11.5 notes](#earlier-builds) and take a backup first |
+| **Version** | 0.12.8, re-cut with control panel 0.12.8.2 (same gateway binary) — force disconnect by IP, account or login with an optional hold-out; `fireflo-install smppsim` for existing installs; receipts returned to the right listener when there are two or more. **One small additive migration** (`V1.73.0`, a new empty table). **Coming from 0.11.4 or earlier it also runs 0.11.5's nine, which can refuse**: read [the 0.11.5 notes](#earlier-builds) and take a backup first |
 | **File** | `fireflo-0.12.8-linux-x86_64.tar.gz` |
-| **SHA-256** | `91d513def897daa73f8a750c6de23bd86c3dbb9f23497323dea325260de620a7` |
+| **SHA-256** | `00260cfcc068c49bc15f39faaba14dbc2bbc0eeb8e09cda95ff8de66242351dc` |
 | **Built** | 2026-10-14, from gateway commit `abd1c6f`, see [the 0.12.8 notes](#earlier-builds) |
-| **Control panel** | 0.12.8.1, included at `panel/`, from commit `2ec6e83` |
+| **Control panel** | 0.12.8.2, included at `panel/`, from commit `336be4f` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.12.8-linux-jvm.tar.gz`, SHA-256 `6ad2d6cc590ffc8f8144141b3c98bde955ce1105d0b44fc0f8c2fbe372241d45`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.12.8-linux-jvm.tar.gz`, SHA-256 `f0aafa65cba3146fb74eb0bad4b23f685bccefae79ae32a005843120ae37906c`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -355,7 +355,8 @@ before another machine can take it.
 ## Earlier builds
 
 **Only the current release is published here.** Builds before 0.12.8 have been
-withdrawn and their tarballs removed from this tree. 0.12.7's tarballs (x86-64, and
+withdrawn and their tarballs removed from this tree. 0.12.8's first tarballs (with
+control panel 0.12.8.1) are in this repository's history at commit `d1e0f81`. 0.12.7's tarballs (x86-64, and
 the Java build for ARM) are in this repository's history at commit `3d945dc`. 0.12.6's tarball (with
 control panel 0.12.6.1) is in this repository's history at commit `4f8cea3`. 0.12.5's last tarball (with
 control panel 0.12.5.1) is in this repository's history at commit `23ca28b`; its first (with
@@ -374,6 +375,19 @@ repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
 
 ### 0.12.8
+
+**These 0.12.8 tarballs were re-cut on 2026-10-14 with control panel 0.12.8.2;
+the gateway in them is byte for byte the one first published.** The first
+tarballs (x86-64 SHA-256 `91d513de…20a7`, ARM `6ad2d6cc…1d45`, panel 0.12.8.1 at
+`2ec6e83`) are in this repository's history at commit `d1e0f81`. 0.12.8.2 changes
+one thing:
+
+- **A Fix link on the TLV-stamping warning.** When an approved sender ID or
+  template carries a TLV a listener requires, and that listener has
+  `whitelist.tlvs.mode` off, the warning now says **Fix on <listener>**. It
+  opens that listener's edit form with the TLVs section expanded, where
+  **Stamp approved TLVs** is set. On the account's Approvals tab and on the
+  Headers and Templates pages.
 
 **One database migration, `V1.73.0`, and it is additive:** a new, empty table,
 `bind_hold`, for the hold-outs below. No existing data changes and no setting is
@@ -1465,7 +1479,7 @@ gateway installs and runs without them.
 
 The control panel is paired by version — its first three numbers name the
 gateway release it was built against — and the one in this tarball is
-**0.12.8.1**, so it matches the gateway beside it. A panel you already have is **not** touched by
+**0.12.8.2**, so it matches the gateway beside it. A panel you already have is **not** touched by
 upgrading the gateway from here; it is upgraded by its own installer.
 
 **0.9.8 corrected what the registration endpoints report**, and that is worth
