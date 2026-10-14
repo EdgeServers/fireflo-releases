@@ -16,11 +16,12 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.6, with control panel 0.12.6.1 — "any of these prefixes" routing that matches, a message tester for routing, pricing and filters, live SMPP sessions per login, and a redesigned Products page; two small migrations (`V1.71.0`, `V1.72.0`), the second rewriting broken prefix conditions. **Coming from 0.11.4 or earlier it also runs 0.11.5's nine, which can refuse**: read [the 0.11.5 notes](#earlier-builds) and take a backup first |
-| **File** | `fireflo-0.12.6-linux-x86_64.tar.gz` |
-| **SHA-256** | `648c65b1ece6230a37884e42f213a4b7d327808fe7f4eb0bb42ca09f24c9171b` |
-| **Built** | 2026-10-14, from gateway commit `1964360`, see [the 0.12.6 notes](#earlier-builds) |
-| **Control panel** | 0.12.6.1, included at `panel/`, from commit `89f1052` |
+| **Version** | 0.12.7, with control panel 0.12.7.0 — an optional SMPPSim test SMSC and `fireflo selftest`, so a fresh install proves its first message routed, priced, delivered and debited; billed and cost units recorded on every message. **No migration**: from 0.12.6 it is a binary swap. **Coming from 0.11.4 or earlier it also runs 0.11.5's nine, which can refuse**: read [the 0.11.5 notes](#earlier-builds) and take a backup first |
+| **File** | `fireflo-0.12.7-linux-x86_64.tar.gz` |
+| **SHA-256** | `2da13947c83b57d692f6f5d975aac265404b44ebd0f4ce8ce022fc230b03592c` |
+| **Built** | 2026-10-14, from gateway commit `e3a01c4`, see [the 0.12.7 notes](#earlier-builds) |
+| **Control panel** | 0.12.7.0, included at `panel/`, from commit `7891b36` |
+| **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 
@@ -76,7 +77,8 @@ fail partway, leaving a half-migrated database rather than a clean error.
 **No Java is needed at any point.** The gateway carries its own runtime, and so
 do the operator commands — `fireflo db migrate`, `fireflo license activate` and
 the rest all run from the same executable. A JDK is only for building from
-source.
+source. The optional SMPPSim test SMSC is the one exception: choosing it adds
+the distribution's Java runtime, for SMPPSim alone.
 
 **No RAM or CPU minimum is published.** Anything that comfortably runs
 PostgreSQL is enough to install and evaluate; sizing for sustained high-rate
@@ -89,7 +91,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.12.6-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.12.7-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -130,8 +132,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.12.6-linux-x86_64.tar.gz
-cd fireflo-0.12.6-linux-x86_64
+tar xzf fireflo-0.12.7-linux-x86_64.tar.gz
+cd fireflo-0.12.7-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -176,6 +178,16 @@ for a scripted install; `--dry-run` shows the decisions without making them.
 routing table, one listener, one login. It refuses on a database that already
 has rows, so it is only ever right on a new one. Coming from an existing
 configuration, use `--import`.
+
+**To see a message go all the way through first**, add `--with-smppsim` (and
+`--balance` to try prepaid). It installs SMPPSim, the test SMSC in `smppsim/`,
+as its own service, routes `MESSAGE` to it, asks for a cost on it and opening
+credit for the first account, and ends by running `fireflo selftest`: one real
+message, checked as routed, priced, delivered and debited. Run the self-test
+again whenever you like. SMPPSim accepts everything and invents its delivery
+receipts — replace it with a real vendor before real traffic. Its ports, 7775
+and 7788, are never opened; it listens on every interface, so keep a firewall
+in front of them.
 
 Add `--smpp-port-range 2775-2799` if you expect more than one listener later: it
 is the band the firewall opens and the band new listeners are allocated within,
@@ -228,7 +240,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.12.6 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.12.7 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -295,14 +307,24 @@ CDR history outlives the software that wrote it. It also leaves PostgreSQL,
 RabbitMQ and Node alone, because `setup.sh` installs those host-wide and a
 second tenant is probably still using them.
 
+**SMPPSim is not removed by it yet.** An install made with `--with-smppsim` has
+its own unit and directory; remove them by hand:
+
+```
+sudo systemctl disable --now fireflo-acme-smppsim
+sudo rm /etc/systemd/system/fireflo-acme-smppsim.service && sudo systemctl daemon-reload
+sudo rm -rf /home/acme/smppsim        # or /srv/fireflo/acme/smppsim, /opt/fireflo-smppsim
+```
+
 **Release the licence in your account before running it, not after.** A licence
 still bound to a host that no longer exists has to wait out the tolerance window
 before another machine can take it.
 
 ## Earlier builds
 
-**Only the current release is published here.** Builds before 0.12.6 have been
-withdrawn and their tarballs removed from this tree. 0.12.5's last tarball (with
+**Only the current release is published here.** Builds before 0.12.7 have been
+withdrawn and their tarballs removed from this tree. 0.12.6's tarball (with
+control panel 0.12.6.1) is in this repository's history at commit `4f8cea3`. 0.12.5's last tarball (with
 control panel 0.12.5.1) is in this repository's history at commit `23ca28b`; its first (with
 control panel 0.12.5.0) at commit `1a8f540`. 0.12.4's tarball is in this
 repository's history at commit `9d0ef1f`. 0.12.3's last tarball (with
@@ -317,6 +339,53 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.12.7
+
+**No database migration.** From 0.12.6 this is a binary swap; `fireflo-install
+update` handles it. The licence key in the binary is unchanged, so no new
+licence is needed.
+
+**SMPPSim, optionally.** The tarball now carries SMPPSim at `smppsim/` —
+third-party software under the GPL-2, with its licence and complete source
+beside it, and not part of FireFlo or its licence. `fireflo-install install
+--bootstrap --with-smppsim` (off by default, never implied by `--yes`):
+- installs the distribution's Java runtime for SMPPSim alone — the gateway
+  still needs none;
+- runs SMPPSim beside the gateway as its own unit, `<service>-smppsim`, with
+  every message delivered, on ports 7775 and 7788 (`--smppsim-port`,
+  `--smppsim-console-port`), outside the listener band and never opened in
+  the firewall;
+- has bootstrap add it as the vendor `smppsim` with a catch-all in `MESSAGE`,
+  a cost on it (`--vendor-cost`, asked, default 0.0050) and prepaid credit on
+  the first account (`--opening-balance`, asked, default 10.00);
+- ends by running `fireflo selftest`.
+
+SMPPSim accepts everything and invents delivery receipts: it is for trying
+FireFlo out, never for customer traffic.
+
+**`fireflo selftest`** sends one real message and reports PASS, FAIL or SKIP for
+each of: accepted, routed (to which vendor, by which rule), billed (price, cost,
+margin), delivered, and — with prepaid on — debited by exactly the price. The
+debit is read from the account's own balance before and after, so it needs no
+admin token and works on an unlicensed gateway. It signs in with
+`FIREFLO_SEND_LOGIN`/`FIREFLO_SEND_PASSWORD`, or the login bootstrap saved.
+Exit 0 when nothing failed, 1 when something did.
+
+**`fireflo bootstrap`** gains `--vendor` (with `--vendor-host`, `--vendor-port`,
+`--vendor-system-id`, `--vendor-password-file`), `--vendor-cost`,
+`--opening-balance` and `--login-file`, which adds an HTTP login `fireflo-http`
+on the same account and saves it owner-only for the self-test.
+
+**Billed units and cost units are recorded on every message**, priced or not.
+A gateway with no rate rules left both blank, and one whose rules matched
+nothing dropped them with the price. Price, cost, the rates and margin status
+are unchanged, nothing is charged without a price, and existing call records are
+not touched.
+
+**Control panel 0.12.7.0**, included at `panel/`: `update` no longer re-asks for
+the public URL when `panel.env` already holds a public one; it asks only when
+it is missing or a localhost value.
 
 ### 0.12.6
 
@@ -1322,7 +1391,7 @@ gateway installs and runs without them.
 
 The control panel is paired by version — its first three numbers name the
 gateway release it was built against — and the one in this tarball is
-**0.12.6.1**, so it matches the gateway beside it. A panel you already have is **not** touched by
+**0.12.7.0**, so it matches the gateway beside it. A panel you already have is **not** touched by
 upgrading the gateway from here; it is upgraded by its own installer.
 
 **0.9.8 corrected what the registration endpoints report**, and that is worth
@@ -1373,7 +1442,7 @@ the key out of the binary:
 strings -a gateway/fireflo-gateway | grep -o 'MCowBQYDK2VwAyEA[A-Za-z0-9+/=]*'
 ```
 
-0.12.6 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
+0.12.7 answers `MCowBQYDK2VwAyEA7cEZKZae5xBb8uwIgvCmxBzW7ceOKl0YiFE1AburdAI=`, and
 that is the only key in it — unchanged since 0.8.9, so an install upgrading from
 any of those needs no new licence. That is a public value; publishing it is safe and is
 what makes a build identifiable. A mismatch here presents as licences being
