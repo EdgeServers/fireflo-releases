@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.12, with control panel 0.12.12.0 — the message tester asks what a real message asks: a blank product is filled from the account's login, a blank account is priced at Everyone's default, every tab says which product it ran as, and a missing price says whether rules exist for another product. The Everyone pricing scope warns when a rule's product is carried by no login. **No migration** from 0.12.10 or 0.12.11; coming from 0.12.9 or earlier read [the 0.12.10 notes](#earlier-builds) first: that upgrade partitions the call record tables and rollback is a database restore |
-| **File** | `fireflo-0.12.12-linux-x86_64.tar.gz` |
-| **SHA-256** | `2ba99e2d56d723317ec6cbcb68369858a841fa7d91fc8788191254a71da6cc91` |
-| **Built** | 2026-10-14, from gateway commit `545fbc2`, see [the 0.12.12 notes](#earlier-builds) |
-| **Control panel** | 0.12.12.0, included at `panel/`, from commit `8ddd98c` |
+| **Version** | 0.12.13, with control panel 0.12.13.0 — **Apply now** on the Routing, Pricing and Filters pages and under a table or scope just saved, so a rule is read at once instead of at the next thirty-second poll; the gateway says when a reload was not adopted because the licence is not current. Plus 0.12.11/0.12.12's message tester fixes. **No migration** from 0.12.10 onwards; coming from 0.12.9 or earlier read [the 0.12.10 notes](#earlier-builds) first: that upgrade partitions the call record tables and rollback is a database restore |
+| **File** | `fireflo-0.12.13-linux-x86_64.tar.gz` |
+| **SHA-256** | `bb73c560dcb97a77100c205d204df22b472b231ed44e80e0fc783541b81fc863` |
+| **Built** | 2026-10-14, from gateway commit `1d54af9`, see [the 0.12.13 notes](#earlier-builds) |
+| **Control panel** | 0.12.13.0, included at `panel/`, from commit `67a5426` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.12.12-linux-jvm.tar.gz`, SHA-256 `2f6e4f0bd44f262524f168162d5ac4430203c41e5aac919a86abcd102c444eb5`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.12.13-linux-jvm.tar.gz`, SHA-256 `8b352cd6e76a8c01b9b40b44784796ed4cfd006a44e2964e7f1a13c2bd10b974`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -52,7 +52,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.12.12-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.12.13-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -71,7 +71,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.12.12-linux-jvm.tar.gz && cd fireflo-0.12.12-linux-jvm
+tar xzf fireflo-0.12.13-linux-jvm.tar.gz && cd fireflo-0.12.13-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -123,7 +123,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.12.12-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.12.13-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -164,8 +164,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.12.12-linux-x86_64.tar.gz
-cd fireflo-0.12.12-linux-x86_64
+tar xzf fireflo-0.12.13-linux-x86_64.tar.gz
+cd fireflo-0.12.13-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -272,7 +272,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.12.12 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.12.13 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -375,6 +375,18 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.12.13
+
+**Apply now on the rule pages.** The gateway picks up a saved routing table, price or filter
+within thirty seconds. The **Apply now** button the Servers and Vendors pages already had now
+sits on Routing, Pricing and Filters, and under a table or scope you have just saved, so a
+change is read at once. The gateway's reload answer says whether the configuration was adopted
+at all: on a gateway whose licence is not current, the panel says "reloaded, but not adopted"
+instead of claiming success.
+
+**No migration** from 0.12.10, 0.12.11 or 0.12.12. The licence key in the binary is unchanged.
+0.12.12's tarballs are in this repository's history at commit `77e1d67`.
 
 ### 0.12.12
 
