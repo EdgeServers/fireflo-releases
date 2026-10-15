@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.15, with control panel 0.12.15.0 — the hardening release from the 0.13 readiness review: vendor reconnects back off with jitter, a full vendor window and a repeatedly refused client address each wait their own bounded time, webhook retries without a broker are capped, call records are written on several lanes, configuration is republished only when it changed and every change is in the operator log, `client_ref` on `/secure/send` makes a retried send one message, `/ops/health` says the schema version and what the API can do, and the customer API is a committed OpenAPI document. Panel: dashboards read the daily summary so 7 and 30 day views no longer time out; **writes are refused from a browser whose address is not `AUTH_URL`**; a password change signs other browsers out. **Nine migrations, V1.82.0 to V1.90.0** — run `fireflo db migrate` (or start with `FIREFLO_DB_MIGRATE=true`) before the new binary serves traffic; V1.87.0 validates four CHECK constraints over the call record tables, minutes on a large one. 0.12.14 was never published here; its changes (a bound SMPP session follows its login's product, bounded list filters, `TRUSTED_PROXY_HOPS`) are in this build |
-| **File** | `fireflo-0.12.15-linux-x86_64.tar.gz` |
-| **SHA-256** | `e3ea7fb4262ede39318ef4cb54e4fe976cc4c782ffd0aaeaeb5bec76012f5a19` |
-| **Built** | 2026-10-15, from gateway commit `f9035aa`, see [the 0.12.15 notes](#earlier-builds) |
-| **Control panel** | 0.12.15.0, included at `panel/`, from commit `5731eac` |
+| **Version** | 0.12.16, with control panel 0.12.16.0 — what the 2,000-message-a-second runs found: a vendor that stops reading no longer wedges its worker, a vendor restart under load no longer deadlocks the router, and a bind's `system_type` selects a product only when the login may name it (otherwise ignored, logged, and the login's product applies). Usage summaries move into the gateway: an hourly table maintained every minute and restated for late receipts, and the daily rollup scheduled in-process at 00:15 billing time. The panel's home page and portal landing page are built in the background once a minute and served from that snapshot with an as-of time; a listener gets a confirmed Restart (how a changed listen port takes effect); Ingress server and Vendor join the Messages search row. **One additive migration, V1.91.0.** **Coming from 0.12.15: run `fireflo db repair` once before `fireflo db migrate`** — 0.12.15's V1.87.0 was corrected in place (it failed where a second FireFlo schema shared the database) and its checksum changed |
+| **File** | `fireflo-0.12.16-linux-x86_64.tar.gz` |
+| **SHA-256** | `ee2c82c121abaaf39de521028bab64959dc14e6406f08f2791f7967742bb579f` |
+| **Built** | 2026-10-15, from gateway commit `94932c3`, see [the 0.12.16 notes](#earlier-builds) |
+| **Control panel** | 0.12.16.0, included at `panel/`, from commit `9f83203` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.12.15-linux-jvm.tar.gz`, SHA-256 `96059491a2863e89db2f8fd83a3b31465db3f9f915220b0e03dae8aa991183b5`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.12.16-linux-jvm.tar.gz`, SHA-256 `c737ebd47b240b04322ad0768874e184eeede4f4c2032986d15aeb3d439e3cca`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -52,7 +52,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.12.15-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.12.16-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -71,7 +71,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.12.15-linux-jvm.tar.gz && cd fireflo-0.12.15-linux-jvm
+tar xzf fireflo-0.12.16-linux-jvm.tar.gz && cd fireflo-0.12.16-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -123,7 +123,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.12.15-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.12.16-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -164,8 +164,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.12.15-linux-x86_64.tar.gz
-cd fireflo-0.12.15-linux-x86_64
+tar xzf fireflo-0.12.16-linux-x86_64.tar.gz
+cd fireflo-0.12.16-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -272,7 +272,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.12.15 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.12.16 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -375,6 +375,33 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.12.16
+
+**What the 2,000-message-a-second runs found, and a home page that no longer queries live.**
+Gateway: a vendor that stops reading no longer parks the worker's sender for good (the socket write
+is bounded by `window.offer.timeout.ms`; the dead session is dropped and re-dialled); a vendor
+restart under load no longer deadlocks the router (retries are offered back to the router queue,
+never blocked on); a bind's `system_type` selects a product **only when the login may name it** (its
+own product or one on its allowed list, the same rule as the HTTP `product` field) — otherwise it is
+ignored with a `bind.system_type.ignored` log line and the login's product applies. Installs that
+relied on per-session product selection without an allow list must list those products on the
+login. **Usage summaries move into the gateway**: `usage_hourly` (UTC hours, per account, product and
+vendor) is maintained every minute and restated every 15 minutes for late receipts; the daily rollup
+runs in-process at 00:15 billing time (`smsg.usage.hourly.*`, `smsg.usage.daily.schedule`;
+`fireflo usage hourly --backfill DAYS` for history; the CLI rollup still works). Control panel: the
+home page and the portal landing page are built in the background once a minute and served from the
+snapshot with an **as of** time (`OVERVIEW_REFRESH_SECONDS`); a listener gets a confirmed **Restart**,
+offered on the saved-but-needs-a-restart card too; **Ingress server** and **Vendor** in the Messages
+search row; a product's login list pages; TLV catalogue notes behind an info button; rebuild default
+routing no longer preselects a listener for inbound.
+
+**One migration, V1.91.0**, additive (two tables, six registered keys). **Before migrating a database
+that ran 0.12.15, run `fireflo db repair` once:** 0.12.15's V1.87.0 was corrected in place so it no
+longer fails where a second FireFlo schema shares the database, and its checksum changed; the
+gateway does not validate checksums at start, so a running 0.12.15 is unaffected until its next
+migrate. The licence key in the binary is unchanged. 0.12.15's tarballs are in this repository's
+history at commit `8c0c142`.
 
 ### 0.12.15
 
