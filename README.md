@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.19, with control panel 0.12.19.0 — queue housekeeping: waiting work can be archived and cleaned off a live queue (ended like a router drop: refunded, a failed receipt queued) instead of the old "no flush" refusal, with an Archives report in the panel, and an SMPP login's delivery receipts can be re-sent for a period. **One migration, V1.93.0** (three new tables, one registry row, nothing existing altered); coming from 0.12.16 or earlier read the 0.12.17 notes (V1.92.0) too |
-| **File** | `fireflo-0.12.19-linux-x86_64.tar.gz` |
-| **SHA-256** | `3157e0a91c1c21c634b6367456ab9fdf5bc06da2763cbf6a7bf1c067955bf1f5` |
-| **Built** | 2026-10-16, from gateway commit `3fcf973`, see [the 0.12.19 notes](#earlier-builds) |
-| **Control panel** | 0.12.19.0, included at `panel/`, from commit `dd9ac62` |
+| **Version** | 0.12.20, with control panel 0.12.20.0 — recipients in the form each vendor asks for: a vendor's **Convert recipient automatically** rewrites each number after routing into international or national digits, as its Recipient type of number asks, with a **Recipient default country** for numbers written without a country code. Off by default. **One migration, V1.94.0** (two registry rows, no table changes); coming from 0.12.18 or earlier read the 0.12.19 notes (V1.93.0) too |
+| **File** | `fireflo-0.12.20-linux-x86_64.tar.gz` |
+| **SHA-256** | `f4c2688909181575107fda406c4043d53e42697727ae58e8f7bd1b995cce3ad3` |
+| **Built** | 2026-10-16, from gateway commit `6fcd3e7`, see [the 0.12.20 notes](#earlier-builds) |
+| **Control panel** | 0.12.20.0, included at `panel/`, from commit `b33af2a` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.12.19-linux-jvm.tar.gz`, SHA-256 `aa8319637674f166ef13acc9e8853cae8d2fda2d7b9e6d88888b5ec1fcfee673`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.12.20-linux-jvm.tar.gz`, SHA-256 `4e386357ca07284cd42f8e1a0332dcabe12497987b24ffbff022d3b253d3f279`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -52,7 +52,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.12.19-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.12.20-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -71,7 +71,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.12.19-linux-jvm.tar.gz && cd fireflo-0.12.19-linux-jvm
+tar xzf fireflo-0.12.20-linux-jvm.tar.gz && cd fireflo-0.12.20-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -123,7 +123,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.12.19-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.12.20-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -164,8 +164,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.12.19-linux-x86_64.tar.gz
-cd fireflo-0.12.19-linux-x86_64
+tar xzf fireflo-0.12.20-linux-x86_64.tar.gz
+cd fireflo-0.12.20-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -272,7 +272,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.12.19 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.12.20 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -375,6 +375,27 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.12.20
+
+**Recipients in the form each vendor asks for.** Recipients used to reach a vendor exactly as the
+customer wrote them. A vendor's new **Convert recipient automatically** (`dest.addr.convert`, under
+Detect sender type in Addressing) rewrites each number after routing, with libphonenumber, into the
+form its Recipient type of number asks for: type 1, country code and number in digits
+(`0412 345 678` → `61412345678`); type 2, national digits (`+61412345678` → `0412345678`), with a
+number of another country sent internationally as type 1. **Recipient default country**
+(`dest.addr.country`, beside Address range) is the ISO code for numbers written without one; blank
+converts only numbers written with `+`.
+
+Numbers already in the vendor's form are recognised without being parsed (0.04 µs each; 6 µs for one
+that needs converting), so throughput is unaffected. A number that cannot be read goes unchanged and
+is counted in `fireflo_smpp_client_recipient_unconverted_total`; nothing is refused. Only the
+`submit_sm` changes: call records, receipts, pricing and a re-route to another vendor keep the number
+as the customer sent it. Off by default; a change applies live.
+
+**One migration, V1.94.0:** two `app_config_key` rows, no table changes. Coming from 0.12.18 or
+earlier, the 0.12.19 notes apply too (V1.93.0). The licence key in the binary is unchanged. 0.12.19's
+tarballs are in this repository's history at commit `c51ff86`.
 
 ### 0.12.19
 
