@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.16, with control panel 0.12.16.0 — what the 2,000-message-a-second runs found: a vendor that stops reading no longer wedges its worker, a vendor restart under load no longer deadlocks the router, and a bind's `system_type` selects a product only when the login may name it (otherwise ignored, logged, and the login's product applies). Usage summaries move into the gateway: an hourly table maintained every minute and restated for late receipts, and the daily rollup scheduled in-process at 00:15 billing time. The panel's home page and portal landing page are built in the background once a minute and served from that snapshot with an as-of time; a listener gets a confirmed Restart (how a changed listen port takes effect); Ingress server and Vendor join the Messages search row. **One additive migration, V1.91.0.** **Coming from 0.12.15: run `fireflo db repair` once before `fireflo db migrate`** — 0.12.15's V1.87.0 was corrected in place (it failed where a second FireFlo schema shared the database) and its checksum changed |
-| **File** | `fireflo-0.12.16-linux-x86_64.tar.gz` |
-| **SHA-256** | `1624c48e4e7cff62edd213428c04bad96228ac02520044da7c22127fd0419c40` |
-| **Built** | 2026-10-15 (re-cut the same evening, see the notes), from gateway commit `3eb1ff1`, see [the 0.12.16 notes](#earlier-builds) |
-| **Control panel** | 0.12.16.0, included at `panel/`, from commit `9f83203` |
+| **Version** | 0.12.17, with control panel 0.12.17.0 — a fresh prepaid account no longer refuses its opening burst: messages arriving while an account's first credit block is being reserved (after a restart, or the first send after a top-up from zero) now wait for it instead of being refused "insufficient credit". Message text recording (`smsg.cdr.body`) is a registered setting with a switch in the control panel under Gateway settings → Call records. The installer repairs 0.12.15's corrected V1.87.0 checksum itself. **One migration, V1.92.0** (one registry row). Coming from 0.12.15 or 0.12.16 with this installer, nothing to do by hand |
+| **File** | `fireflo-0.12.17-linux-x86_64.tar.gz` |
+| **SHA-256** | `8abe8fba1232364af5f9b443206dec6343c3a50d2f365c2c4d1b098fe0f02ce4` |
+| **Built** | 2026-10-16, from gateway commit `c25fee4`, see [the 0.12.17 notes](#earlier-builds) |
+| **Control panel** | 0.12.17.0, included at `panel/`, from commit `eacc932` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.12.16-linux-jvm.tar.gz`, SHA-256 `ac9397a8b9c67cc9c2b070925093fedcd805569df0a0c4124b32f9963ed4c306`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.12.17-linux-jvm.tar.gz`, SHA-256 `38543d6fa460ef2ad0b36e38ed678b177926d25de5131ff825878d42e7b6b148`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -52,7 +52,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.12.16-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.12.17-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -71,7 +71,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.12.16-linux-jvm.tar.gz && cd fireflo-0.12.16-linux-jvm
+tar xzf fireflo-0.12.17-linux-jvm.tar.gz && cd fireflo-0.12.17-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -123,7 +123,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.12.16-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.12.17-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -164,8 +164,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.12.16-linux-x86_64.tar.gz
-cd fireflo-0.12.16-linux-x86_64
+tar xzf fireflo-0.12.17-linux-x86_64.tar.gz
+cd fireflo-0.12.17-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -272,7 +272,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.12.16 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.12.17 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -375,6 +375,24 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.12.17
+
+**A fresh prepaid account no longer refuses its opening burst, and message text has a switch.**
+When an account has no credit block in memory -- after a gateway restart, or its first send after a
+top-up from zero -- the first message reserves one on a database round trip. Every message for the
+same account that arrived during it used to be refused "insufficient credit" on a funded account;
+they now wait for that one reservation (at most 4 seconds) and spend from it. A busy account that has
+spent its block is unchanged: refused at once and refilled in the background. `smsg.cdr.body`
+(whether call records keep message text: `off`, `excerpt` or `full`) is now a registered setting, so
+any other value is refused when saved instead of being read as off, and the control panel has a
+switch for it under **Gateway settings → Call records → Keep message text**. The installer carried by
+the 0.12.16 re-cut is here too: `update` from 0.12.15 repairs the corrected V1.87.0 checksum itself.
+
+**One migration, V1.92.0** (one registry row). It stops with the key named if an invalid
+`smsg.cdr.body` value is already stored; set it to `off`, `excerpt` or `full` (or delete the row) and
+run the update again. The licence key in the binary is unchanged. 0.12.16's tarballs are in this
+repository's history at commit `61f6cec`.
 
 ### 0.12.16
 
