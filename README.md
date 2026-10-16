@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.23, with control panel 0.12.23.0 — prepaid spending is no longer refunded by a restart: it is settled out of `reserved` into a new `spent` column every few seconds and on shutdown. 0.12.10 to 0.12.22 refunded all prepaid spending since the previous restart on every restart. **One migration, V1.95.0** — run it with every gateway stopped; the installer and update do |
-| **File** | `fireflo-0.12.23-linux-x86_64.tar.gz` |
-| **SHA-256** | `b83b08919029321bfb7a2fdd6703abaa78217062fa27620ab6cc06d222ed264b` |
-| **Built** | 2026-10-16, from gateway commit `c91f924`, see [the 0.12.23 notes](#earlier-builds) |
-| **Control panel** | 0.12.23.0, included at `panel/`, from commit `cc7f931` |
+| **Version** | 0.12.24, with control panel 0.12.24.0 — the ~500 messages a second ceiling removed: a vendor's delivery receipts no longer stall the connection that carries its responses, so a gateway with receipts on sustains 3,000/s where it settled near 500/s. **No migration** from 0.12.23; coming from 0.12.22 or earlier read the 0.12.23 notes (V1.95.0) first |
+| **File** | `fireflo-0.12.24-linux-x86_64.tar.gz` |
+| **SHA-256** | `507fbe995dc478f8efc0c82acc7ec5d83ab6137066195a63151bd486430fbe5b` |
+| **Built** | 2026-10-16, from gateway commit `5a3a6a2`, see [the 0.12.24 notes](#earlier-builds) |
+| **Control panel** | 0.12.24.0, included at `panel/`, from commit `861e8d1` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.12.23-linux-jvm.tar.gz`, SHA-256 `d18e36a3b55969af21f0407b6e53aed155da1ea17bcf1fddd15e85ba00d4141d`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.12.24-linux-jvm.tar.gz`, SHA-256 `da4e740b7af032fae55d1b64d2274f8e3922a46408c285c11929e56b6a935b1a`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -52,7 +52,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.12.23-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.12.24-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -71,7 +71,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.12.23-linux-jvm.tar.gz && cd fireflo-0.12.23-linux-jvm
+tar xzf fireflo-0.12.24-linux-jvm.tar.gz && cd fireflo-0.12.24-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -123,7 +123,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.12.23-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.12.24-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -164,8 +164,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.12.23-linux-x86_64.tar.gz
-cd fireflo-0.12.23-linux-x86_64
+tar xzf fireflo-0.12.24-linux-x86_64.tar.gz
+cd fireflo-0.12.24-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -272,7 +272,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.12.23 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.12.24 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -375,6 +375,24 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.12.24
+
+**The ~500 messages a second ceiling, removed.** A vendor's delivery receipt was handed to the router
+with a blocking put into the bounded router queue -- the queue new submits fill -- on the same
+connection thread that reads the vendor's `submit_sm_resp`s. Under load the receipt waited for room,
+the responses went unread and expired, the vendor's window stayed full, and the router could not hand
+it anything. Throughput settled near 500/s whatever the hardware, and the listener refused the rest
+as queue full (`ESME_RMSGQFUL`). Receipts and inbound messages from a vendor now never make that
+thread wait: when the router queue is full they wait in an ordered overflow drained by its own thread.
+
+Measured with a test vendor returning a receipt for every message, 3,000/s offered for 60 s: about
+520/s accepted before; 3,000/s sustained after, every receipt delivered, the gateway using about one
+core. The first seconds after a start still refuse some traffic while the JVM warms up.
+
+**No migration** from 0.12.23; coming from 0.12.22 or earlier the 0.12.23 notes apply first (V1.95.0).
+The licence key in the binary is unchanged. 0.12.23's tarballs are in this repository's history at
+commit `bcb0625`.
 
 ### 0.12.23
 
