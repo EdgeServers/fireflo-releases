@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.17, with control panel 0.12.17.0 — a fresh prepaid account no longer refuses its opening burst: messages arriving while an account's first credit block is being reserved (after a restart, or the first send after a top-up from zero) now wait for it instead of being refused "insufficient credit". Message text recording (`smsg.cdr.body`) is a registered setting with a switch in the control panel under Gateway settings → Call records. The installer repairs 0.12.15's corrected V1.87.0 checksum itself. **One migration, V1.92.0** (one registry row). Coming from 0.12.15 or 0.12.16 with this installer, nothing to do by hand |
-| **File** | `fireflo-0.12.17-linux-x86_64.tar.gz` |
-| **SHA-256** | `8abe8fba1232364af5f9b443206dec6343c3a50d2f365c2c4d1b098fe0f02ce4` |
-| **Built** | 2026-10-16, from gateway commit `c25fee4`, see [the 0.12.17 notes](#earlier-builds) |
-| **Control panel** | 0.12.17.0, included at `panel/`, from commit `eacc932` |
+| **Version** | 0.12.18, with control panel 0.12.18.0 — the opening-burst fix completed: right after a gateway restart, a funded prepaid account's first block is now sized from its last price (20 messages' worth by default), so messages sent together are no longer refused "insufficient credit". 0.12.17 fixed only accounts that were fully cold and missed this one. **No migration** from 0.12.17; coming from 0.12.16 or earlier read the 0.12.17 notes (V1.92.0) |
+| **File** | `fireflo-0.12.18-linux-x86_64.tar.gz` |
+| **SHA-256** | `692970a208a987cae59b269b528c5ba99ef04b632cf5141faf41688770f7a94a` |
+| **Built** | 2026-10-16, from gateway commit `75c07e6`, see [the 0.12.18 notes](#earlier-builds) |
+| **Control panel** | 0.12.18.0, included at `panel/`, from commit `f829737` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.12.17-linux-jvm.tar.gz`, SHA-256 `38543d6fa460ef2ad0b36e38ed678b177926d25de5131ff825878d42e7b6b148`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.12.18-linux-jvm.tar.gz`, SHA-256 `46f687ef6120e285c54d394c443b0f8e00b499fe3f79b8e3935b86710c20de89`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -52,7 +52,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.12.17-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.12.18-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -71,7 +71,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.12.17-linux-jvm.tar.gz && cd fireflo-0.12.17-linux-jvm
+tar xzf fireflo-0.12.18-linux-jvm.tar.gz && cd fireflo-0.12.18-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -123,7 +123,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.12.17-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.12.18-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -164,8 +164,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.12.17-linux-x86_64.tar.gz
-cd fireflo-0.12.17-linux-x86_64
+tar xzf fireflo-0.12.18-linux-x86_64.tar.gz
+cd fireflo-0.12.18-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -272,7 +272,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.12.17 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.12.18 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -375,6 +375,22 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.12.18
+
+**The opening-burst fix, completed.** 0.12.17 made messages wait for an account's first credit
+block instead of being refused, but right after a gateway restart that path never ran: the startup
+pre-warm had already reserved a first block of the currency minimum -- usually one message -- so the
+account counted as warm and the rest of its opening burst was still refused "insufficient credit"
+while a proper block was fetched. Pre-warm now sizes each account's first block from its most recent
+priced message (`smsg.balance.block.min.messages` of it, 20 by default) and leaves an account with no
+priced message in the last 30 days cold, so its first burst reserves at the real price with every
+concurrent message waiting for that one reservation. Measured on a staging gateway after a restart:
+three messages sent together on a funded account, all three accepted, where 0.12.17 accepted one.
+
+**No migration** from 0.12.17. Coming from 0.12.16 or earlier, the 0.12.17 notes apply (V1.92.0).
+The licence key in the binary is unchanged. 0.12.17's tarballs are in this repository's history at
+commit `22df7b4`.
 
 ### 0.12.17
 
