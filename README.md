@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.22, with control panel 0.12.22.0 — billing fixes: an SMPP submit refused as queue-full or by a filter is refunded (it was charged and kept), postpaid accounts can send from the moment the gateway starts (they were refused for up to 30 s), and a burst waiting for prepaid credit no longer inflates the blocks reserved. **No migration** from 0.12.20 or 0.12.21; coming from 0.12.19 or earlier read the 0.12.20 notes (V1.94.0) |
-| **File** | `fireflo-0.12.22-linux-x86_64.tar.gz` |
-| **SHA-256** | `fe32d388059bc104f8ccea06b45f88eefe901b5863cb817498e7307e0334d23d` |
-| **Built** | 2026-10-16, from gateway commit `c8855bf`, see [the 0.12.22 notes](#earlier-builds) |
-| **Control panel** | 0.12.22.0, included at `panel/`, from commit `c19c9b4` |
+| **Version** | 0.12.23, with control panel 0.12.23.0 — prepaid spending is no longer refunded by a restart: it is settled out of `reserved` into a new `spent` column every few seconds and on shutdown. 0.12.10 to 0.12.22 refunded all prepaid spending since the previous restart on every restart. **One migration, V1.95.0** — run it with every gateway stopped; the installer and update do |
+| **File** | `fireflo-0.12.23-linux-x86_64.tar.gz` |
+| **SHA-256** | `b83b08919029321bfb7a2fdd6703abaa78217062fa27620ab6cc06d222ed264b` |
+| **Built** | 2026-10-16, from gateway commit `c91f924`, see [the 0.12.23 notes](#earlier-builds) |
+| **Control panel** | 0.12.23.0, included at `panel/`, from commit `cc7f931` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.12.22-linux-jvm.tar.gz`, SHA-256 `3da4ead9ffeb115a0e302013f191e3994cd1379448cd0e3d05ed81f9559c1bee`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.12.23-linux-jvm.tar.gz`, SHA-256 `d18e36a3b55969af21f0407b6e53aed155da1ea17bcf1fddd15e85ba00d4141d`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -52,7 +52,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.12.22-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.12.23-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -71,7 +71,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.12.22-linux-jvm.tar.gz && cd fireflo-0.12.22-linux-jvm
+tar xzf fireflo-0.12.23-linux-jvm.tar.gz && cd fireflo-0.12.23-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -123,7 +123,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.12.22-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.12.23-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -164,8 +164,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.12.22-linux-x86_64.tar.gz
-cd fireflo-0.12.22-linux-x86_64
+tar xzf fireflo-0.12.23-linux-x86_64.tar.gz
+cd fireflo-0.12.23-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -272,7 +272,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.12.22 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.12.23 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -375,6 +375,32 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.12.23
+
+**Prepaid spending is no longer refunded by a restart.** A gateway moves credit from `balance` into
+`reserved` in blocks and spends it in memory, and nothing ever took the spending out of the database:
+`reserved` held spent and unspent credit alike. The reclaim on start added in 0.12.10 (V1.79.0)
+returned everything an instance held to `balance`, so **every restart from 0.12.10 to 0.12.22 refunded
+the prepaid spending since the one before.** On a staging gateway an account was back at its starting
+balance after about 120,000 charged messages and four restarts.
+
+The gateway now settles its spending every `smsg.balance.settle.seconds` (default 5) and on release or
+shutdown: `reserved` goes down by what was spent and the new `account_balance.spent` goes up, with a
+`SPEND` row in `balance_reservation` each time. A restart returns only credit that was held and not
+spent; a crash returns at most the last settlement interval's spending. The money identity is now
+`credited = balance + reserved + spent`, and the control panel's reconciliation reads it that way.
+
+**If you ran 0.12.10 to 0.12.22 with prepaid credit on,** account balances may be higher than what was
+paid for, by the prepaid spending between restarts. Nothing in the database tells the refunded spending
+apart from real top-ups; the call records (`cdr_submit.price`) are what was actually sent.
+
+**One migration, V1.95.0:** adds `account_balance.spent`, lets `balance_reservation` hold `SPEND`, and
+moves whatever is in `reserved` to `spent` -- under the old bookkeeping that amount is spending, since a
+stopped gateway has already handed back what it had not spent. **Run it with every gateway stopped**
+(the installer and `fireflo-install update` do): a gateway still running on an older release loses
+what it holds unspent. The licence key in the binary is unchanged. 0.12.22's tarballs are in this
+repository's history at commit `c826485`.
 
 ### 0.12.22
 
