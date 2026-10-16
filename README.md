@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.21, with control panel 0.12.21.0 — a funded prepaid account no longer refuses part of a burst between credit blocks: right after a restart its pre-warmed 20-message block ran out in milliseconds and the rest were refused "insufficient credit" until the next block landed; they now wait for it (at most 500 ms). RabbitMQ client 5.37.0. **No migration** from 0.12.20; coming from 0.12.19 or earlier read the 0.12.20 notes (V1.94.0) |
-| **File** | `fireflo-0.12.21-linux-x86_64.tar.gz` |
-| **SHA-256** | `9f82ec09b95f2b0ac2f6b1bc925f7dddc2f1c4c74032c8b9d71ea7e533a99462` |
-| **Built** | 2026-10-16, from gateway commit `7b6cd6b`, see [the 0.12.21 notes](#earlier-builds) |
-| **Control panel** | 0.12.21.0, included at `panel/`, from commit `6d467ac` |
+| **Version** | 0.12.22, with control panel 0.12.22.0 — billing fixes: an SMPP submit refused as queue-full or by a filter is refunded (it was charged and kept), postpaid accounts can send from the moment the gateway starts (they were refused for up to 30 s), and a burst waiting for prepaid credit no longer inflates the blocks reserved. **No migration** from 0.12.20 or 0.12.21; coming from 0.12.19 or earlier read the 0.12.20 notes (V1.94.0) |
+| **File** | `fireflo-0.12.22-linux-x86_64.tar.gz` |
+| **SHA-256** | `fe32d388059bc104f8ccea06b45f88eefe901b5863cb817498e7307e0334d23d` |
+| **Built** | 2026-10-16, from gateway commit `c8855bf`, see [the 0.12.22 notes](#earlier-builds) |
+| **Control panel** | 0.12.22.0, included at `panel/`, from commit `c19c9b4` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.12.21-linux-jvm.tar.gz`, SHA-256 `603b0682f18db44b5cbad50fb8cf91db9331481c570be42a5548abaa665aa543`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.12.22-linux-jvm.tar.gz`, SHA-256 `3da4ead9ffeb115a0e302013f191e3994cd1379448cd0e3d05ed81f9559c1bee`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -52,7 +52,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.12.21-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.12.22-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -71,7 +71,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.12.21-linux-jvm.tar.gz && cd fireflo-0.12.21-linux-jvm
+tar xzf fireflo-0.12.22-linux-jvm.tar.gz && cd fireflo-0.12.22-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -123,7 +123,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.12.21-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.12.22-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -164,8 +164,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.12.21-linux-x86_64.tar.gz
-cd fireflo-0.12.21-linux-x86_64
+tar xzf fireflo-0.12.22-linux-x86_64.tar.gz
+cd fireflo-0.12.22-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -272,7 +272,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.12.21 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.12.22 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -375,6 +375,30 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.12.22
+
+**SMPP refusals refund what they charged.** The price of an SMPP submit is taken before the listener
+checks its queue and its filters, and three refusals there -- queue full (`ESME_RMSGQFUL`), dropped by
+a filter, and a filter that failed and refuses -- answered the client without giving it back. The
+REST ingress always refunded the same three. On a staging gateway under overload, 170,712 queue-full
+refusals had been charged this way. Each now refunds, once. If you run with `smsg.queue.capacity` set,
+or with filters on an SMPP listener, earlier releases charged for these: they are the `cdr_rejected`
+rows with reason `queueFull`, `filtered` or `filterFailed`.
+
+**Postpaid accounts can send from the moment the gateway starts.** Their credit limits were first
+read by the recharge poll, which sleeps first, so for up to `smsg.balance.recharge.poll.seconds`
+(30 s) after every start a postpaid account with an empty balance was refused "insufficient credit".
+The limits are now read at start, and by the first message if it arrives sooner.
+
+**Prepaid credit blocks are no longer inflated by a burst.** Since 0.12.21 a message that finds its
+account between credit blocks waits for the next; each waiting message also counted a miss, and a
+burst doubled the next block's size hundreds of times, pinning every block at
+`smsg.balance.block.max`. A miss now counts once per reservation.
+
+**No migration** from 0.12.20 or 0.12.21; coming from 0.12.19 or earlier the 0.12.20 notes apply
+(V1.94.0). The licence key in the binary is unchanged. 0.12.21's tarballs are in this repository's
+history at commit `0711b7f`.
 
 ### 0.12.21
 
