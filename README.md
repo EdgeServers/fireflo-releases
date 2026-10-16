@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.20, with control panel 0.12.20.0 — recipients in the form each vendor asks for: a vendor's **Convert recipient automatically** rewrites each number after routing into international or national digits, as its Recipient type of number asks, with a **Recipient default country** for numbers written without a country code. Off by default. **One migration, V1.94.0** (two registry rows, no table changes); coming from 0.12.18 or earlier read the 0.12.19 notes (V1.93.0) too |
-| **File** | `fireflo-0.12.20-linux-x86_64.tar.gz` |
-| **SHA-256** | `f4c2688909181575107fda406c4043d53e42697727ae58e8f7bd1b995cce3ad3` |
-| **Built** | 2026-10-16, from gateway commit `6fcd3e7`, see [the 0.12.20 notes](#earlier-builds) |
-| **Control panel** | 0.12.20.0, included at `panel/`, from commit `b33af2a` |
+| **Version** | 0.12.21, with control panel 0.12.21.0 — a funded prepaid account no longer refuses part of a burst between credit blocks: right after a restart its pre-warmed 20-message block ran out in milliseconds and the rest were refused "insufficient credit" until the next block landed; they now wait for it (at most 500 ms). RabbitMQ client 5.37.0. **No migration** from 0.12.20; coming from 0.12.19 or earlier read the 0.12.20 notes (V1.94.0) |
+| **File** | `fireflo-0.12.21-linux-x86_64.tar.gz` |
+| **SHA-256** | `9f82ec09b95f2b0ac2f6b1bc925f7dddc2f1c4c74032c8b9d71ea7e533a99462` |
+| **Built** | 2026-10-16, from gateway commit `7b6cd6b`, see [the 0.12.21 notes](#earlier-builds) |
+| **Control panel** | 0.12.21.0, included at `panel/`, from commit `6d467ac` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.12.20-linux-jvm.tar.gz`, SHA-256 `4e386357ca07284cd42f8e1a0332dcabe12497987b24ffbff022d3b253d3f279`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.12.21-linux-jvm.tar.gz`, SHA-256 `603b0682f18db44b5cbad50fb8cf91db9331481c570be42a5548abaa665aa543`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -52,7 +52,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.12.20-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.12.21-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -71,7 +71,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.12.20-linux-jvm.tar.gz && cd fireflo-0.12.20-linux-jvm
+tar xzf fireflo-0.12.21-linux-jvm.tar.gz && cd fireflo-0.12.21-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -123,7 +123,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.12.20-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.12.21-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -164,8 +164,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.12.20-linux-x86_64.tar.gz
-cd fireflo-0.12.20-linux-x86_64
+tar xzf fireflo-0.12.21-linux-x86_64.tar.gz
+cd fireflo-0.12.21-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -272,7 +272,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.12.20 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.12.21 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -375,6 +375,23 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.12.21
+
+**A funded prepaid account no longer refuses part of a burst between credit blocks.** Credit is spent
+from a block held in memory, and when an account spent it faster than the next block was reserved,
+every message until that reservation landed was refused "insufficient credit" on an account that
+could pay. Right after a restart that was most of an opening burst: the pre-warmed first block covers
+20 messages, which lasts 40 ms at 500/s. Measured on a staging gateway after the 0.12.20 cutover: 51 of
+10,000 refused, all in the first 125 ms, on an account holding thousands of messages' worth.
+
+A message now waits for the reservation already in flight -- one shared by every waiting message, so
+no extra database work -- and spends from it, at most 500 ms from its first miss. An account whose
+last reservation found no money refuses at once for a second, so an empty account is never slowed.
+
+Also the RabbitMQ client 5.37.0. **No migration** from 0.12.20; coming from 0.12.19 or earlier the
+0.12.20 notes apply (V1.94.0). The licence key in the binary is unchanged. 0.12.20's tarballs are in
+this repository's history at commit `56cb78d`.
 
 ### 0.12.20
 
