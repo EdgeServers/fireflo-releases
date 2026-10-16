@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.18, with control panel 0.12.18.0 — the opening-burst fix completed: right after a gateway restart, a funded prepaid account's first block is now sized from its last price (20 messages' worth by default), so messages sent together are no longer refused "insufficient credit". 0.12.17 fixed only accounts that were fully cold and missed this one. **No migration** from 0.12.17; coming from 0.12.16 or earlier read the 0.12.17 notes (V1.92.0) |
-| **File** | `fireflo-0.12.18-linux-x86_64.tar.gz` |
-| **SHA-256** | `692970a208a987cae59b269b528c5ba99ef04b632cf5141faf41688770f7a94a` |
-| **Built** | 2026-10-16, from gateway commit `75c07e6`, see [the 0.12.18 notes](#earlier-builds) |
-| **Control panel** | 0.12.18.0, included at `panel/`, from commit `f829737` |
+| **Version** | 0.12.19, with control panel 0.12.19.0 — queue housekeeping: waiting work can be archived and cleaned off a live queue (ended like a router drop: refunded, a failed receipt queued) instead of the old "no flush" refusal, with an Archives report in the panel, and an SMPP login's delivery receipts can be re-sent for a period. **One migration, V1.93.0** (three new tables, one registry row, nothing existing altered); coming from 0.12.16 or earlier read the 0.12.17 notes (V1.92.0) too |
+| **File** | `fireflo-0.12.19-linux-x86_64.tar.gz` |
+| **SHA-256** | `3157e0a91c1c21c634b6367456ab9fdf5bc06da2763cbf6a7bf1c067955bf1f5` |
+| **Built** | 2026-10-16, from gateway commit `3fcf973`, see [the 0.12.19 notes](#earlier-builds) |
+| **Control panel** | 0.12.19.0, included at `panel/`, from commit `dd9ac62` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.12.18-linux-jvm.tar.gz`, SHA-256 `46f687ef6120e285c54d394c443b0f8e00b499fe3f79b8e3935b86710c20de89`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.12.19-linux-jvm.tar.gz`, SHA-256 `aa8319637674f166ef13acc9e8853cae8d2fda2d7b9e6d88888b5ec1fcfee673`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -52,7 +52,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.12.18-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.12.19-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -71,7 +71,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.12.18-linux-jvm.tar.gz && cd fireflo-0.12.18-linux-jvm
+tar xzf fireflo-0.12.19-linux-jvm.tar.gz && cd fireflo-0.12.19-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -123,7 +123,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.12.18-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.12.19-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -164,8 +164,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.12.18-linux-x86_64.tar.gz
-cd fireflo-0.12.18-linux-x86_64
+tar xzf fireflo-0.12.19-linux-x86_64.tar.gz
+cd fireflo-0.12.19-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -272,7 +272,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.12.18 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.12.19 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -375,6 +375,29 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.12.19
+
+**Queue housekeeping: archive and clean, instead of "no flush".** Until now the gateway refused to
+flush a queue, so work waiting behind a dead vendor or a removed login could only be left there. It
+can now be taken off a live queue -- a worker, routing, receipts or callbacks -- and every entry is
+archived and ended the way a router drop ends it: the price refunded, a failed receipt queued for the
+client, nothing silently discarded. `fireflo queue dump` shows what is waiting (held work is called
+held), `fireflo queue archive` cleans with a dry run first and gives a summary, a list and a purge
+that is reconciled against the summary before it deletes, `fireflo queue archived` reads it back, and
+a spill file can be imported into the archive. `fireflo receipts repush` re-sends an SMPP login's
+delivery receipts for a period, including messages that ended before any vendor attempt.
+`smsg.queue.archive.retention.days` (default 0) leaves the archive alone until a purge is run by hand.
+
+**Control panel 0.12.19.0:** Reports → Archives reads the queue archive; Archive & clean from the
+Queues page and the vendor and listener pages; Re-send receipts… on an SMPP login, with a dry run,
+progress and cancel; archive retention on the Gateway settings page. The panel pairs with schema 1.93.0.
+
+**One migration, V1.93.0:** `queue_archive_batch`, `queue_archive` (partitioned by month) and
+`queue_archive_summary`, and one registry row. Nothing existing is altered and the tables stay empty
+until housekeeping is used. Coming from 0.12.16 or earlier, the 0.12.17 notes apply too (V1.92.0).
+The licence key in the binary is unchanged. 0.12.18's tarballs are in this repository's history at
+commit `0bef6dc`.
 
 ### 0.12.18
 
