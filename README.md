@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.26, with control panel 0.12.26.0 — vendor traffic loads at once instead of timing out: the panel reads whole hours from the gateway's hourly summary, which now also counts attempts per vendor. The panel expects the right schema again. **One migration, V1.97.0** — `usage_hourly.attempts`, backfilled; run it with the gateway stopped |
-| **File** | `fireflo-0.12.26-linux-x86_64.tar.gz` |
-| **SHA-256** | `3810bded8e9960cb3b44e7084048e9c4ea9fe774b730dfda91d451f1c2b2629c` |
-| **Built** | 2026-10-16, from gateway commit `a74e54d`, see [the 0.12.26 notes](#earlier-builds) |
-| **Control panel** | 0.12.26.0, included at `panel/`, from commit `0529aab` |
+| **Version** | 0.12.27, with control panel 0.12.27.0 — vendor attempts survive an hour's last summary pass and a backfill, and the panel reads hours before the summary began from the call records instead of counting them as empty. **No migration** from 0.12.26; coming from 0.12.25 or earlier read the 0.12.26 notes (V1.97.0) |
+| **File** | `fireflo-0.12.27-linux-x86_64.tar.gz` |
+| **SHA-256** | `bad24a94addd967ce1aaf6cb16182035105983011eac959dead18cd16dab9990` |
+| **Built** | 2026-10-16, from gateway commit `01006a0`, see [the 0.12.27 notes](#earlier-builds) |
+| **Control panel** | 0.12.27.0, included at `panel/`, from commit `5da277a` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.12.26-linux-jvm.tar.gz`, SHA-256 `33b9339125b0e1fef71889f299060c1a4f55a2bc627659a8157097d67377320e`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.12.27-linux-jvm.tar.gz`, SHA-256 `43fa56b5c131bd24af054feff973d7dc7ff90c67174ba87d82c4c1c751ca3b18`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -52,7 +52,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.12.26-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.12.27-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -71,7 +71,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.12.26-linux-jvm.tar.gz && cd fireflo-0.12.26-linux-jvm
+tar xzf fireflo-0.12.27-linux-jvm.tar.gz && cd fireflo-0.12.27-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -123,7 +123,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.12.26-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.12.27-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -164,8 +164,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.12.26-linux-x86_64.tar.gz
-cd fireflo-0.12.26-linux-x86_64
+tar xzf fireflo-0.12.27-linux-x86_64.tar.gz
+cd fireflo-0.12.27-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -272,7 +272,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.12.26 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.12.27 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -375,6 +375,25 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.12.27
+
+**Vendor attempts survive an hour's last summary pass.** 0.12.26 added per-vendor attempts to the
+hourly usage summary and recounted them under the rule that stops a settled hour from changing --
+right after the same pass had marked the hour as just recomputed. An hour past the receipt deadline
+therefore read as settled and kept the zero the pass had cleared it to: every hour lost its attempts
+at its last recount, and so did every hour `fireflo usage hourly --backfill` computed. Attempts are
+call record rows that never change, so they are now recounted at any age. If you ran 0.12.26, run
+`fireflo usage hourly --backfill 35` once after upgrading to repair the hours already affected.
+
+**Hours before the summary began are no longer counted as empty.** On an install that enabled the
+hourly summary late, the control panel's vendor figures read those hours from the call records (slower,
+but right) until the backfill summarises them. On a staging gateway the 7- and 30-day figures had come
+out equal, a week of records short.
+
+**No migration** from 0.12.26; coming from 0.12.25 or earlier the 0.12.26 notes apply first (V1.97.0).
+The licence key in the binary is unchanged. 0.12.26's tarballs are in this repository's history at
+commit `46975b3`.
 
 ### 0.12.26
 
