@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.24, with control panel 0.12.24.0 — the ~500 messages a second ceiling removed: a vendor's delivery receipts no longer stall the connection that carries its responses, so a gateway with receipts on sustains 3,000/s where it settled near 500/s. **No migration** from 0.12.23; coming from 0.12.22 or earlier read the 0.12.23 notes (V1.95.0) first |
-| **File** | `fireflo-0.12.24-linux-x86_64.tar.gz` |
-| **SHA-256** | `507fbe995dc478f8efc0c82acc7ec5d83ab6137066195a63151bd486430fbe5b` |
-| **Built** | 2026-10-16, from gateway commit `5a3a6a2`, see [the 0.12.24 notes](#earlier-builds) |
-| **Control panel** | 0.12.24.0, included at `panel/`, from commit `861e8d1` |
+| **Version** | 0.12.25, with control panel 0.12.25.0 — call record inserts stay flat as the tables grow: message ids are time-ordered (UUID version 7, same form), the body and multipart lookup indexes cover only the rows that use them, and three duplicate indexes are dropped. **One migration, V1.96.0** — rebuilds two indexes, reading `cdr_submit` once; run it with the gateway stopped |
+| **File** | `fireflo-0.12.25-linux-x86_64.tar.gz` |
+| **SHA-256** | `2f0e3e37f2a6b9689b607256ea945162210734180b6ec968d883bb5c497f2ba7` |
+| **Built** | 2026-10-16, from gateway commit `898ae12`, see [the 0.12.25 notes](#earlier-builds) |
+| **Control panel** | 0.12.25.0, included at `panel/`, from commit `66dfe9e` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.12.24-linux-jvm.tar.gz`, SHA-256 `da4e740b7af032fae55d1b64d2274f8e3922a46408c285c11929e56b6a935b1a`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.12.25-linux-jvm.tar.gz`, SHA-256 `f366567704a9275a6bb772d8fb824850f137e3d190443359c49018cd635e2984`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -52,7 +52,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.12.24-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.12.25-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -71,7 +71,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.12.24-linux-jvm.tar.gz && cd fireflo-0.12.24-linux-jvm
+tar xzf fireflo-0.12.25-linux-jvm.tar.gz && cd fireflo-0.12.25-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -123,7 +123,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.12.24-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.12.25-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -164,8 +164,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.12.24-linux-x86_64.tar.gz
-cd fireflo-0.12.24-linux-x86_64
+tar xzf fireflo-0.12.25-linux-x86_64.tar.gz
+cd fireflo-0.12.25-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -272,7 +272,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.12.24 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.12.25 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -375,6 +375,26 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.12.25
+
+**Call record inserts stay flat as the tables grow.** Every call record table is indexed on the
+message id, and the id was a random UUID, so each insert landed on a random page of each of those
+indexes. While they fit in memory that is cheap; once they do not, every message costs random disk
+reads and writes, and more of them as the table grows -- the limit at ten million records a day.
+Message ids are now **UUID version 7**: the same 36-character form, ordered by time, so new ids land at
+the end of every index keyed on them. Measured, 200,000 inserts into a 5-million-row id index: 3 pages
+read from disk instead of 128,082, 4,267 dirtied instead of 129,779. Existing ids are untouched; a new
+id reveals when it was made, to the millisecond.
+
+The message body search and multipart lookup indexes now cover only the rows that have something to
+index (almost every row has neither), and searches still use them. Three indexes left by the 0.12.10
+partitioning that duplicated others on the current partition are dropped.
+
+**One migration, V1.96.0:** rebuilds the two indexes, reading `cdr_submit` once while call record
+inserts wait -- seconds on a few million rows, longer on hundreds of millions. Run it with the gateway
+stopped, as the installer and `fireflo-install update` do. The licence key in the binary is unchanged.
+0.12.24's tarballs are in this repository's history at commit `5b58e2a`.
 
 ### 0.12.24
 
