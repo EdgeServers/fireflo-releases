@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.27, with control panel 0.12.27.0 — vendor attempts survive an hour's last summary pass and a backfill, and the panel reads hours before the summary began from the call records instead of counting them as empty. **No migration** from 0.12.26; coming from 0.12.25 or earlier read the 0.12.26 notes (V1.97.0) |
-| **File** | `fireflo-0.12.27-linux-x86_64.tar.gz` |
-| **SHA-256** | `bad24a94addd967ce1aaf6cb16182035105983011eac959dead18cd16dab9990` |
-| **Built** | 2026-10-16, from gateway commit `01006a0`, see [the 0.12.27 notes](#earlier-builds) |
-| **Control panel** | 0.12.27.0, included at `panel/`, from commit `5da277a` |
+| **Version** | 0.12.30, with control panel 0.12.30.0 — a final UNKNOWN receipt for a message whose receipt never comes, the home page's failures tile from an hourly summary, vendor connections kept on their own link, and change confirmations in the panel. **Two migrations** from 0.12.27 or 0.12.28 (V1.98.0, V1.99.0); read the 0.12.30 notes before upgrading |
+| **File** | `fireflo-0.12.30-linux-x86_64.tar.gz` |
+| **SHA-256** | `957043404fa67b514d4debd1350501a6ef71099dfbb7f0b44ce81db031beb253` |
+| **Built** | 2026-10-16, from gateway commit `cfe7ac6`, see [the 0.12.30 notes](#earlier-builds) |
+| **Control panel** | 0.12.30.0, included at `panel/`, from commit `dd2d8fc` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.12.27-linux-jvm.tar.gz`, SHA-256 `43fa56b5c131bd24af054feff973d7dc7ff90c67174ba87d82c4c1c751ca3b18`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.12.30-linux-jvm.tar.gz`, SHA-256 `bb222f9dc363b6f9c46e667e32972585ea7bc9f60320f9b007282498eda7a706`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -52,7 +52,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.12.27-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.12.30-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -71,7 +71,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.12.27-linux-jvm.tar.gz && cd fireflo-0.12.27-linux-jvm
+tar xzf fireflo-0.12.30-linux-jvm.tar.gz && cd fireflo-0.12.30-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -123,7 +123,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.12.27-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.12.30-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -164,8 +164,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.12.27-linux-x86_64.tar.gz
-cd fireflo-0.12.27-linux-x86_64
+tar xzf fireflo-0.12.30-linux-x86_64.tar.gz
+cd fireflo-0.12.30-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -272,7 +272,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.12.27 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.12.30 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -375,6 +375,54 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.12.30
+
+**A message whose receipt never comes gets a final UNKNOWN receipt.** At the receipt deadline
+(`smsg.cdr.deadline.hours`, 24 hours) a message still waiting for its outcome was closed as EXPIRED in
+the call records and the customer was never told. It is now sent one final receipt, `stat:UNKNOWN` with
+`err:000` by default: over SMPP through the listener it arrived on (held and replayed at the next bind
+when the login is not bound), or to its webhook. `registered_delivery` decides whether it is owed. A
+vendor receipt arriving later is recorded and shown in the panel, and not sent: the customer is never
+told two outcomes for one message. Each node tells the messages it took. Settings, under Settings →
+Receipts: `smsg.dlr.deadline.receipt.enabled` (true), `smsg.dlr.deadline.receipt.err` (`000`) and
+`smsg.dlr.deadline.receipt.exclude.accounts`.
+
+**Before upgrading:** within ten minutes of the first start, customers are sent UNKNOWN for every
+message already past the deadline with no outcome and still in the receipt store (up to
+`smsg.dlr.retention.days`, 7). List the accounts that must not get them, or switch the feature off,
+beforehand. Messages taken before 0.12.25 are not reached.
+
+**One migration, V1.99.0:** the three settings registered, and the registered default of
+`smsg.cdr.deadline.hours` corrected from 48 to 24 -- what the gateway has always used. Carries 0.12.29
+and 0.12.28, which were not published here; their notes follow.
+
+### 0.12.29
+
+**The home page's failures tile loads again on a busy gateway.** It grouped the last day's failed
+messages from every call record in the window; at about a million records a day that ran past the
+control panel's 10-second limit every minute and the tile showed "stale: failures". The gateway now
+keeps failures per hour by state, receipt status and error code beside its hourly usage summary, and
+the panel reads whole hours from it and only the last minutes from the records. The tile's counts move
+when an hour is recomputed (every 15 minutes by default) and its window starts at the top of the hour.
+
+**One migration, V1.98.0:** table `usage_failure_hourly`, backfilled during the upgrade from the call
+records already there (about 40 seconds for ten days at a million a day). Run it with the gateway
+stopped, as the installer does.
+
+### 0.12.28
+
+**Each vendor connection stays on its own link.** With two or more vendors, connections opened at the
+same moment -- at start-up, or a reconnect overlapping another vendor's -- could be built on each
+other's socket: messages routed to one vendor went out through another and were recorded under the
+first ("Duplicate handler name: smppSessionThreadRenamer" in the log). A single-vendor install was
+never affected. **A group re-route tries another member:** a message a vendor hands back for
+re-routing (`status.retry.router`) no longer goes straight back to it while another member is up.
+**The control panel confirms changes** on the vendor, server, account, pricing and routing screens, and
+asks for DELETE before deleting. No migration.
+
+The licence key in the binary is unchanged. 0.12.27's tarballs are in this repository's history at
+commit `61e59b3`.
 
 ### 0.12.27
 
