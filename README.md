@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.25, with control panel 0.12.25.0 — call record inserts stay flat as the tables grow: message ids are time-ordered (UUID version 7, same form), the body and multipart lookup indexes cover only the rows that use them, and three duplicate indexes are dropped. **One migration, V1.96.0** — rebuilds two indexes, reading `cdr_submit` once; run it with the gateway stopped |
-| **File** | `fireflo-0.12.25-linux-x86_64.tar.gz` |
-| **SHA-256** | `2f0e3e37f2a6b9689b607256ea945162210734180b6ec968d883bb5c497f2ba7` |
-| **Built** | 2026-10-16, from gateway commit `898ae12`, see [the 0.12.25 notes](#earlier-builds) |
-| **Control panel** | 0.12.25.0, included at `panel/`, from commit `66dfe9e` |
+| **Version** | 0.12.26, with control panel 0.12.26.0 — vendor traffic loads at once instead of timing out: the panel reads whole hours from the gateway's hourly summary, which now also counts attempts per vendor. The panel expects the right schema again. **One migration, V1.97.0** — `usage_hourly.attempts`, backfilled; run it with the gateway stopped |
+| **File** | `fireflo-0.12.26-linux-x86_64.tar.gz` |
+| **SHA-256** | `3810bded8e9960cb3b44e7084048e9c4ea9fe774b730dfda91d451f1c2b2629c` |
+| **Built** | 2026-10-16, from gateway commit `a74e54d`, see [the 0.12.26 notes](#earlier-builds) |
+| **Control panel** | 0.12.26.0, included at `panel/`, from commit `0529aab` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.12.25-linux-jvm.tar.gz`, SHA-256 `f366567704a9275a6bb772d8fb824850f137e3d190443359c49018cd635e2984`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.12.26-linux-jvm.tar.gz`, SHA-256 `33b9339125b0e1fef71889f299060c1a4f55a2bc627659a8157097d67377320e`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -52,7 +52,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.12.25-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.12.26-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -71,7 +71,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.12.25-linux-jvm.tar.gz && cd fireflo-0.12.25-linux-jvm
+tar xzf fireflo-0.12.26-linux-jvm.tar.gz && cd fireflo-0.12.26-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -123,7 +123,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.12.25-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.12.26-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -164,8 +164,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.12.25-linux-x86_64.tar.gz
-cd fireflo-0.12.25-linux-x86_64
+tar xzf fireflo-0.12.26-linux-x86_64.tar.gz
+cd fireflo-0.12.26-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -272,7 +272,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.12.25 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.12.26 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -375,6 +375,27 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.12.26
+
+**Vendor traffic loads at once instead of timing out.** The vendor page and the Vendors list
+computed their figures from every call record in the range on each load: a distinct count of message
+ids, the representative attempt of every message, and a receipt lookup per message. On a few million
+records that ran past the control panel's 10-second statement timeout ("canceling statement due to
+statement timeout"). The gateway's hourly usage summary already held each message's count, outcome
+and cost under the vendor that carried it; it now also counts **attempts by the vendor each attempt
+went to** (a failover refusal is real load on the first vendor). The panel reads whole hours from the
+summary and only the opening part-hour and the last minute or two from the records. Measured on 2.3
+million records over two and a half days: the same figures for every vendor, in 0.1 s instead of
+8.7 s. A gateway before 0.12.26, or a stalled rollup, keeps the old query.
+
+The control panel also expects the right schema again: 0.12.25.0 still expected 1.95.0 and showed
+"Database schema 1.96.0 is newer than this panel expects".
+
+**One migration, V1.97.0:** adds `usage_hourly.attempts` and backfills it for the hours the summary
+already covers (35 days by default), reading that range of call records once. Run it with the gateway
+stopped, as the installer and `fireflo-install update` do. The licence key in the binary is unchanged.
+0.12.25's tarballs are in this repository's history at commit `953cc3c`.
 
 ### 0.12.25
 
