@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.30, with control panel 0.12.30.0 — a final UNKNOWN receipt for a message whose receipt never comes, the home page's failures tile from an hourly summary, vendor connections kept on their own link, and change confirmations in the panel. **Two migrations** from 0.12.27 or 0.12.28 (V1.98.0, V1.99.0); read the 0.12.30 notes before upgrading |
-| **File** | `fireflo-0.12.30-linux-x86_64.tar.gz` |
-| **SHA-256** | `957043404fa67b514d4debd1350501a6ef71099dfbb7f0b44ce81db031beb253` |
-| **Built** | 2026-10-16, from gateway commit `cfe7ac6`, see [the 0.12.30 notes](#earlier-builds) |
-| **Control panel** | 0.12.30.0, included at `panel/`, from commit `dd2d8fc` |
+| **Version** | 0.12.31, with control panel 0.12.31.0 — the control panel redesigned: a neutral palette, a top bar with the four most-used pages, a jump box (⌘K) and a live health pill, forms as settings rows, and the customer portal on the same frame; with it, a reseller's child statement CSV fixed, closing a period confirmed, a white-label logo, and host-supplied settings editable again. **No migration**: the schema stays 1.99.0, so a 0.12.30 install upgrades without a `db migrate` step. From 0.12.29 or earlier, read the 0.12.30 notes first |
+| **File** | `fireflo-0.12.31-linux-x86_64.tar.gz` |
+| **SHA-256** | `e0c39ab714d0d4ab864ba77b2597b8bc331745ee87dced7754ea3c7732e7683b` |
+| **Built** | 2026-10-18, from gateway commit `59d22b0`, see [the 0.12.31 notes](#earlier-builds) |
+| **Control panel** | 0.12.31.0, included at `panel/`, from commit `342bfe4` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.12.30-linux-jvm.tar.gz`, SHA-256 `bb222f9dc363b6f9c46e667e32972585ea7bc9f60320f9b007282498eda7a706`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.12.31-linux-jvm.tar.gz`, SHA-256 `bdeb7d94c24b36453b4a107a5e86d39b617d3b1e021e6a9dc0d92ca248a1abfe`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -52,7 +52,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.12.30-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.12.31-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -71,7 +71,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.12.30-linux-jvm.tar.gz && cd fireflo-0.12.30-linux-jvm
+tar xzf fireflo-0.12.31-linux-jvm.tar.gz && cd fireflo-0.12.31-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -123,7 +123,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.12.30-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.12.31-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -164,8 +164,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.12.30-linux-x86_64.tar.gz
-cd fireflo-0.12.30-linux-x86_64
+tar xzf fireflo-0.12.31-linux-x86_64.tar.gz
+cd fireflo-0.12.31-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -272,7 +272,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.12.30 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.12.31 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -355,7 +355,8 @@ before another machine can take it.
 ## Earlier builds
 
 **Only the current release is published here.** Builds before 0.12.10 have been
-withdrawn and their tarballs removed from this tree. 0.12.9's tarballs (with
+withdrawn and their tarballs removed from this tree. 0.12.30's tarballs (with
+control panel 0.12.30.0) are in this repository's history at commit `edd265d`. 0.12.9's tarballs (with
 control panel 0.12.9.0) are in this repository's history at commit `d39e2df`. 0.12.8's last tarballs (with
 control panel 0.12.8.2) are in this repository's history at commit `0463a83`; its first
 (with control panel 0.12.8.1) at commit `d1e0f81`. 0.12.7's tarballs (x86-64, and
@@ -375,6 +376,31 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.12.31
+
+**The control panel, redesigned.** A neutral palette (green is the mark and the success state, nothing
+else); a top bar on every page with Messages, Vendors, Servers and Accounts as tabs, a jump box
+(⌘K / Ctrl+K) that opens an account, a vendor, a server or a message by id, the gateway's health as
+one word with its outbound rate, and an account menu holding Change password and Sign out; forms laid
+out as settings rows -- the setting and its help on the left, the control on the right -- on the
+Gateway, vendor, server, login, account, pricing, routing and TLV screens; stat tiles without icons;
+cards without shadows. The customer portal runs on the same frame with its own map, its balance in
+the sidebar and the top bar, and Accounts shown only to a reseller.
+
+**Fixed with it.** A reseller's child-statement CSV was the reseller's whole book; it is the child's.
+*Close this period* asked nothing; it confirms, naming the period and the amount. A white-labelled
+portal showed FireFlo's mark; it shows the operator's logo (new optional `MIS_PANEL_LOGO_URL` beside
+`MIS_PANEL_BRAND`) or the brand's initial. An operator could name a brand-new account with a vendor's
+name or a malformed id; both are refused, and the Settings tab now shows a refusal instead of
+swallowing it. A gateway setting the host supplies (an env var, or the shipped `application.properties`
+line for keys such as `smsg.cdr.body`) was shown as *Set on the host* and locked, so message-text
+retention could not be switched on from the panel; the gateway reads a saved value before the host's,
+and the row is editable again.
+
+**Gateway:** no functional change since 0.12.30 (one test). **No migration** -- the schema stays
+1.99.0. Upgrading from 0.12.30 is the gateway binary, the panel source and `npm ci && npm run build`;
+from 0.12.29 or earlier, apply the 0.12.30 notes below first.
 
 ### 0.12.30
 
