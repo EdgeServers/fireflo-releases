@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.31, with control panel 0.12.31.0 — the control panel redesigned: a neutral palette, a top bar with the four most-used pages, a jump box (⌘K) and a live health pill, forms as settings rows, and the customer portal on the same frame; with it, a reseller's child statement CSV fixed, closing a period confirmed, a white-label logo, and host-supplied settings editable again. **No migration**: the schema stays 1.99.0, so a 0.12.30 install upgrades without a `db migrate` step. From 0.12.29 or earlier, read the 0.12.30 notes first |
+| **Version** | 0.12.31, with control panel 0.12.31.1 — the control panel redesigned: a neutral palette, a top bar with the four most-used pages, a jump box (⌘K) and a live health pill, forms as settings rows, and the customer portal on the same frame; with it, a reseller's child statement CSV fixed, closing a period confirmed, a white-label logo, and host-supplied settings editable again. Panel 0.12.31.1 stops an account save from blanking fields it did not carry, fixes control widths on the Gateway page and the top bar's alignment, and puts TLV stamps behind a chip. **No migration**: the schema stays 1.99.0, so a 0.12.30 install upgrades without a `db migrate` step. From 0.12.29 or earlier, read the 0.12.30 notes first |
 | **File** | `fireflo-0.12.31-linux-x86_64.tar.gz` |
-| **SHA-256** | `e0c39ab714d0d4ab864ba77b2597b8bc331745ee87dced7754ea3c7732e7683b` |
+| **SHA-256** | `42e40c2c5a263cfe0d0ccf98d1a8639878d3e761ee4b383269095b63f54397e2` |
 | **Built** | 2026-10-18, from gateway commit `59d22b0`, see [the 0.12.31 notes](#earlier-builds) |
-| **Control panel** | 0.12.31.0, included at `panel/`, from commit `342bfe4` |
+| **Control panel** | 0.12.31.1, included at `panel/`, from commit `db71b53` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.12.31-linux-jvm.tar.gz`, SHA-256 `bdeb7d94c24b36453b4a107a5e86d39b617d3b1e021e6a9dc0d92ca248a1abfe`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.12.31-linux-jvm.tar.gz`, SHA-256 `0fed12e9dccb042139d9f2281ab3fae4313e7c2fcc71eda46e171175af55749e`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -355,7 +355,8 @@ before another machine can take it.
 ## Earlier builds
 
 **Only the current release is published here.** Builds before 0.12.10 have been
-withdrawn and their tarballs removed from this tree. 0.12.30's tarballs (with
+withdrawn and their tarballs removed from this tree. 0.12.31's first tarballs (with
+control panel 0.12.31.0) are in this repository's history at commit `4c0443a`. 0.12.30's tarballs (with
 control panel 0.12.30.0) are in this repository's history at commit `edd265d`. 0.12.9's tarballs (with
 control panel 0.12.9.0) are in this repository's history at commit `d39e2df`. 0.12.8's last tarballs (with
 control panel 0.12.8.2) are in this repository's history at commit `0463a83`; its first
@@ -378,6 +379,16 @@ repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
 
 ### 0.12.31
+
+**Control panel 0.12.31.1** (the gateway is unchanged; the tarballs were re-cut with the new panel).
+An account's Settings tab showed *Name this account* for a moment on every account while the
+catalogue loaded, and saving it sent a name alone -- which blanked the account's email and
+description and, for an operator, reset reselling and the reseller it belongs to. A save now keeps
+every field it does not carry, on the operator panel and the portal alike, and the tab waits for the
+catalogue before offering either form. On the Gateway page switches, number boxes and lists keep
+their own width instead of stretching across the column; the top bar's health, theme and account
+menu sit at the right edge on a wide screen; and the TLVs a header, template or login stamps show as
+an *N stamps* chip that opens the list, instead of widening the table.
 
 **The control panel, redesigned.** A neutral palette (green is the mark and the success state, nothing
 else); a top bar on every page with Messages, Vendors, Servers and Accounts as tabs, a jump box
