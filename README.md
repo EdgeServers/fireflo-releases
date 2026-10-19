@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.32, with control panel 0.12.32.0 — a funded prepaid account is no longer refused `0x402` on its last twenty messages of credit; a throttled SMPP client is named in `smsg.log` once per session and counted; the insufficient-credit status is chosen per listener (`0x401` or `0x402`) |
-| **File** | `fireflo-0.12.32-linux-x86_64.tar.gz` |
-| **SHA-256** | `876ddd29ecaf60947f69a982d17b884bc506a8b7d5640f0df97cea8e23b83c0e` |
-| **Built** | 2026-10-19, from gateway commit `d48e8a3`, see [the 0.12.32 notes](#earlier-builds) |
-| **Control panel** | 0.12.32.0, included at `panel/`, from commit `bcf22af` |
+| **Version** | 0.12.33, with control panel 0.12.33.0 — template variables written together act as one longer variable; SMPP delivery receipts now come from the handset to the customer's sender ID (a behaviour change, see [the 0.12.33 notes](#earlier-builds)) |
+| **File** | `fireflo-0.12.33-linux-x86_64.tar.gz` |
+| **SHA-256** | `ffe5ffe6acf300c3228d758fd04e836ec9a73833ef607c8da06ccbf64d888a40` |
+| **Built** | 2026-10-19, from gateway commit `1824ca8`, see [the 0.12.33 notes](#earlier-builds) |
+| **Control panel** | 0.12.33.0, included at `panel/`, from commit `de51cfc` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.12.32-linux-jvm.tar.gz`, SHA-256 `0db4b207878ca7bc543d2d15ecb6d0bb9614eff6f31c43ec832801d60239da1a`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.12.33-linux-jvm.tar.gz`, SHA-256 `1e355d16e7c0f7916a5b83dc0808a47c9b5a8f414a226f38613016c25fc0266b`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -52,7 +52,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.12.32-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.12.33-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -71,7 +71,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.12.32-linux-jvm.tar.gz && cd fireflo-0.12.32-linux-jvm
+tar xzf fireflo-0.12.33-linux-jvm.tar.gz && cd fireflo-0.12.33-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -123,7 +123,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.12.32-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.12.33-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -164,8 +164,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.12.32-linux-x86_64.tar.gz
-cd fireflo-0.12.32-linux-x86_64
+tar xzf fireflo-0.12.33-linux-x86_64.tar.gz
+cd fireflo-0.12.33-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -272,7 +272,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.12.32 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.12.33 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -355,7 +355,8 @@ before another machine can take it.
 ## Earlier builds
 
 **Only the current release is published here.** Builds before 0.12.10 have been
-withdrawn and their tarballs removed from this tree. 0.12.31's last tarballs (with
+withdrawn and their tarballs removed from this tree. 0.12.32's tarballs (with
+control panel 0.12.32.0) are in this repository's history at commit `ec03260`. 0.12.31's last tarballs (with
 control panel 0.12.31.1) are in this repository's history at commit `d7b0f65`; its first (with
 control panel 0.12.31.0) are in this repository's history at commit `4c0443a`. 0.12.30's tarballs (with
 control panel 0.12.30.0) are in this repository's history at commit `edd265d`. 0.12.9's tarballs (with
@@ -378,6 +379,26 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.12.33
+
+**Template variables written together are one variable.** Assets → Templates now accepts DLT-style
+templates such as `Your OTP is {#var#}{#var#}{#var#}`. Placeholders of one type that touch, or are
+separated only by spaces, act as one variable of their combined length: three `{#var#}` stand for 1
+to 90 characters at the default limit of 30. A space between them is optional, so `{#num#} {#num#}`
+accepts `1234 5678` and `12345678`. Digits next to letters (`{#num#}{#alp#}`) split where the type
+changes. `{#var#}` touching `{#num#}` or `{#alp#}` is refused when the template is saved, because the
+split point could not be known. The template form shows each group and its length under the preview.
+An approved template like `Code {#var#} {#var#} end` now also accepts the two values written without
+the space.
+
+**Behaviour change: SMPP delivery receipts come from the handset.** Every receipt went out from the
+customer's own sender ID to the handset -- the opposite of SMPP practice and of Kannel. It now goes
+from the handset (the number the message was sent to) to the customer's sender ID. A customer whose
+receipt parser was written against the old order can keep it: set `flag.reverseDlrSrcDst=true` on
+that customer's listener. Routing rules are unaffected.
+
+No database migration (the schema stays at V1.99.0).
 
 ### 0.12.32
 
