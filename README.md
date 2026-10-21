@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.34, with control panel 0.12.34.5 — archive accounts and move logins, sender IDs and templates between accounts; dashboard rings for failures by account and traffic by vendor (see [the 0.12.34 notes](#earlier-builds)) |
+| **Version** | 0.12.34, with control panel 0.12.34.6 — archive accounts and move logins, sender IDs and templates between accounts; dashboard rings for failures by account and traffic by vendor (see [the 0.12.34 notes](#earlier-builds)) |
 | **File** | `fireflo-0.12.34-linux-x86_64.tar.gz` |
-| **SHA-256** | `279e1cda8a5313fa39629853af4aebc24f5cb9658da1cb3eeef1430dbe8ddfd3` |
+| **SHA-256** | `b53ece3bc32ae52a708abeaf7bedc81b5f42c928d93f19930063d65deb58153b` |
 | **Built** | 2026-10-21, from gateway commit `11527cc`, see [the 0.12.34 notes](#earlier-builds) |
-| **Control panel** | 0.12.34.5, included at `panel/`, from commit `f0168eb` |
+| **Control panel** | 0.12.34.6, included at `panel/`, from commit `b99ce85` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.12.34-linux-jvm.tar.gz`, SHA-256 `d782c486f9e2901b0d4125c934fa68d0fe3570db0832a645024a6ba49f1d6583`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.12.34-linux-jvm.tar.gz`, SHA-256 `c4459a494d8fa29f1f6354b7bcf6754d145cb347ea2667c20ba63b06681c100e`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -405,9 +405,13 @@ and Vendors page) now read the call records by index -- 1.3 s became a few milli
 3.7-million-row test database. Measured TPS shows at most two decimal places. The routing and pricing rule
 dialogs no longer stretch the When switch beside a squeezed condition editor.
 
+**Accounts and assets.** An account's Overview tab reads only that account, and its 7 and 30 days
+from the hourly summary: it no longer hits the statement timeout. The Headers and Templates pages
+are paged, searched and filtered in the database, 25 rows at a time.
+
 **Schema V1.100.0** adds three empty columns to `app_account` (`archived_at`, `archived_by`,
 `archived_logins`); nothing existing changes. Update the control panel with the gateway: a panel
-older than 0.12.34 warns that the schema is newer than it expects. Control panel 0.12.34.5; gateway
+older than 0.12.34 warns that the schema is newer than it expects. Control panel 0.12.34.6; gateway
 `11527cc`.
 
 ### 0.12.33
