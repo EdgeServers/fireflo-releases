@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.34, with control panel 0.12.34.6 — archive accounts and move logins, sender IDs and templates between accounts; dashboard rings for failures by account and traffic by vendor (see [the 0.12.34 notes](#earlier-builds)) |
-| **File** | `fireflo-0.12.34-linux-x86_64.tar.gz` |
-| **SHA-256** | `b53ece3bc32ae52a708abeaf7bedc81b5f42c928d93f19930063d65deb58153b` |
-| **Built** | 2026-10-21, from gateway commit `11527cc`, see [the 0.12.34 notes](#earlier-builds) |
-| **Control panel** | 0.12.34.6, included at `panel/`, from commit `b99ce85` |
+| **Version** | 0.12.35, with control panel 0.12.35.0 — Headers and Templates show each registration in full; the account Overview no longer times out; zoomable dashboard sunbursts (see [the 0.12.35 notes](#earlier-builds)) |
+| **File** | `fireflo-0.12.35-linux-x86_64.tar.gz` |
+| **SHA-256** | `c2cd31a3537f22fb52f8074bb580d7011c64a78b264467e1f2f3f37ae4c37888` |
+| **Built** | 2026-10-21, from gateway commit `c0581ec`, see [the 0.12.35 notes](#earlier-builds) |
+| **Control panel** | 0.12.35.0, included at `panel/`, from commit `07246dd` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.12.34-linux-jvm.tar.gz`, SHA-256 `c4459a494d8fa29f1f6354b7bcf6754d145cb347ea2667c20ba63b06681c100e`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.12.35-linux-jvm.tar.gz`, SHA-256 `00aedab23c31d07c8dedbd3504fa3c09897558f391fecb4436323e305faef560`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -52,7 +52,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.12.34-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.12.35-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -71,7 +71,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.12.34-linux-jvm.tar.gz && cd fireflo-0.12.34-linux-jvm
+tar xzf fireflo-0.12.35-linux-jvm.tar.gz && cd fireflo-0.12.35-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -123,7 +123,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.12.34-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.12.35-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -164,8 +164,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.12.34-linux-x86_64.tar.gz
-cd fireflo-0.12.34-linux-x86_64
+tar xzf fireflo-0.12.35-linux-x86_64.tar.gz
+cd fireflo-0.12.35-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -272,7 +272,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.12.34 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.12.35 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -355,7 +355,8 @@ before another machine can take it.
 ## Earlier builds
 
 **Only the current release is published here.** Builds before 0.12.10 have been
-withdrawn and their tarballs removed from this tree. 0.12.33's tarballs (with
+withdrawn and their tarballs removed from this tree. 0.12.34's last tarballs (with
+control panel 0.12.34.6) are in this repository's history at commit `c95aa37`. 0.12.33's tarballs (with
 control panel 0.12.33.0) are in this repository's history at commit `b35bfe6`. 0.12.32's tarballs (with
 control panel 0.12.32.0) are in this repository's history at commit `ec03260`. 0.12.31's last tarballs (with
 control panel 0.12.31.1) are in this repository's history at commit `d7b0f65`; its first (with
@@ -380,6 +381,24 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.12.35
+
+**Headers and Templates show each registration in full** (Assets). Over each list, how many there
+are, how many wait for approval, are refused or withdrawn, and how many of the listed accounts
+enforce it. Chips filter by status (all, waiting, refused, approved, withdrawn) with their counts,
+beside an account picker and 25, 50 or 100 rows a page -- all done by the database. A sender ID
+shows its account's name and whether it enforces, its product and login, its stamps and any change
+the customer proposed, who asked for it, who reviewed it and why it was refused. A template shows
+its text on its own line with the variables marked, how many variables and of what kind, and its
+length as GSM-7 or Unicode with the number of SMS parts. Open a row for the request note, every
+stamp on the wire (accept or dismiss proposed stamps there), missing stamps with their fixes, and
+the history.
+
+The gateway is unchanged apart from its version: no schema change (still 1.100.0), so `update` has
+nothing to migrate. Everything else listed under 0.12.34 below -- archived accounts, moves, the
+dashboard sunbursts, the account Overview fix -- is in this release too. Control panel 0.12.35.0;
+gateway `c0581ec`.
 
 ### 0.12.34
 
