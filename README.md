@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.33, with control panel 0.12.33.0 — template variables written together act as one longer variable; SMPP delivery receipts now come from the handset to the customer's sender ID (a behaviour change, see [the 0.12.33 notes](#earlier-builds)) |
-| **File** | `fireflo-0.12.33-linux-x86_64.tar.gz` |
-| **SHA-256** | `ffe5ffe6acf300c3228d758fd04e836ec9a73833ef607c8da06ccbf64d888a40` |
-| **Built** | 2026-10-19, from gateway commit `1824ca8`, see [the 0.12.33 notes](#earlier-builds) |
-| **Control panel** | 0.12.33.0, included at `panel/`, from commit `de51cfc` |
+| **Version** | 0.12.34, with control panel 0.12.34.3 — archive accounts and move logins, sender IDs and templates between accounts; dashboard rings for failures by account and traffic by vendor (see [the 0.12.34 notes](#earlier-builds)) |
+| **File** | `fireflo-0.12.34-linux-x86_64.tar.gz` |
+| **SHA-256** | `980006d79f9d70304d6bbb9ba909da5a80a7bcef3b78dfe04fb4733ef5781b5e` |
+| **Built** | 2026-10-21, from gateway commit `11527cc`, see [the 0.12.34 notes](#earlier-builds) |
+| **Control panel** | 0.12.34.3, included at `panel/`, from commit `c1e6888` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.12.33-linux-jvm.tar.gz`, SHA-256 `1e355d16e7c0f7916a5b83dc0808a47c9b5a8f414a226f38613016c25fc0266b`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.12.34-linux-jvm.tar.gz`, SHA-256 `0afb98064fb513f00c4b7a82bde52e1dc3d1d3c4abc188150c2a6f9bd8f9a20d`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -52,7 +52,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.12.33-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.12.34-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -71,7 +71,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.12.33-linux-jvm.tar.gz && cd fireflo-0.12.33-linux-jvm
+tar xzf fireflo-0.12.34-linux-jvm.tar.gz && cd fireflo-0.12.34-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -123,7 +123,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.12.33-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.12.34-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -164,8 +164,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.12.33-linux-x86_64.tar.gz
-cd fireflo-0.12.33-linux-x86_64
+tar xzf fireflo-0.12.34-linux-x86_64.tar.gz
+cd fireflo-0.12.34-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -272,7 +272,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.12.33 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.12.34 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -355,7 +355,8 @@ before another machine can take it.
 ## Earlier builds
 
 **Only the current release is published here.** Builds before 0.12.10 have been
-withdrawn and their tarballs removed from this tree. 0.12.32's tarballs (with
+withdrawn and their tarballs removed from this tree. 0.12.33's tarballs (with
+control panel 0.12.33.0) are in this repository's history at commit `b35bfe6`. 0.12.32's tarballs (with
 control panel 0.12.32.0) are in this repository's history at commit `ec03260`. 0.12.31's last tarballs (with
 control panel 0.12.31.1) are in this repository's history at commit `d7b0f65`; its first (with
 control panel 0.12.31.0) are in this repository's history at commit `4c0443a`. 0.12.30's tarballs (with
@@ -379,6 +380,31 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.12.34
+
+**Archive an account** (Accounts → an account → Settings, admins). Archiving retires an account
+without deleting it: its logins are switched off and any live SMPP binds dropped, nobody can sign in
+to the portal for it (a sign-in link sent earlier stops working too), it leaves the account list for
+an "Archived" view, and it becomes read-only. The credit the gateway holds for it goes back to its
+balance; the balance, statement and call records stay. Unarchive switches back on exactly the logins
+the archive switched off. A reseller with active customers cannot be archived. The gateway withholds
+an archived account's logins, and its management API refuses to top up or re-provision one (409).
+
+**Move a login, sender ID or template to another account** ("Move…" on the Logins tab, the move icon
+on Approvals). A login moves alone: it is refused while sender IDs or templates are scoped to it,
+and its live binds are dropped so it re-binds billing the new account. A sender ID or template keeps
+its approval. What was already sent stays on the old account.
+
+**Dashboard.** Two ring charts side by side: why messages failed (accounts inside, each split by
+reason) and sent by vendor (vendors inside, each split into delivered, failed and pending), with
+their tables on demand. Measured TPS shows at most two decimal places. The routing and pricing rule
+dialogs no longer stretch the When switch beside a squeezed condition editor.
+
+**Schema V1.100.0** adds three empty columns to `app_account` (`archived_at`, `archived_by`,
+`archived_logins`); nothing existing changes. Update the control panel with the gateway: a panel
+older than 0.12.34 warns that the schema is newer than it expects. Control panel 0.12.34.3; gateway
+`11527cc`.
 
 ### 0.12.33
 
