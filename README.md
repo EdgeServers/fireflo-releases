@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.34, with control panel 0.12.34.4 — archive accounts and move logins, sender IDs and templates between accounts; dashboard rings for failures by account and traffic by vendor (see [the 0.12.34 notes](#earlier-builds)) |
+| **Version** | 0.12.34, with control panel 0.12.34.5 — archive accounts and move logins, sender IDs and templates between accounts; dashboard rings for failures by account and traffic by vendor (see [the 0.12.34 notes](#earlier-builds)) |
 | **File** | `fireflo-0.12.34-linux-x86_64.tar.gz` |
-| **SHA-256** | `6e8858616d7aade46ef8636a0b4da4d5013bd111a921f31bfeb21ddcbceef5e9` |
+| **SHA-256** | `279e1cda8a5313fa39629853af4aebc24f5cb9658da1cb3eeef1430dbe8ddfd3` |
 | **Built** | 2026-10-21, from gateway commit `11527cc`, see [the 0.12.34 notes](#earlier-builds) |
-| **Control panel** | 0.12.34.4, included at `panel/`, from commit `387883c` |
+| **Control panel** | 0.12.34.5, included at `panel/`, from commit `f0168eb` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.12.34-linux-jvm.tar.gz`, SHA-256 `ab2e3d9fe27e3e51fc7331c5198660f68b9f0b271078829a72d9aedbf08caeff`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.12.34-linux-jvm.tar.gz`, SHA-256 `d782c486f9e2901b0d4125c934fa68d0fe3570db0832a645024a6ba49f1d6583`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -396,9 +396,9 @@ on Approvals). A login moves alone: it is refused while sender IDs or templates 
 and its live binds are dropped so it re-binds billing the new account. A sender ID or template keeps
 its approval. What was already sent stays on the old account.
 
-**Dashboard.** Two ring charts side by side: why messages failed (accounts inside, each split by
+**Dashboard.** Two sunburst charts side by side: why messages failed (accounts inside, each split by
 reason) and sent by vendor (vendors inside, each split into delivered, failed and pending), with
-their tables on demand. Both follow the 24 hours / 7 days / 30 days toggle with the tiles and the
+their tables on demand. Click a slice to zoom into it; the centre or the breadcrumb zooms back out. Both follow the 24 hours / 7 days / 30 days toggle with the tiles and the
 traffic chart, and come from the same background snapshot: the hourly summary for whole hours,
 the call records only past its watermark; each says which it read. The vendor figures (dashboard
 and Vendors page) now read the call records by index -- 1.3 s became a few milliseconds on a
@@ -407,7 +407,7 @@ dialogs no longer stretch the When switch beside a squeezed condition editor.
 
 **Schema V1.100.0** adds three empty columns to `app_account` (`archived_at`, `archived_by`,
 `archived_logins`); nothing existing changes. Update the control panel with the gateway: a panel
-older than 0.12.34 warns that the schema is newer than it expects. Control panel 0.12.34.4; gateway
+older than 0.12.34 warns that the schema is newer than it expects. Control panel 0.12.34.5; gateway
 `11527cc`.
 
 ### 0.12.33
