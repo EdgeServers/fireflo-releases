@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.13.0, with control panel 0.13.0.1 — **breaking**: the management port is GraphQL-only (`/ops` is gone), guarded by an address allow-list; metrics move to the main port; the platform API for OMNI on the same port; slow query log; refusals by listener with fail2ban bans from the panel (see [the 0.13.0 notes](#earlier-builds)) |
+| **Version** | 0.13.0, with control panel 0.13.0.2 — **breaking**: the management port is GraphQL-only (`/ops` is gone), guarded by an address allow-list; metrics move to the main port; the platform API for OMNI on the same port; slow query log; refusals by listener with fail2ban bans from the panel (see [the 0.13.0 notes](#earlier-builds)) |
 | **File** | `fireflo-0.13.0-linux-x86_64.tar.gz` |
-| **SHA-256** | `c4e6ac7b4585137eb02f82d95117665b69399d52d2e0790252c32cec97c38f63` |
+| **SHA-256** | `55f9ab666d64f5faec1b7ee72b0f9d08320e0d90faf318c3680c12c38c815bb0` |
 | **Built** | 2026-10-22, from gateway commit `272b619`, see [the 0.13.0 notes](#earlier-builds) |
-| **Control panel** | 0.13.0.1, included at `panel/`, from commit `097244f` |
+| **Control panel** | 0.13.0.2, included at `panel/`, from commit `6495973` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.13.0-linux-jvm.tar.gz`, SHA-256 `1e0c06a3e7b3f27e021a0dfed0bd4617941fc7d35563e89ed2f3325d8fe92e5f`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.13.0-linux-jvm.tar.gz`, SHA-256 `920d8fa5a8273190ae4cdc20f329af4e313b6083a608863e3b4fa552211bfe40`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -417,7 +417,7 @@ are recorded too, and the Security page gets a *By server port* view: per listen
 address, with **Ban in fail2ban** (the sudo wrapper gains a `ban` verb -- re-run
 `fireflo-install fail2ban`) and rules that ban automatically after a dry run.
 
-Control panel 0.13.0.1 (its Security and Slow queries pages moved under Reports; 0.13.0.0 was the first cut of this release, with the same gateway); gateway `272b619` (0.13.0 plus the native-image fix that follows it).
+Control panel 0.13.0.2 (0.13.0.1 moved its Security and Slow queries pages under Reports; 0.13.0.2 stops asking for a currency when opening a balance wherever the gateway already holds one -- on a file-mode gateway the panel now reads the gateway's own `explicit_currencies` view, and asks only on a platform with nothing priced or funded yet; 0.13.0.0 was the first cut, all with the same gateway); gateway `272b619` (0.13.0 plus the native-image fix that follows it).
 
 ### 0.12.36
 
