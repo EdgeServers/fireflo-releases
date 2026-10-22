@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.13.3, with control panel 0.13.3.3 — the native build's management port works again (0.13.0 to 0.13.2 answered 500 to every GraphQL request); 0.13.2 added session rows that carry the receipts delivered, and the listener page groups connections by account with MT/DLR per account; 0.13.1 added `health.currency` for file-mode gateways; and from 0.13.0, **breaking**: the management port is GraphQL-only (`/ops` is gone), guarded by an address allow-list; metrics move to the main port; the platform API for OMNI on the same port; slow query log; refusals by listener with fail2ban bans from the panel (see [the 0.13.0 notes](#earlier-builds)) |
-| **File** | `fireflo-0.13.3-linux-x86_64.tar.gz` |
-| **SHA-256** | `2a280ca188777cf57bc11cc9126867ea640ffacf1e02bf24efc0ed7c823838ae` |
-| **Built** | 2026-10-22, from gateway commit `623e915`, see [the 0.13.3 notes](#earlier-builds) |
-| **Control panel** | 0.13.3.3, included at `panel/`, from commit `49bf1d8` |
+| **Version** | 0.13.4, with control panel 0.13.4.0 — native builds: the Security, Slow queries and whitelist tester pages work again, and a customer's SMPP bind password no longer reaches the gateway log; 0.13.3 fixed the native management port; the native build's management port works again (0.13.0 to 0.13.2 answered 500 to every GraphQL request); 0.13.2 added session rows that carry the receipts delivered, and the listener page groups connections by account with MT/DLR per account; 0.13.1 added `health.currency` for file-mode gateways; and from 0.13.0, **breaking**: the management port is GraphQL-only (`/ops` is gone), guarded by an address allow-list; metrics move to the main port; the platform API for OMNI on the same port; slow query log; refusals by listener with fail2ban bans from the panel (see [the 0.13.0 notes](#earlier-builds)) |
+| **File** | `fireflo-0.13.4-linux-x86_64.tar.gz` |
+| **SHA-256** | `bb6799f4b2b34d86664c059c6d583f6dc867b9710bb870462fdde137c567245f` |
+| **Built** | 2026-10-23, from gateway commit `b611256`, see [the 0.13.4 notes](#earlier-builds) |
+| **Control panel** | 0.13.4.0, included at `panel/`, from commit `4209364` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.13.3-linux-jvm.tar.gz`, SHA-256 `45d6f96b100b4c38732fe81efa8c3541d39be6a9822dd9080a2e60a08386522f`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.13.4-linux-jvm.tar.gz`, SHA-256 `79a8b5e903e7dc0aea5f4a36be12ff6a183de695a258416f5cf993e9f31d6972`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -52,7 +52,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.13.3-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.13.4-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -71,7 +71,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.13.3-linux-jvm.tar.gz && cd fireflo-0.13.3-linux-jvm
+tar xzf fireflo-0.13.4-linux-jvm.tar.gz && cd fireflo-0.13.4-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -123,7 +123,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.13.3-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.13.4-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -164,8 +164,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.13.3-linux-x86_64.tar.gz
-cd fireflo-0.13.3-linux-x86_64
+tar xzf fireflo-0.13.4-linux-x86_64.tar.gz
+cd fireflo-0.13.4-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -272,7 +272,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.13.3 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.13.4 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -384,6 +384,19 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.13.4
+
+**Native builds: the Security, Slow queries and whitelist tester pages work again.** On 0.13.0 to
+0.13.3 a native gateway answered "The field at path '/refusalSummary[0]/byReason[0]/reason' was
+declared as a non null type, but … returned a null value": the records behind `refusals`,
+`refusalSummary`, `slowQueries`, `slowQuerySummary` and `whitelistTest` were never registered for
+reflection, so the native image read every field as null. The Java build was unaffected.
+**Security:** a customer's SMPP bind password no longer reaches `smsg.log` -- the SMPP library
+(the EdgeServers fork, now 7.2.4) logged every bind PDU, password included, before any per-account
+logging applied. Existing logs keep what was written: rotate or scrub `smsg.log` on gateways that
+carried SMPP customers on 0.13.3 or earlier. No schema change (still 1.102.0). Control panel
+0.13.4.0 is 0.13.3.3 renumbered to pair with it. Gateway `b611256`.
 
 ### 0.13.3
 
