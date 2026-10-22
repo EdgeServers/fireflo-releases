@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.12.36, with control panel 0.12.36.0 — platform ownership and the management API a platform like OMNI needs: products, quotes, custom tariffs, SMPP logins on request, the price in every send response (see [the 0.12.36 notes](#earlier-builds)) |
-| **File** | `fireflo-0.12.36-linux-x86_64.tar.gz` |
-| **SHA-256** | `766e3a042ba638d0eb650118ce87cc7362701e9398b53e569e497aae5316eec8` |
-| **Built** | 2026-10-22, from gateway commit `d8ed07b`, see [the 0.12.36 notes](#earlier-builds) |
-| **Control panel** | 0.12.36.0, included at `panel/`, from commit `3b42a63` |
+| **Version** | 0.13.0, with control panel 0.13.0.0 — **breaking**: the management port is GraphQL-only (`/ops` is gone), guarded by an address allow-list; metrics move to the main port; the platform API for OMNI on the same port; slow query log; refusals by listener with fail2ban bans from the panel (see [the 0.13.0 notes](#earlier-builds)) |
+| **File** | `fireflo-0.13.0-linux-x86_64.tar.gz` |
+| **SHA-256** | `764996cabe7f5831faaa3a1c6eccc9f21c6d0277a6cc330dff1cc3e653095d84` |
+| **Built** | 2026-10-22, from gateway commit `272b619`, see [the 0.13.0 notes](#earlier-builds) |
+| **Control panel** | 0.13.0.0, included at `panel/`, from commit `71ab787` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.12.36-linux-jvm.tar.gz`, SHA-256 `6570fbbc7e60d1e32b72bec57cad36e18fca9a5e5e95e74e8e4bdcc60b52397a`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.13.0-linux-jvm.tar.gz`, SHA-256 `e178340cefa49e67e92651732ac572d3bafa16271dad513577685b6c8f4e89df`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -52,7 +52,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.12.36-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.13.0-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -71,7 +71,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.12.36-linux-jvm.tar.gz && cd fireflo-0.12.36-linux-jvm
+tar xzf fireflo-0.13.0-linux-jvm.tar.gz && cd fireflo-0.13.0-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -123,7 +123,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.12.36-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.13.0-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -164,8 +164,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.12.36-linux-x86_64.tar.gz
-cd fireflo-0.12.36-linux-x86_64
+tar xzf fireflo-0.13.0-linux-x86_64.tar.gz
+cd fireflo-0.13.0-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -272,7 +272,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.12.36 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.13.0 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -355,7 +355,8 @@ before another machine can take it.
 ## Earlier builds
 
 **Only the current release is published here.** Builds before 0.12.10 have been
-withdrawn and their tarballs removed from this tree. 0.12.35's tarballs (with
+withdrawn and their tarballs removed from this tree. 0.12.36's tarballs (with
+control panel 0.12.36.0) are in this repository's history at commit `0821a8b`. 0.12.35's tarballs (with
 control panel 0.12.35.0) are in this repository's history at commit `88159a1`. 0.12.34's last tarballs (with
 control panel 0.12.34.6) are in this repository's history at commit `c95aa37`. 0.12.33's tarballs (with
 control panel 0.12.33.0) are in this repository's history at commit `b35bfe6`. 0.12.32's tarballs (with
@@ -382,6 +383,41 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.13.0
+
+**The management port is GraphQL-only** (breaking). Everything that was `GET`/`POST /ops/...` on
+port 9000 is now a query or mutation at `POST /graphql` on the same port, with the same two bearer
+tokens (the admin token now also answers reads); `/ops/*` answers 404. A new allow-list,
+`FIREFLO_OPS_ALLOWED_IPS` (addresses or CIDR blocks; empty means loopback only), is checked before any
+token, so `FIREFLO_OPS_HOST=0.0.0.0` on its own exposes nothing. `/q/metrics` moves to the main
+port, behind the ops read token (`bearer_token` in your Prometheus scrape); it is gone from 9000.
+**Update together:** the control panel (0.13.0.0, which needs schema 1.102.0), `scripts/fireflo`
+(shipped here; `fireflo verify` now prints a licence line), and anything of yours that scraped
+`/ops/health` or `/q/metrics` on 9000. The customer API (`/secure/*`) and `/manage/*` are unchanged.
+
+**The platform API on the same port.** A platform such as FireFlo OMNI 1.1 manages its accounts
+through `/graphql` only, signed with the management token: accounts, balances, ledger, usage,
+messages and outcomes as paged feeds, sends under an account, provisioning, tariffs, logins and
+registrations. OMNI 1.1 needs this release: upgrade gateways first, then OMNI, and allow-list OMNI's
+address. One additive migration, **V1.102.0**: sync indexes on the call records (minutes per large
+month partition -- run `update` in a quiet window), `cdr_final.account_id` (filled for old rows by the
+`backfillOutcomeAccounts` mutation, otherwise found through a join), a `fireflo_sync` read-only role
+when the migrating role may create one (else `conf.example/sql/fireflo_sync.sql`), and a new
+`FIREFLO_SYNC_DB_*` datasource (pool 4, 5 s statement timeout) so sync traffic never starves sending.
+
+**Slow query log.** Every statement the gateway runs is timed; those over `FIREFLO_DB_SLOW_MS`
+(500) are kept in memory with their SQL shape (never a value) and shown on the control panel's new
+Database → Slow queries page, with `fireflo_db_query` and `fireflo_db_slow` meters.
+
+**Refused logins by server port.** Each refused bind now records its listener and port
+(`auth-failed.log` gains `listener=... port=...` before `ip=`; the shipped fail2ban filter matches
+both the old and the new line), the connection-limit and back-off refusals that were only counters
+are recorded too, and the Security page gets a *By server port* view: per listener, by reason and
+address, with **Ban in fail2ban** (the sudo wrapper gains a `ban` verb -- re-run
+`fireflo-install fail2ban`) and rules that ban automatically after a dry run.
+
+Control panel 0.13.0.0; gateway `272b619` (0.13.0 plus the native-image fix that follows it).
 
 ### 0.12.36
 
