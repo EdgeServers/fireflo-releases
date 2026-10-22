@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.13.1, with control panel 0.13.1.0 — `health.currency` for file-mode gateways; and from 0.13.0, **breaking**: the management port is GraphQL-only (`/ops` is gone), guarded by an address allow-list; metrics move to the main port; the platform API for OMNI on the same port; slow query log; refusals by listener with fail2ban bans from the panel (see [the 0.13.0 notes](#earlier-builds)) |
+| **Version** | 0.13.1, with control panel 0.13.1.1 — `health.currency` for file-mode gateways; and from 0.13.0, **breaking**: the management port is GraphQL-only (`/ops` is gone), guarded by an address allow-list; metrics move to the main port; the platform API for OMNI on the same port; slow query log; refusals by listener with fail2ban bans from the panel (see [the 0.13.0 notes](#earlier-builds)) |
 | **File** | `fireflo-0.13.1-linux-x86_64.tar.gz` |
-| **SHA-256** | `affb0c0edac73a3ba38582564d73916805dbf0fbb937faebafb018be3ab3c523` |
+| **SHA-256** | `05d1d1d7b15a9e987d815cc699ec12f5a47b9f767159549ba8017d6c8fd66d5c` |
 | **Built** | 2026-10-22, from gateway commit `cb84f11`, see [the 0.13.1 notes](#earlier-builds) |
-| **Control panel** | 0.13.1.0, included at `panel/`, from commit `0e280c6` |
+| **Control panel** | 0.13.1.1, included at `panel/`, from commit `b98d7b3` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.13.1-linux-jvm.tar.gz`, SHA-256 `e04db98dd3973439aa5b4da9086b5f586f8a3ceaf045b51728cf599829873e2e`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.13.1-linux-jvm.tar.gz`, SHA-256 `52a2598e4c1755fd42239fe67e795a4f07a8a7e0f2bd465c20562ad84e473a01`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -391,7 +391,7 @@ for now.
 gateway reads it, file or database. The control panel (0.13.1.0) reads it when the key is not in
 `app_config`, which is every file-mode gateway, so opening a balance never asks for a currency the
 platform already has and statements and reconciliations name it. No schema change (still
-1.102.0). Control panel 0.13.1.0 also lets an account's notes run across the whole settings row.
+1.102.0). Control panel 0.13.1.0 also lets an account's notes run across the whole settings row. **0.13.1.1 redesigns the Security page**: one time range for the whole page, one Refused logins card with By address, By server port and Every attempt tabs sharing a filter row, per-port and per-reason columns from the gateway's ledger merged into the address rows, Ban/Unban/Hold/Lift on the row with the fail2ban jail and duration chosen inline, automatic-ban rules as settings rows, and a uniform tools rail.
 Gateway `cb84f11`.
 
 ### 0.13.0
