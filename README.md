@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.13.3, with control panel 0.13.3.2 — the native build's management port works again (0.13.0 to 0.13.2 answered 500 to every GraphQL request); 0.13.2 added session rows that carry the receipts delivered, and the listener page groups connections by account with MT/DLR per account; 0.13.1 added `health.currency` for file-mode gateways; and from 0.13.0, **breaking**: the management port is GraphQL-only (`/ops` is gone), guarded by an address allow-list; metrics move to the main port; the platform API for OMNI on the same port; slow query log; refusals by listener with fail2ban bans from the panel (see [the 0.13.0 notes](#earlier-builds)) |
+| **Version** | 0.13.3, with control panel 0.13.3.3 — the native build's management port works again (0.13.0 to 0.13.2 answered 500 to every GraphQL request); 0.13.2 added session rows that carry the receipts delivered, and the listener page groups connections by account with MT/DLR per account; 0.13.1 added `health.currency` for file-mode gateways; and from 0.13.0, **breaking**: the management port is GraphQL-only (`/ops` is gone), guarded by an address allow-list; metrics move to the main port; the platform API for OMNI on the same port; slow query log; refusals by listener with fail2ban bans from the panel (see [the 0.13.0 notes](#earlier-builds)) |
 | **File** | `fireflo-0.13.3-linux-x86_64.tar.gz` |
-| **SHA-256** | `249b278259800ebacd143e2b1e6941ee719be1426f201fbcf37f1abb90e6fe4c` |
+| **SHA-256** | `2a280ca188777cf57bc11cc9126867ea640ffacf1e02bf24efc0ed7c823838ae` |
 | **Built** | 2026-10-22, from gateway commit `623e915`, see [the 0.13.3 notes](#earlier-builds) |
-| **Control panel** | 0.13.3.2, included at `panel/`, from commit `ae0c467` |
+| **Control panel** | 0.13.3.3, included at `panel/`, from commit `49bf1d8` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.13.3-linux-jvm.tar.gz`, SHA-256 `0178876152fb26b83c216607bb48a7efef6556f0a078a9bc0795985bb2a5e76f`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.13.3-linux-jvm.tar.gz`, SHA-256 `45d6f96b100b4c38732fe81efa8c3541d39be6a9822dd9080a2e60a08386522f`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -398,7 +398,12 @@ help text 13/20, figures 30px -- and retunes card, table, sidebar and dialog spa
 gateway is unchanged. **Control panel 0.13.3.2** darkens body text to near-black and
 secondary text to slate-600, draws a listener's Disable as a danger button with Force disconnect
 in the card footer and a session's Disconnect as an icon, and puts "Page generated in N s" in
-every operator page's footer in place of the version. Gateway `623e915`.
+every operator page's footer in place of the version. **Control panel 0.13.3.3** makes the Receipts page answer
+within seconds on a busy gateway (counts from the hourly summary, timings from a fixed sample;
+it used to hit the 10 s statement timeout past a day of traffic), and fixes "GATEWAY_BASE_URL and
+GATEWAY_OPS_TOKEN must both be set" on panels upgraded to 0.13: `fireflo-panel-install update`
+now writes `GATEWAY_BASE_URL` (the gateway's main port, where 0.13 serves its metrics) when it is
+missing. Gateway `623e915`.
 
 ### 0.13.2
 
