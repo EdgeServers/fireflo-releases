@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.13.2, with control panel 0.13.2.0 — session rows carry the receipts delivered, and the listener page groups connections by account with MT/DLR per account; 0.13.1 added `health.currency` for file-mode gateways; and from 0.13.0, **breaking**: the management port is GraphQL-only (`/ops` is gone), guarded by an address allow-list; metrics move to the main port; the platform API for OMNI on the same port; slow query log; refusals by listener with fail2ban bans from the panel (see [the 0.13.0 notes](#earlier-builds)) |
-| **File** | `fireflo-0.13.2-linux-x86_64.tar.gz` |
-| **SHA-256** | `0b69f30bdbd18a425f542515d2370d83368e2ac442dbc62be48f204ef2f4c9c3` |
-| **Built** | 2026-10-22, from gateway commit `575f623`, see [the 0.13.2 notes](#earlier-builds) |
-| **Control panel** | 0.13.2.0, included at `panel/`, from commit `67a785f` |
+| **Version** | 0.13.3, with control panel 0.13.3.0 — the native build's management port works again (0.13.0 to 0.13.2 answered 500 to every GraphQL request); 0.13.2 added session rows that carry the receipts delivered, and the listener page groups connections by account with MT/DLR per account; 0.13.1 added `health.currency` for file-mode gateways; and from 0.13.0, **breaking**: the management port is GraphQL-only (`/ops` is gone), guarded by an address allow-list; metrics move to the main port; the platform API for OMNI on the same port; slow query log; refusals by listener with fail2ban bans from the panel (see [the 0.13.0 notes](#earlier-builds)) |
+| **File** | `fireflo-0.13.3-linux-x86_64.tar.gz` |
+| **SHA-256** | `83f119f9dbc60b6c6afe917a4372d6d9012820f7184aa49870cd5c9809d27848` |
+| **Built** | 2026-10-22, from gateway commit `623e915`, see [the 0.13.3 notes](#earlier-builds) |
+| **Control panel** | 0.13.3.0, included at `panel/`, from commit `528fddd` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.13.2-linux-jvm.tar.gz`, SHA-256 `edd6a29d16ee2311b37cd1024ec331e19181162ee21303fa81ad8fe4987c4cc1`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.13.3-linux-jvm.tar.gz`, SHA-256 `e09905a6e9243e7b7793c1309142562bfdfa856809c435dbd64828f605cd4cb6`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -52,7 +52,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.13.2-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.13.3-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -71,7 +71,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.13.2-linux-jvm.tar.gz && cd fireflo-0.13.2-linux-jvm
+tar xzf fireflo-0.13.3-linux-jvm.tar.gz && cd fireflo-0.13.3-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -123,7 +123,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.13.2-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.13.3-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -164,8 +164,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.13.2-linux-x86_64.tar.gz
-cd fireflo-0.13.2-linux-x86_64
+tar xzf fireflo-0.13.3-linux-x86_64.tar.gz
+cd fireflo-0.13.3-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -272,7 +272,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.13.2 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.13.3 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -384,6 +384,15 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.13.3
+
+**The native build's management port works again.** On 0.13.0 to 0.13.2 the native gateway answered
+500 to every GraphQL request on port 9000 -- graphql-java's message bundles were in the image but
+not registered as bundles, so a document could not even be parsed. The Java build (the ARM tarball,
+and the staging gateway) was never affected, which is how it went unnoticed. Nothing else changes;
+control panel 0.13.3.0 is 0.13.2.0 renumbered to pair with it. Every native install on 0.13.x
+should take this release. Gateway `623e915`.
 
 ### 0.13.2
 
