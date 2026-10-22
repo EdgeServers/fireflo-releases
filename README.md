@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.13.0, with control panel 0.13.0.2 — **breaking**: the management port is GraphQL-only (`/ops` is gone), guarded by an address allow-list; metrics move to the main port; the platform API for OMNI on the same port; slow query log; refusals by listener with fail2ban bans from the panel (see [the 0.13.0 notes](#earlier-builds)) |
-| **File** | `fireflo-0.13.0-linux-x86_64.tar.gz` |
-| **SHA-256** | `55f9ab666d64f5faec1b7ee72b0f9d08320e0d90faf318c3680c12c38c815bb0` |
-| **Built** | 2026-10-22, from gateway commit `272b619`, see [the 0.13.0 notes](#earlier-builds) |
-| **Control panel** | 0.13.0.2, included at `panel/`, from commit `6495973` |
+| **Version** | 0.13.1, with control panel 0.13.1.0 — `health.currency` for file-mode gateways; and from 0.13.0, **breaking**: the management port is GraphQL-only (`/ops` is gone), guarded by an address allow-list; metrics move to the main port; the platform API for OMNI on the same port; slow query log; refusals by listener with fail2ban bans from the panel (see [the 0.13.0 notes](#earlier-builds)) |
+| **File** | `fireflo-0.13.1-linux-x86_64.tar.gz` |
+| **SHA-256** | `affb0c0edac73a3ba38582564d73916805dbf0fbb937faebafb018be3ab3c523` |
+| **Built** | 2026-10-22, from gateway commit `cb84f11`, see [the 0.13.1 notes](#earlier-builds) |
+| **Control panel** | 0.13.1.0, included at `panel/`, from commit `0e280c6` |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.13.0-linux-jvm.tar.gz`, SHA-256 `920d8fa5a8273190ae4cdc20f329af4e313b6083a608863e3b4fa552211bfe40`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.13.1-linux-jvm.tar.gz`, SHA-256 `e04db98dd3973439aa5b4da9086b5f586f8a3ceaf045b51728cf599829873e2e`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -52,7 +52,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.13.0-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.13.1-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -71,7 +71,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.13.0-linux-jvm.tar.gz && cd fireflo-0.13.0-linux-jvm
+tar xzf fireflo-0.13.1-linux-jvm.tar.gz && cd fireflo-0.13.1-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -123,7 +123,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.13.0-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.13.1-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -164,8 +164,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.13.0-linux-x86_64.tar.gz
-cd fireflo-0.13.0-linux-x86_64
+tar xzf fireflo-0.13.1-linux-x86_64.tar.gz
+cd fireflo-0.13.1-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -272,7 +272,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.13.0 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.13.1 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -355,7 +355,8 @@ before another machine can take it.
 ## Earlier builds
 
 **Only the current release is published here.** Builds before 0.12.10 have been
-withdrawn and their tarballs removed from this tree. 0.12.36's tarballs (with
+withdrawn and their tarballs removed from this tree. 0.13.0's last tarballs (with
+control panel 0.13.0.2) are in this repository's history at commit `9102ba0`. 0.12.36's tarballs (with
 control panel 0.12.36.0) are in this repository's history at commit `0821a8b`. 0.12.35's tarballs (with
 control panel 0.12.35.0) are in this repository's history at commit `88159a1`. 0.12.34's last tarballs (with
 control panel 0.12.34.6) are in this repository's history at commit `c95aa37`. 0.12.33's tarballs (with
@@ -383,6 +384,15 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.13.1
+
+**`health.currency`.** The management port's `health` now carries `smsg.rates.currency` as the
+gateway reads it, file or database. The control panel (0.13.1.0) reads it when the key is not in
+`app_config`, which is every file-mode gateway, so opening a balance never asks for a currency the
+platform already has and statements and reconciliations name it. No schema change (still
+1.102.0). Control panel 0.13.1.0 also lets an account's notes run across the whole settings row.
+Gateway `cb84f11`.
 
 ### 0.13.0
 
