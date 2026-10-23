@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.13.4, with control panel 0.13.4.0 — native builds: the Security, Slow queries and whitelist tester pages work again, and a customer's SMPP bind password no longer reaches the gateway log; 0.13.3 fixed the native management port; the native build's management port works again (0.13.0 to 0.13.2 answered 500 to every GraphQL request); 0.13.2 added session rows that carry the receipts delivered, and the listener page groups connections by account with MT/DLR per account; 0.13.1 added `health.currency` for file-mode gateways; and from 0.13.0, **breaking**: the management port is GraphQL-only (`/ops` is gone), guarded by an address allow-list; metrics move to the main port; the platform API for OMNI on the same port; slow query log; refusals by listener with fail2ban bans from the panel (see [the 0.13.0 notes](#earlier-builds)) |
+| **Version** | 0.13.4, with control panel 0.13.4.4 — the heavy stats pages (Receipts, Usage, Revenue, Vendors) no longer time out, with Receipts and Revenue charts; native builds: the Security, Slow queries and whitelist tester pages work again, and a customer's SMPP bind password no longer reaches the gateway log; 0.13.3 fixed the native management port; the native build's management port works again (0.13.0 to 0.13.2 answered 500 to every GraphQL request); 0.13.2 added session rows that carry the receipts delivered, and the listener page groups connections by account with MT/DLR per account; 0.13.1 added `health.currency` for file-mode gateways; and from 0.13.0, **breaking**: the management port is GraphQL-only (`/ops` is gone), guarded by an address allow-list; metrics move to the main port; the platform API for OMNI on the same port; slow query log; refusals by listener with fail2ban bans from the panel (see [the 0.13.0 notes](#earlier-builds)) |
 | **File** | `fireflo-0.13.4-linux-x86_64.tar.gz` |
-| **SHA-256** | `bb6799f4b2b34d86664c059c6d583f6dc867b9710bb870462fdde137c567245f` |
-| **Built** | 2026-10-23, from gateway commit `b611256`, see [the 0.13.4 notes](#earlier-builds) |
-| **Control panel** | 0.13.4.0, included at `panel/`, from commit `4209364` |
+| **SHA-256** | `0b6aefaaf74b0a133042ab02b2d0530ce02281f20c35bffb6242cef090c43bf4` |
+| **Built** | 2026-10-23, from gateway commit `b611256` with control panel `v0.13.4.4`, see [the 0.13.4 notes](#earlier-builds) |
+| **Control panel** | 0.13.4.4, included at `panel/`, from commit `21a40e8` (tag `v0.13.4.4`) |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.13.4-linux-jvm.tar.gz`, SHA-256 `79a8b5e903e7dc0aea5f4a36be12ff6a183de695a258416f5cf993e9f31d6972`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.13.4-linux-jvm.tar.gz`, SHA-256 `25516ce33b1687657759524c6db6090d2149a8e50005a761832928d3876820cc`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -384,6 +384,27 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.13.4 with control panel 0.13.4.4
+
+Same gateway (`b611256`, schema 1.102.0); the tarballs carry the newer control panel. Install or
+update as for any 0.13.4 build -- `fireflo-panel-install update` brings an existing panel to it.
+
+- **Heavy stats no longer time out.** Usage and Revenue read the gateway's hourly summary while it
+  is current (a 24-hour window used to read every message of the day); Receipts finds its sample's
+  receipts by index instead of scanning the window (30 days on a few million messages went from a
+  timeout to about a second). Their answers are kept and shared for a while (5 min for a week or a
+  month), at most three heavy reads run at once, and a read that takes long shows a "taking a
+  breath" card and finishes in the background instead of "canceling statement due to statement
+  timeout".
+- **Charts:** Receipts (how each vendor's attempts ended; time to receipt) and Revenue (revenue by
+  period as cost plus margin; top accounts).
+- **The last hour first:** every traffic page opens on 1 hour, remembers the period its user last
+  chose, and a listener page shows its traffic by account. Messages has a one-row filter bar, with
+  a right-hand drawer on phones and its filters kept between visits.
+- **Smaller things:** pin pages to the top bar; one stats API for the panel and the portal
+  (`/api/stats/<metric>`, old routes kept); loading shown on the control that asked; copy buttons
+  that work over plain HTTP; Space Grotesk / DM Sans on Tailwind's type steps.
 
 ### 0.13.4
 
