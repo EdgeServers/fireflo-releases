@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.13.4, with control panel 0.13.4.4 — the heavy stats pages (Receipts, Usage, Revenue, Vendors) no longer time out, with Receipts and Revenue charts; native builds: the Security, Slow queries and whitelist tester pages work again, and a customer's SMPP bind password no longer reaches the gateway log; 0.13.3 fixed the native management port; the native build's management port works again (0.13.0 to 0.13.2 answered 500 to every GraphQL request); 0.13.2 added session rows that carry the receipts delivered, and the listener page groups connections by account with MT/DLR per account; 0.13.1 added `health.currency` for file-mode gateways; and from 0.13.0, **breaking**: the management port is GraphQL-only (`/ops` is gone), guarded by an address allow-list; metrics move to the main port; the platform API for OMNI on the same port; slow query log; refusals by listener with fail2ban bans from the panel (see [the 0.13.0 notes](#earlier-builds)) |
-| **File** | `fireflo-0.13.4-linux-x86_64.tar.gz` |
-| **SHA-256** | `0b6aefaaf74b0a133042ab02b2d0530ce02281f20c35bffb6242cef090c43bf4` |
-| **Built** | 2026-10-23, from gateway commit `b611256` with control panel `v0.13.4.4`, see [the 0.13.4 notes](#earlier-builds) |
-| **Control panel** | 0.13.4.4, included at `panel/`, from commit `21a40e8` (tag `v0.13.4.4`) |
+| **Version** | 0.13.5, with control panel 0.13.5.0 — billing and receipt fixes from an audit: a long message the vendor refuses part of is refunded once, not once per refused part; late receipts reach customers the 24-hour UNKNOWN did not go to; receipts for the parts of one message are all counted; Revenue, Usage and Accounts at 7 and 30 days no longer under-report on a young hourly summary; 0.13.4.4 stopped the heavy stats pages (Receipts, Usage, Revenue, Vendors) timing out, with Receipts and Revenue charts; 0.13.4 native builds: the Security, Slow queries and whitelist tester pages work again, and a customer's SMPP bind password no longer reaches the gateway log; 0.13.3 fixed the native management port; the native build's management port works again (0.13.0 to 0.13.2 answered 500 to every GraphQL request); 0.13.2 added session rows that carry the receipts delivered, and the listener page groups connections by account with MT/DLR per account; 0.13.1 added `health.currency` for file-mode gateways; and from 0.13.0, **breaking**: the management port is GraphQL-only (`/ops` is gone), guarded by an address allow-list; metrics move to the main port; the platform API for OMNI on the same port; slow query log; refusals by listener with fail2ban bans from the panel (see [the 0.13.0 notes](#earlier-builds)) |
+| **File** | `fireflo-0.13.5-linux-x86_64.tar.gz` |
+| **SHA-256** | `fc466e6f95b8099ba8740dba334ee2711c5847cd09646f9b6d13f4bbc9098424` |
+| **Built** | 2026-10-24, from gateway commit `7f73b38` with control panel `v0.13.5.0`, see [the 0.13.5 notes](#earlier-builds) |
+| **Control panel** | 0.13.5.0, included at `panel/`, from commit `3c7dd8f` (tag `v0.13.5.0`) |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.13.4-linux-jvm.tar.gz`, SHA-256 `25516ce33b1687657759524c6db6090d2149a8e50005a761832928d3876820cc`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.13.5-linux-jvm.tar.gz`, SHA-256 `8abf7c69d405d92f792293d3030980b63115819261bd057ebe3ccc61bab9e4e2`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -52,7 +52,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.13.4-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.13.5-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -71,7 +71,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.13.4-linux-jvm.tar.gz && cd fireflo-0.13.4-linux-jvm
+tar xzf fireflo-0.13.5-linux-jvm.tar.gz && cd fireflo-0.13.5-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -123,7 +123,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.13.4-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.13.5-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -164,8 +164,8 @@ loopback — the correct default, and the only one that needs no secret.
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.13.4-linux-x86_64.tar.gz
-cd fireflo-0.13.4-linux-x86_64
+tar xzf fireflo-0.13.5-linux-x86_64.tar.gz
+cd fireflo-0.13.5-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -272,7 +272,7 @@ whatever has not reached a vendor. Pass
 `setup.sh` installed.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.13.4 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.13.5 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -355,7 +355,8 @@ before another machine can take it.
 ## Earlier builds
 
 **Only the current release is published here.** Builds before 0.12.10 have been
-withdrawn and their tarballs removed from this tree. 0.13.0's last tarballs (with
+withdrawn and their tarballs removed from this tree. 0.13.4's last tarballs (with
+control panel 0.13.4.4) are in this repository's history at commit `30ee812`. 0.13.0's last tarballs (with
 control panel 0.13.0.2) are in this repository's history at commit `9102ba0`. 0.12.36's tarballs (with
 control panel 0.12.36.0) are in this repository's history at commit `0821a8b`. 0.12.35's tarballs (with
 control panel 0.12.35.0) are in this repository's history at commit `88159a1`. 0.12.34's last tarballs (with
@@ -384,6 +385,31 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.13.5
+
+**Billing and receipt fixes from a routing/billing/DLR audit.** No schema change (still 1.102.0);
+update as for 0.13.4. Gateway `7f73b38`, control panel 0.13.5.0.
+
+- **A long message is refunded once.** When the gateway split a message into parts and the vendor
+  refused some of them, each refused part refunded the whole message price -- so a customer could
+  be credited two or three times for one message. Now one refund per message, and none once the
+  vendor has accepted any part of it (it carried that part and charged for it); the customer's
+  receipt still says FAILED.
+- **Late receipts reach the customers the deadline did not answer.** The 24-hour UNKNOWN job marked
+  every overdue message, including those it then sent nothing to (excluded accounts, customers who
+  asked for no such receipt, no listener or webhook). Their real receipt, arriving later, was then
+  suppressed. Only messages actually told UNKNOWN are marked now.
+- **Every part's receipt is counted.** Receipts for the parts of one message arriving together
+  could lose a count, so a delivered message ended UNKNOWN and then EXPIRED. A message closed by a
+  refused part can no longer be re-opened by a later part, which gave a second receipt and a second
+  final record.
+- **Billing zone:** a gateway that takes its zone from `FIREFLO_BILLING_ZONE` writes it to
+  `smsg.billing.zone` in `app_config` at start-up when that row is missing, so the control panel
+  cuts billing days in the same zone. A row that is already set is never changed; a mismatch is
+  logged as `billing.zone.mismatch`.
+- **Control panel 0.13.5.0:** Revenue, Usage and Accounts at 7 and 30 days no longer count the
+  hours before the hourly summary began as empty.
 
 ### 0.13.4 with control panel 0.13.4.4
 
