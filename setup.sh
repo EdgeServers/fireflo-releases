@@ -1661,8 +1661,10 @@ summary_kafka_where() {
   binaries  $KAFKA_HOME
   topics    $KAFKA_HOME/bin/kafka-topics.sh --bootstrap-server 127.0.0.1:9092 --list
 
-auto.create.topics.enable is false, as on Redpanda: the gateway's topics must
-exist before it produces to them (docs/21-clustering.md has the list).
+auto.create.topics.enable is false, as on Redpanda: a typo can never invent a topic.
+The gateway creates the topics it needs itself at start (smsg.kafka.topics.create,
+on by default); 'fireflo broker init' creates them ahead of time, and with
+smsg.kafka.topics.create=false a gateway refuses to start until they exist.
 EOF
 }
 
