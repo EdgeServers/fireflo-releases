@@ -16,15 +16,15 @@ empty box to a running gateway, in order.
 
 | | |
 |---|---|
-| **Version** | 0.13.5, with control panel 0.13.5.0 — billing and receipt fixes from an audit: a long message the vendor refuses part of is refunded once, not once per refused part; late receipts reach customers the 24-hour UNKNOWN did not go to; receipts for the parts of one message are all counted; Revenue, Usage and Accounts at 7 and 30 days no longer under-report on a young hourly summary; 0.13.4.4 stopped the heavy stats pages (Receipts, Usage, Revenue, Vendors) timing out, with Receipts and Revenue charts; 0.13.4 native builds: the Security, Slow queries and whitelist tester pages work again, and a customer's SMPP bind password no longer reaches the gateway log; 0.13.3 fixed the native management port; the native build's management port works again (0.13.0 to 0.13.2 answered 500 to every GraphQL request); 0.13.2 added session rows that carry the receipts delivered, and the listener page groups connections by account with MT/DLR per account; 0.13.1 added `health.currency` for file-mode gateways; and from 0.13.0, **breaking**: the management port is GraphQL-only (`/ops` is gone), guarded by an address allow-list; metrics move to the main port; the platform API for OMNI on the same port; slow query log; refusals by listener with fail2ban bans from the panel (see [the 0.13.0 notes](#earlier-builds)) |
-| **File** | `fireflo-0.13.5-linux-x86_64.tar.gz` |
-| **SHA-256** | `fc466e6f95b8099ba8740dba334ee2711c5847cd09646f9b6d13f4bbc9098424` |
-| **Built** | 2026-10-24, from gateway commit `7f73b38` with control panel `v0.13.5.0`, see [the 0.13.5 notes](#earlier-builds) |
-| **Control panel** | 0.13.5.0, included at `panel/`, from commit `3c7dd8f` (tag `v0.13.5.0`) |
+| **Version** | 0.14.0, with control panel 0.14.0.0 — **breaking: RabbitMQ is removed** (the queue is in memory, the default, or Kafka; an install still on RabbitMQ must be drained first, see [Upgrading from 0.13.x](#upgrading-from-013x)); optional Kafka backbone, which is also cluster mode: several gateway nodes on one PostgreSQL and one Kafka; a message no routing rule matches is refused at once instead of accepted and refunded; copy routes are unbilled and silent; `setup.sh` gains host roles, a broker choice (Redpanda or Apache Kafka) and RHEL-family 9+ hosts; schema 1.109.0, upgrading is a maintenance window (see [the 0.14.0 notes](#earlier-builds)). Before it: 0.13.5 billing and receipt fixes (a long message refunded once, late receipts delivered, every part's receipt counted); 0.13.4.4 stats pages that no longer time out; 0.13.4 and 0.13.3 native management port fixes; 0.13.2 session rows and per-account listener view; 0.13.1 `health.currency`; and from 0.13.0, **breaking**: the management port is GraphQL-only (`/ops` is gone), guarded by an address allow-list, with metrics on the main port, the platform API for OMNI, the slow query log and refusals by listener with fail2ban bans (see [the 0.13.0 notes](#earlier-builds)) |
+| **File** | `fireflo-0.14.0-linux-x86_64.tar.gz` |
+| **SHA-256** | `7100428a43efad1bb673312a1bdd172c201c1aba62167f3f8669e793f703c5db` |
+| **Built** | 2026-10-24, from gateway commit `036a71f` with control panel `v0.14.0.0`, see [the 0.14.0 notes](#earlier-builds) |
+| **Control panel** | 0.14.0.0, included at `panel/`, from commit `8d83df4` (tag `v0.14.0.0`) |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.13.5-linux-jvm.tar.gz`, SHA-256 `8abf7c69d405d92f792293d3030980b63115819261bd057ebe3ccc61bab9e4e2`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.14.0-linux-jvm.tar.gz`, SHA-256 `af488a4ca1546734571e83fe475e088d3f7e464c4b6905865155895b40ff1baf`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -52,7 +52,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.13.5-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.14.0-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -66,12 +66,16 @@ echo "deb [signed-by=/etc/apt/keyrings/adoptium.asc] https://packages.adoptium.n
 sudo apt-get update && sudo apt-get install -y temurin-25-jdk
 ```
 
+That is for Ubuntu and Debian. On a RHEL-family host, or on either if you would
+rather not type it, `sudo ./setup.sh --with-java` adds the same Temurin 25 from
+Adoptium's own apt or rpm repository.
+
 Then verify it the same way, against its own checksum file:
 
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.13.5-linux-jvm.tar.gz && cd fireflo-0.13.5-linux-jvm
+tar xzf fireflo-0.14.0-linux-jvm.tar.gz && cd fireflo-0.14.0-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -86,7 +90,10 @@ The whole sequence, in order, for a host with nothing on it. Each step points at
 the section or the page that explains it in full; this exists so it can be
 followed top to bottom without deciding what to read next.
 
-Roughly twenty minutes, most of it waiting for `apt`.
+Roughly twenty minutes, most of it waiting for the package manager. The commands
+below are for one box carrying everything — the right shape for most
+deployments; splitting it across hosts is
+[Multi-host and clustering](#multi-host-and-clustering).
 
 ### Before you begin
 
@@ -96,8 +103,8 @@ than discovering at step three.
 | | Requirement |
 |---|---|
 | **Architecture** | **linux-x86_64** for the native release. On ARM (aarch64, e.g. AWS Graviton) use the Java build instead — see [ARM servers](#arm-servers-the-java-build) |
-| **Operating system** | Ubuntu or Debian. Nothing else is handled by `setup.sh` |
-| **Release** | Ubuntu focal, jammy, noble, plucky — Debian bullseye, bookworm, trixie |
+| **Operating system** | Ubuntu or Debian (`apt`), or RHEL-family 9 or newer — RHEL 9, CentOS Stream 9, Rocky Linux 9, AlmaLinux 9 (`dnf`). `setup.sh` refuses anything else, naming what `/etc/os-release` said |
+| **Release** | Ubuntu focal, jammy, noble, plucky — Debian bullseye, bookworm, trixie — on RHEL-family hosts, 9 and newer |
 | **PostgreSQL** | **14 or newer** |
 | **Root** | Every step except `check` is run with `sudo` |
 
@@ -123,7 +130,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.13.5-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.14.0-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -145,8 +152,9 @@ sudo ./setup.sh --dry-run
 sudo ./setup.sh
 ```
 
-PostgreSQL, RabbitMQ and Node 22. See [Preparing a host](#preparing-a-host)
-below for the flags and for what it deliberately leaves to you.
+PostgreSQL, a single-node Redpanda broker on loopback, and Node 22 — the
+default `--role all`. See [Preparing a host](#preparing-a-host) below for the
+roles, the broker choice and what it deliberately leaves to you.
 
 ### 4. Create the database and role
 
@@ -158,14 +166,15 @@ sudo -u postgres createuser --pwprompt fireflo
 sudo -u postgres createdb --owner=fireflo fireflo
 ```
 
-RabbitMQ keeps its default `guest` account, which the broker itself restricts to
-loopback — the correct default, and the only one that needs no secret.
+The broker gets no user either. On one box it listens on loopback only, so it
+needs none; on a broker host of its own, firewall 9092 to the gateway subnet
+before anything else (the summary `setup.sh` prints has the lines).
 
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.13.5-linux-x86_64.tar.gz
-cd fireflo-0.13.5-linux-x86_64
+tar xzf fireflo-0.14.0-linux-x86_64.tar.gz
+cd fireflo-0.14.0-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -184,8 +193,8 @@ Three of its findings are worth understanding before you see them:
 - **`psql` missing is fatal in database mode.** The operational tokens and the
   configuration rows are written with it. Without it the install runs the
   migrations and the bootstrap, then dies at the tokens — leaving a migrated,
-  bootstrapped database behind a gateway that answers `404` on every `/ops`
-  endpoint. `setup.sh` installs it.
+  bootstrapped database behind a gateway the control panel cannot manage.
+  `setup.sh` installs it.
 - **A port already held is fatal on install** — 2775, 8080, 9000. A second
   instance given ports the first already holds completes, never binds, and then
   every check afterwards passes by answering from the *old* gateway.
@@ -267,12 +276,18 @@ sudo ./scripts/fireflo-install fail2ban --fail2ban-ignore "YOUR.OFFICE.IP,YOUR.M
 ```
 
 **A durable queue.** Without a broker the queue is in memory and a restart drops
-whatever has not reached a vendor. Pass
-`--broker-uri amqp://guest:guest@127.0.0.1:5672/%2F` to use the RabbitMQ
-`setup.sh` installed.
+whatever has not reached a vendor — the default, and a real trade rather than
+an oversight. To use the broker `setup.sh` installed, give the install
+`--kafka-bootstrap 127.0.0.1:9092 --node-id gw-1` (or, on an install that
+already runs, `fireflo-install update --from ./gateway --kafka-bootstrap
+127.0.0.1:9092 --node-id gw-1 --migrate`). A message is then acknowledged to the
+customer only once the broker has it, and if the broker is down the gateway
+refuses new messages (SMPP `ESME_RMSGQFUL`, HTTP `503`) rather than falling back
+to memory. The gateway creates its topics when it starts; `fireflo broker init`
+creates them ahead of time if your broker does not let clients do that.
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.13.5 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.14.0 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -289,33 +304,127 @@ sudo ./scripts/fireflo-install update --from ./gateway
 version so `fireflo-install rollback` is one command. The panel is upgraded
 separately by its own installer.
 
+On a Kafka install `update` needs to be told which node migrates: `--migrate`
+on the first, `--no-migrate` on every other, after `fireflo-install service
+stop` on all of them. **Coming from 0.13.x**, read
+[Upgrading from 0.13.x](#upgrading-from-013x) first.
+
+### Multi-host and clustering
+
+From 0.14 the database, the broker, the gateway nodes and the control panel can
+each be a machine of their own, and the gateway can be two or more nodes behind
+a TCP load balancer. Run `setup.sh` once per host with that host's role —
+`db`, `broker`, `gateway`, `panel` — and it ends by printing the install
+command and the firewall lines for that role:
+
+```
+sudo ./setup.sh --role db --allow-from 10.0.0.0/24      # PostgreSQL, reachable from the gateways
+sudo ./setup.sh --role broker                           # one Redpanda node, or one of three with --ips
+sudo ./setup.sh --role gateway                          # client tools only
+sudo ./setup.sh --role panel                            # Node 22 and a PostgreSQL client
+```
+
+A cluster is what `--kafka-bootstrap` makes: every node shares one PostgreSQL
+and one Kafka and has its own `--node-id`. The first node installs with
+`--role gateway --bootstrap`; every further node with `--role gateway --join
+--no-migrate --secrets-key-file <file>`, where the file holds the first node's
+`FIREFLO_SECRETS_KEY` — without the same key a node cannot read the customer
+passwords the first one sealed. Each vendor is held by one node at a time and
+moves to another if that node dies; receipts reach the node holding the
+customer's bind; credit and rate limits are shared out between nodes. A panel on
+its own host is installed with `--gateway-ops-url`, `--gateway-base-url`, the
+database flags with `--db-password-file`, the token files, and optionally
+`--gateway-ops-urls gw-1=…,gw-2=…` to fail over between nodes;
+`fireflo-panel-install --help` lists them.
+
+The full guide — sizing, load balancer, failover, upgrading a cluster — is
+[Clustering](https://docs.fireflo.au/platform/install/clustering) in the
+documentation.
+
+## Upgrading from 0.13.x
+
+**Plan a maintenance window.** 0.14.0's migrations (schema 1.109.0; V1.105.0
+moves held credit to a per-node owner) need every gateway on the database
+stopped while they run. On one host `fireflo-install update` does that itself.
+With several nodes: `fireflo-install service stop` on each, then `update
+--migrate` on the first and `update --no-migrate` on the rest — the installer
+refuses the wrong order rather than trusting it. Credit held under the old
+host-name owner carries over.
+
+**RabbitMQ is gone.** An install whose stored `smsg.queue.provider` is
+`rabbitmq` will not start on 0.14, so `update` checks for it before stopping
+anything and refuses, printing this procedure:
+
+1. Stop customer intake — the load balancer, or the listeners.
+2. Wait until `fireflo health` shows the broker queue and the router queue
+   both at 0, so nothing is left in RabbitMQ.
+3. Update with where the queue goes now: `update --from ./gateway --no-broker`
+   for the in-memory queue, or `--kafka-bootstrap host:9092 --node-id gw-1
+   --migrate` for Kafka.
+
+`--broker-uri` and `--broker-queue` are refused, naming the replacement.
+RabbitMQ itself is left installed; remove it when you are done with it.
+
 ## Preparing a host
 
-`setup.sh` installs the services FireFlo talks to, on Ubuntu and Debian. It
-exists because the gateway's own installer does not: `fireflo-install` adds the
-PostgreSQL **client** and no server, and never mentions a broker — so between
-unpacking the tarball and running the installer there is a step that was only
-ever written down in prose.
+`setup.sh` installs the services FireFlo talks to. It exists because the
+gateway's own installer does not: `fireflo-install` adds the PostgreSQL
+**client** and no server, and never installs a broker — so between unpacking the
+tarball and running the installer there is a step that was only ever written
+down in prose.
 
 ```
 sudo ./setup.sh --dry-run     # read what it would do first
 sudo ./setup.sh
+sudo ./setup.sh --help        # every flag, and why each default is what it is
 ```
 
-It installs PostgreSQL (14 or newer), RabbitMQ, and Node 22 for the control
-panel. Java is **not** installed unless you pass `--with-java`: this gateway is
-a native binary and opens no JDK, so a JDK is only wanted for building from
-source.
+**Hosts.** Ubuntu focal, jammy, noble and plucky, and Debian bookworm and
+trixie, through `apt`; RHEL 9, CentOS Stream 9, Rocky Linux 9 and AlmaLinux 9
+(and newer), through `dnf`, from BaseOS and AppStream only — no EPEL. Debian
+bullseye is recognised but refused, because its PostgreSQL is 13 (see
+[Before you begin](#before-you-begin)). Anything else is refused by name.
 
-**It creates no database, no role and no password**, and no RabbitMQ user or
-vhost. Installing a package is impersonal and reversible; minting a credential
+**Roles.** `--role` says which machine this is:
+
+| Role | Installs |
+|---|---|
+| `all` (default) | Everything on one box: PostgreSQL, a single broker node on 127.0.0.1, Node 22 for the control panel, the gateway's client tools. `--no-postgres` and `--no-node` leave either out |
+| `gateway` | Client tools only — no database, no broker, no Node. Nothing on a gateway node holds state |
+| `db` | The PostgreSQL server the gateway nodes share. `--allow-from CIDR` (repeatable) edits `listen_addresses` and `pg_hba.conf` for that subnet, backing each file up first; without it the lines are printed for you to apply |
+| `broker` | One broker node, advertising `--advertise-ip` (default: the first non-loopback address, printed so you can check it). For a three-node Redpanda cluster, run it on each with `--ips A,B,C` |
+| `panel` | Node 22 and a PostgreSQL client |
+
+**The broker.** `--broker redpanda`, the default, is one binary from
+Redpanda's own apt or rpm repository (`REDPANDA_VERSION` pins it).
+`--broker kafka` is Apache Kafka in KRaft mode, one node, from the
+downloads.apache.org tarball with its SHA-512 checked (4.4.0 unless
+`KAFKA_VERSION` says otherwise), run by a systemd unit it writes — a JVM with a
+fixed heap (`--kafka-heap`, 1g), which suits a small VM better, and needs
+Java 17 or newer (`--with-java` if the host has none). Either is optional: a
+gateway without `--kafka-bootstrap` uses its in-memory queue and never talks to
+the broker.
+
+Java is **not** installed unless you pass `--with-java`: the gateway is a native
+binary and opens no JDK, so a JDK is only wanted for building from source, for
+the Java build on ARM, or for `--broker kafka`.
+
+**It creates no database, no role and no password**, and no broker user, ACL or
+SASL. Installing a package is impersonal and reversible; minting a credential
 and writing it to disk is neither, and it is not a decision a setup script
 should take for you. It prints the commands to run instead.
 
+**It writes no firewall rules and never changes SELinux.** Which hosts may
+reach which port is a fact about your network, and a firewall on a host you are
+ssh'd into is not something to change from a script. It prints the lines per
+role — `ufw` on Ubuntu and Debian, `firewall-cmd` on RHEL-family hosts or
+wherever firewalld runs — and, on an Enforcing host where a data directory has
+moved, the `semanage` and `restorecon` lines.
+
 **`setup.sh` is not signed**, unlike the release tarball — it is a plain script
-in this repository rather than a build artefact. It is one readable file with no
-network fetch except the NodeSource and Adoptium installers it names, so read it
-before you run it as root.
+in this repository rather than a build artefact. It is one readable file whose
+only network fetches are the repositories it names (NodeSource, Adoptium,
+Redpanda) and the Apache Kafka tarball, so read it before you run it as root.
 
 ## Removing an install
 
@@ -336,7 +445,7 @@ without `--tenant` or `--service`, rather than guessing.
 **It keeps your data.** The data and log directories survive unless you pass
 `--purge-data` or `--purge-logs`, and it never drops a database or a role — a
 CDR history outlives the software that wrote it. It also leaves PostgreSQL,
-RabbitMQ and Node alone, because `setup.sh` installs those host-wide and a
+the broker and Node alone, because `setup.sh` installs those host-wide and a
 second tenant is probably still using them.
 
 **SMPPSim is not removed by it yet.** An install made with `--with-smppsim` has
@@ -355,7 +464,8 @@ before another machine can take it.
 ## Earlier builds
 
 **Only the current release is published here.** Builds before 0.12.10 have been
-withdrawn and their tarballs removed from this tree. 0.13.4's last tarballs (with
+withdrawn and their tarballs removed from this tree. 0.13.5's last tarballs (with
+control panel 0.13.5.0) are in this repository's history at commit `e110799`. 0.13.4's last tarballs (with
 control panel 0.13.4.4) are in this repository's history at commit `30ee812`. 0.13.0's last tarballs (with
 control panel 0.13.0.2) are in this repository's history at commit `9102ba0`. 0.12.36's tarballs (with
 control panel 0.12.36.0) are in this repository's history at commit `0821a8b`. 0.12.35's tarballs (with
@@ -385,6 +495,50 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.14.0 with control panel 0.14.0.0
+
+**RabbitMQ is removed** (breaking). `smsg.queue.provider` is `memory` -- the default, one gateway,
+behaviour unchanged -- or `kafka`. A stored `rabbitmq` refuses to start; `fireflo-install update`
+finds it before stopping anything and prints the drain procedure (stop customer intake, wait until
+the broker queue and the router queue are empty, then `update --no-broker` or `--kafka-bootstrap
+host:9092`). `--broker-uri` and `--broker-queue` are refused. See
+[Upgrading from 0.13.x](#upgrading-from-013x). Gateway `036a71f`, schema 1.109.0, control panel
+0.14.0.0 (`8d83df4`).
+
+- **Kafka backbone, optional.** With `--kafka-bootstrap`, every hand-off inside the gateway goes
+  through Kafka (Apache Kafka 4.x in KRaft mode, or Redpanda). A message is acknowledged to the
+  customer only after the broker has it; routing rules from the control panel are applied by the
+  gateway's router reading the router topic; one topic per vendor; retries through delay topics; a
+  dead-letter topic; webhooks that survive a restart. There is no fallback to memory: with the
+  broker down the gateway answers SMPP `ESME_RMSGQFUL` and HTTP `503`. The gateway creates its
+  topics at start, or ahead of time with `fireflo broker init`.
+- **Kafka mode is cluster mode.** Several gateway nodes on one PostgreSQL and one Kafka, each with
+  its own `FIREFLO_INSTANCE_ID` (`--node-id`). Each vendor is leased to one node at a time and moves
+  automatically when that node dies; receipts are delivered to the node holding the customer's
+  bind; credit is held per node; rate limits are split by where each customer is bound; dead nodes
+  are cleaned up. See [Multi-host and clustering](#multi-host-and-clustering).
+- **A message no rule routes is refused at the door.** It used to be accepted, retried and
+  refunded; now SMPP answers `0x0000000B` by default (`conf.status.noRoute`, settable per listener)
+  and HTTP `403`. `smsg.routing.ingress.check=false` restores the old behaviour.
+- **Copy routes:** the first target owns the charge and the receipts; the copies are unbilled and
+  send no receipts.
+- **Upgrading from 0.13.x is a maintenance window.** Migration V1.105.0 (credit held per node)
+  needs every gateway stopped. `fireflo-install update` handles one node; with several, stop each
+  (`fireflo-install service stop`), then `--migrate` on the first and `--no-migrate` on the rest.
+  Credit held under the old host-name owner carries over.
+- **Installer flags.** `fireflo-install` gains `--kafka-bootstrap`, `--kafka-security`,
+  `--kafka-sasl-mechanism`, `--kafka-sasl-user`, `--kafka-sasl-password-file`,
+  `--kafka-truststore`, `--kafka-truststore-password-file`, `--kafka-topic-prefix`,
+  `--kafka-partitions`, `--node-id`, `--role gateway`, `--join` (node 2 onwards, with
+  `--secrets-key-file`), `--migrate`/`--no-migrate` and `service stop`. `fireflo-panel-install`
+  gains `--gateway-ops-url`, `--gateway-base-url`, the `--db-*` flags with `--db-password-file`, the
+  token and secret files, and `--gateway-ops-urls id=url,...`, for a panel on a host of its own.
+- **`setup.sh` is new:** host roles (`--role all|gateway|db|broker|panel`), the broker choice
+  (`--broker redpanda`, the default, or `--broker kafka` for Apache Kafka 4.4.0 in KRaft mode,
+  SHA-512 checked), RHEL-family 9+ hosts through `dnf` beside Ubuntu and Debian through `apt`,
+  `--allow-from` for the database host, and firewall and SELinux steps printed rather than applied.
+  See [Preparing a host](#preparing-a-host).
 
 ### 0.13.5
 

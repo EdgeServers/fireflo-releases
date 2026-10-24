@@ -1737,7 +1737,11 @@ migrations, which the first node already did:
   sudo ./scripts/fireflo-install install --from ./gateway --role gateway \
       --config-source db --join --no-migrate \
       --db-host <db-ip> --db-name fireflo --db-user fireflo --db-password-file /root/fireflo-db.pw \
-      --kafka-bootstrap <broker-ip>:9092 --node-id gw-2
+      --kafka-bootstrap <broker-ip>:9092 --node-id gw-2 \
+      --secrets-key-file /root/fireflo-secrets.key
+
+(--secrets-key-file: FIREFLO_SECRETS_KEY copied from the first node's fireflo.env;
+every node must share it, and an empty file means the first node has none.)
 
 Firewall, this host. Outbound: 5432 to the database host, 9092 to every
 broker. Inbound: the customer-facing SMPP listener (2775 by default, or the
