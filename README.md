@@ -10,7 +10,9 @@ starts and carries traffic, but stops adopting configuration changes.
 
 **New host?** Go straight to
 [Install on a blank server](#install-on-a-blank-server) — every command from an
-empty box to a running gateway, in order.
+empty box to a running gateway, in order. **Want a durable queue?**
+[Install and configure Kafka](#install-and-configure-kafka) — one command, on a
+new box or one already running.
 
 ## Current
 
@@ -284,7 +286,9 @@ already runs, `fireflo-install update --from ./gateway --kafka-bootstrap
 customer only once the broker has it, and if the broker is down the gateway
 refuses new messages (SMPP `ESME_RMSGQFUL`, HTTP `503`) rather than falling back
 to memory. The gateway creates its topics when it starts; `fireflo broker init`
-creates them ahead of time if your broker does not let clients do that.
+creates them ahead of time if your broker does not let clients do that. Every
+form of this — one box, an install already running, a broker on its own host —
+is in [Install and configure Kafka](#install-and-configure-kafka).
 
 **The customer-facing REST panel** is optional and installs the same way from
 `rest-panel/scripts/`. **0.14.0 does not carry it**: take it from the 0.11.0
@@ -365,6 +369,131 @@ anything and refuses, printing this procedure:
 `--broker-uri` and `--broker-queue` are refused, naming the replacement.
 RabbitMQ itself is left installed; remove it when you are done with it.
 
+## Install and configure Kafka
+
+Without a broker the gateway queues in memory, and a restart drops whatever has
+not reached a vendor. With Kafka a message is acknowledged only once the broker
+has it — and Kafka is also cluster mode, so a second gateway node is an install
+rather than a migration ([Clustering](https://docs.fireflo.au/platform/install/clustering)
+in the documentation). This section is the commands.
+
+`setup.sh --configure-gateway` does it in one run: it installs Apache Kafka (or
+finds it installed), waits until the broker answers, then runs the gateway's
+own `fireflo-install` with `--kafka-bootstrap` — `install` where there is no
+gateway yet, `update` where there is one. It finds the release you unpacked
+beside it (or take `--gateway-dir DIR`) and never unpacks or verifies a tarball
+itself. Anything after a lone `--` goes to `fireflo-install` unchanged.
+`sudo ./setup.sh --help` covers every flag; `--dry-run` prints the whole plan,
+the `fireflo-install` line included, and changes nothing.
+
+### One box from scratch
+
+Gateway, database and Kafka on one host — the [blank server](#install-on-a-blank-server)
+sequence with Kafka in place of Redpanda. Prepare the host, create the database
+role, then let the same command point a new gateway at the broker:
+
+```
+sudo ./setup.sh --role all --broker kafka --with-java
+
+sudo -u postgres createuser --pwprompt fireflo
+sudo -u postgres createdb --owner=fireflo fireflo
+umask 077 && printf '%s' 'THE-DB-PASSWORD' > /root/fireflo-db.pw
+
+tar xzf fireflo-0.14.0-linux-x86_64.tar.gz      # after verifying it
+sudo ./setup.sh --role all --broker kafka --configure-gateway -- \
+    --config-source db --bootstrap \
+    --db-name fireflo --db-user fireflo --db-password-file /root/fireflo-db.pw
+```
+
+The second run leaves what the first installed alone. Kafka listens on
+127.0.0.1:9092 only, and the gateway becomes node `gw-1` (`--node-id` to name
+it otherwise). `--with-java` is only for a host with no Java 17 or newer: Kafka
+is a JVM, the gateway is not. Carry on from
+[step 7](#7-activate-the-licence).
+
+### An install that already runs on the in-memory queue
+
+Switching restarts the gateway, and what is queued in memory when it stops is
+lost. So drain it first, then switch:
+
+1. Stop customer intake — suspend the listeners or take the node out of the
+   load balancer, and pause anything that submits over HTTP.
+2. Wait until `sudo /opt/fireflo/bin/fireflo health` shows `router_queue` at 0
+   and every worker's `queue_depth` and `retry_queue_depth` at 0.
+3. Then, from beside the unpacked release:
+
+```
+sudo ./setup.sh --role all --broker kafka --configure-gateway --yes-drained
+```
+
+`--yes-drained` is required while the gateway runs, and is checked rather than
+trusted: `setup.sh` reads `fireflo health` before installing anything and again
+just before the switch, and refuses while anything is queued. The update keeps
+the node's existing id, needs the install to have a database (Kafka mode keeps
+receipt correlation in PostgreSQL — receipts still awaited are imported from
+the old store on the first start), and, if the release beside it is newer than
+the running gateway, upgrades it in the same step; the plan it prints says so.
+Reopen intake afterwards. A tenant install is named with
+`--gateway-conf-dir /srv/fireflo/acme/gateway/conf`.
+
+The same by hand, two steps — drained the same way first, since nothing checks
+it for you on this path:
+
+```
+sudo ./setup.sh --role all --broker kafka
+cd fireflo-0.14.0-linux-x86_64
+sudo ./scripts/fireflo-install update --from ./gateway --kafka-bootstrap 127.0.0.1:9092 --migrate
+```
+
+### Kafka on its own host
+
+On the broker host, with the address the gateways reach it on:
+
+```
+sudo ./setup.sh --role broker --broker kafka --advertise-ip 10.0.0.20 --with-java
+```
+
+It binds 9092 on every interface and advertises `10.0.0.20:9092`, PLAINTEXT
+with no ACLs — so **firewall 9092 to the gateway subnet before anything else**
+(the summary prints the `ufw` or `firewall-cmd` lines). Its controller port,
+9093, is loopback-only.
+
+Then on each gateway host, its own `--node-id` each time:
+
+```
+sudo ./setup.sh --role gateway --configure-gateway --kafka-bootstrap 10.0.0.20:9092 --node-id gw-1 -- \
+    --config-source db --bootstrap \
+    --db-host 10.0.0.10 --db-name fireflo --db-user fireflo --db-password-file /root/fireflo-db.pw
+```
+
+`--node-id` is required for a new install here: a default would give two hosts
+the same id. Further nodes join instead of bootstrapping — after the `--`,
+`--join --config-source db --secrets-key-file <file>` and the database flags,
+as in [Multi-host and clustering](#multi-host-and-clustering). Without
+`setup.sh`, the same is `fireflo-install install --from ./gateway --role
+gateway --kafka-bootstrap 10.0.0.20:9092 --node-id gw-1 …`, or `fireflo-install
+update --kafka-bootstrap 10.0.0.20:9092 --migrate` on a gateway that already
+runs (drained, as above). If the broker does not answer within two minutes
+(`--broker-wait` to change it), the gateway is not touched.
+
+### Checking it worked
+
+```
+sudo /opt/fireflo/bin/fireflo health
+sudo /opt/fireflo/bin/fireflo broker test --bootstrap 127.0.0.1:9092    # or 10.0.0.20:9092
+```
+
+In `health`, `backbone` is there with `"connected": true` and the bootstrap you
+gave; `router_lag` is the router's backlog on the topic and should sit near 0.
+No `backbone` at all means the gateway is still on the in-memory queue. `broker
+test` dials the broker the way the gateway does and prints the cluster id, the
+brokers and the controller.
+
+### Redpanda or Kafka
+
+- **Redpanda** (the default): one binary from Redpanda's package repository; sizes itself to the machine, so wants 4 GB and more, and is the one to choose for a three-node broker cluster (`--ips`).
+- **Apache Kafka** (`--broker kafka`): one KRaft node from the apache.org tarball, a JVM with a fixed heap (`--kafka-heap`, 1g), so the better fit for a small VM; a Kafka cluster you build yourself (`--kafka-kraft-notes`).
+
 ## Preparing a host
 
 `setup.sh` installs the services FireFlo talks to. It exists because the
@@ -403,7 +532,8 @@ downloads.apache.org tarball with its SHA-512 checked (4.4.0 unless
 fixed heap (`--kafka-heap`, 1g), which suits a small VM better, and needs
 Java 17 or newer (`--with-java` if the host has none). Either is optional: a
 gateway without `--kafka-bootstrap` uses its in-memory queue and never talks to
-the broker.
+the broker. `--configure-gateway` points the gateway at it in the same run — see
+[Install and configure Kafka](#install-and-configure-kafka).
 
 Java is **not** installed unless you pass `--with-java`: the gateway is a native
 binary and opens no JDK, so a JDK is only wanted for building from source, for

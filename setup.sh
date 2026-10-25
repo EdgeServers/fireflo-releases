@@ -2,6 +2,14 @@
 # Prepare a host for FireFlo.
 #
 #   sudo ./setup.sh [--role ROLE] [options]
+#   sudo ./setup.sh --role all --broker kafka --configure-gateway [options] [-- fireflo-install options]
+#   sudo ./setup.sh --role gateway --configure-gateway --kafka-bootstrap IP:9092 --node-id ID [-- ...]
+#
+# The first prepares the host. The second also installs Kafka on it (or finds
+# it installed), waits for it to answer and points the gateway at it -- a new
+# install, or one that already runs -- by running the gateway's own
+# fireflo-install. The third does the same on a gateway host, against a broker
+# on another host (--role broker there).
 #
 # SUPPORTED HOSTS
 #
@@ -65,6 +73,52 @@
 #                      Next.js will not run on
 #   --no-postgres      --role all only: skip the PostgreSQL server
 #   --kafka-kraft-notes  print a note on Apache Kafka (KRaft) and exit
+#
+#   --configure-gateway
+#                      all|gateway only. Once the host is prepared, point a
+#                      FireFlo gateway at the broker: wait for the broker to
+#                      answer, then run the gateway's OWN fireflo-install,
+#                      from the release you unpacked, with --kafka-bootstrap:
+#                        install  when there is no install (no fireflo.env in
+#                                 --gateway-conf-dir), with a --node-id
+#                        update   when there is one, with --migrate. On an
+#                                 install running the in-memory queue this
+#                                 RESTARTS the gateway, so it needs
+#                                 --yes-drained -- see SWITCHING below
+#                      An install already on Kafka at that address is left
+#                      alone. Nothing fireflo-install does is done here: it
+#                      dials the broker (fireflo broker test), creates the
+#                      topics (fireflo broker init) and writes the settings.
+#                      Everything after a lone '--' is handed to fireflo-install
+#                      as it is -- the database flags of a new install, say:
+#                        -- --config-source db --bootstrap --db-name fireflo
+#                           --db-user fireflo --db-password-file /root/fireflo-db.pw
+#   --kafka-bootstrap HOST:PORT[,HOST:PORT...]
+#                      --role gateway --configure-gateway, and required there:
+#                      the broker host's --advertise-ip, port 9092. --role all
+#                      always uses the broker it installs, 127.0.0.1:9092
+#   --node-id ID       --configure-gateway: this gateway node's id. gw-1 by
+#                      default on --role all. REQUIRED for a new install on
+#                      --role gateway, where one default would give two hosts
+#                      the same id. An install that has an id keeps it (an id
+#                      is set once), and a different --node-id is refused
+#   --gateway-dir DIR  --configure-gateway: the UNPACKED, VERIFIED release, with
+#                      scripts/fireflo-install and gateway/ in it. Default: the
+#                      current directory or this script's, or the one
+#                      fireflo-*-linux-*/ directory in either. A tarball nobody
+#                      unpacked is refused rather than unpacked: verifying it
+#                      is your step (README, "Verify it before anything else")
+#   --gateway-conf-dir DIR
+#                      --configure-gateway: the install's configuration
+#                      directory, where fireflo-install itself looks for
+#                      fireflo.env (/etc/fireflo). A tenant's is named here,
+#                      e.g. /srv/fireflo/acme/gateway/conf
+#   --yes-drained      --configure-gateway, switching a RUNNING in-memory
+#                      gateway: you have stopped customer intake and the queues
+#                      have emptied. Checked as well as believed -- see below
+#   --broker-wait SEC  --configure-gateway: how long the broker has to answer
+#                      before the gateway is left untouched and this stops (120)
+#
 #   --dry-run          print every command and touch nothing
 #   --yes              do not prompt
 #   --help
@@ -105,13 +159,15 @@
 #     reason. A fresh Redpanda node accepts any client that can reach port 9092,
 #     which is correct on a single box where 9092 is not opened to anybody, and
 #     is why the firewall lines in the summary come BEFORE the ACL lines.
-#   * It does not download, verify or install FireFlo, and it never asks for a
-#     licence key. Keeping those separate is what lets this file be read in full
-#     before it is run -- which you should do, because you are about to run it
-#     as root.
+#   * It does not download or verify FireFlo, and it never asks for a licence
+#     key. Keeping those separate is what lets this file be read in full before
+#     it is run -- which you should do, because you are about to run it as root.
+#     It installs FireFlo only when told to (--configure-gateway), and then only
+#     by running the fireflo-install of a release you have already unpacked.
 #   * It does not create a service user, a systemd unit or any FireFlo
-#     configuration (--broker kafka's broker user and unit aside; see below).
-#     Those are fireflo-install's, which does them carefully.
+#     configuration itself (--broker kafka's broker user and unit aside; see
+#     below). Those are fireflo-install's, which does them carefully -- and
+#     which --configure-gateway calls, rather than copying any of it.
 #     The one host-level edit it will make is PostgreSQL's listen address and
 #     pg_hba.conf, and only when you name the subnet with --allow-from.
 #   * It never writes firewall rules. It prints them, per role -- ufw lines on
@@ -126,6 +182,31 @@
 #     creates a 'kafka' system user, /etc/kafka/server.properties and
 #     /etc/systemd/system/kafka.service, because a tarball brings none of
 #     those. Each is written only when absent, never overwritten.
+#
+# SWITCHING A RUNNING GATEWAY TO KAFKA (--configure-gateway on an install)
+#
+# The in-memory queue lives in the gateway's heap, and the switch is a
+# 'fireflo-install update', which stops the gateway and starts it on Kafka.
+# Whatever is queued in memory at that moment -- the router queue, each
+# vendor's queue, the retry delays -- is lost, although the customer was told
+# it was accepted. fireflo-install does not check for that (it guards the
+# RabbitMQ move, not this one), so this script does, before anything is
+# installed:
+#
+#   * a gateway that is not running holds nothing in memory: no condition.
+#   * a running one needs --yes-drained: you have stopped intake (suspended
+#     the listeners or taken it out of the load balancer, paused REST
+#     submitters). A queue that reads 0 with intake open is 0 for a moment.
+#   * and 'fireflo health' must agree: router_queue and every worker's
+#     queue_depth and retry_queue_depth at 0. Not 0 is refused, whatever the
+#     flag says. Read again after the broker answers, just before the switch,
+#     because installing Kafka takes minutes.
+#   * a running gateway whose health cannot be read (no token, management
+#     port moved) proceeds on --yes-drained alone, and says it could not check.
+#
+# Receipts are not part of it: correlations waiting for a receipt are in the
+# MVStore file, which the gateway imports into PostgreSQL on its first start on
+# Kafka. Kafka mode needs that database, so an install without one is refused.
 #
 # This file is not signed. Neither are the release tarballs. Read it.
 
@@ -143,6 +224,17 @@ SEED_IPS=""            # from --ips, comma-separated as rpk wants it
 BROKER=redpanda        # from --broker
 FORCED_OS=no           # yes when FIREFLO_SETUP_OS / _OS_RELEASE drive a dry run
 PKG=""                 # apt or dnf, from detect_host
+
+# --configure-gateway: what to point at the broker, and how.
+CONFIGURE_GW=no
+GW_DIR=""              # from --gateway-dir; found by find_release_dir otherwise
+GW_CONF_DIR=/etc/fireflo
+GW_CONF_GIVEN=no
+GW_NODE_ID=""          # from --node-id
+GW_BOOTSTRAP=""        # from --kafka-bootstrap; 127.0.0.1:9092 on --role all
+YES_DRAINED=no
+BROKER_WAIT=120
+GW_RESULT=""           # the summary line, once it has run
 
 # The oldest PostgreSQL the schema runs on. Below this the Flyway migrations
 # fail partway, which leaves a half-migrated database rather than a clean
@@ -1434,6 +1526,338 @@ EOF
 }
 
 # ---------------------------------------------------------------------------
+# the gateway (--configure-gateway)
+# ---------------------------------------------------------------------------
+# Everything here READS, until do_configure_gateway hands over to the release's
+# own fireflo-install. That is the rule: the env file edits, the app_config
+# rows, the broker dial, the topics and the restart are fireflo-install's, and
+# a second copy of any of them here would one day disagree with the first. What
+# this adds is the order -- the broker is up before the gateway is pointed at
+# it -- and the one guard fireflo-install does not have: a running in-memory
+# gateway is drained before the update that restarts it.
+
+# The unpacked release: a directory with scripts/fireflo-install and gateway/.
+# Looked for in the current directory and in this script's, each itself or the
+# one fireflo-*-linux-*/ inside it. Never unpacked from a tarball here: the
+# checksum and the signature are checked by a person, before anything runs.
+is_release_dir() { [ -x "$1/scripts/fireflo-install" ] && [ -d "$1/gateway" ]; }
+
+find_release_dir() {
+    if [ -n "$GW_DIR" ]; then
+        # the gateway/ directory itself is an easy thing to name by mistake
+        if ! is_release_dir "$GW_DIR" && is_release_dir "$GW_DIR/.."; then GW_DIR=$GW_DIR/..; fi
+        is_release_dir "$GW_DIR" || die "--gateway-dir $GW_DIR has no scripts/fireflo-install and gateway/ in it.
+            Name the directory the release tarball unpacked to, e.g. ./fireflo-0.14.1-linux-x86_64."
+        REL_DIR=$(cd "$GW_DIR" && pwd)
+    else
+        _here=$(cd "$(dirname "$0")" && pwd)
+        _found=""; _tgz=""
+        for _d in "$PWD" "$_here"; do
+            if is_release_dir "$_d"; then _found="$_found $_d"; continue; fi
+            for _c in "$_d"/fireflo-*-linux-*/; do
+                _c=${_c%/}
+                if is_release_dir "$_c"; then _found="$_found $_c"; fi
+            done
+            for _t in "$_d"/fireflo-*-linux-*.tar.gz; do
+                if [ -f "$_t" ]; then _tgz="$_tgz $_t"; fi
+            done
+        done
+        # the same directory found twice (run from beside the script) is one
+        _found=$(echo "$_found" | tr ' ' '\n' | sed '/^$/d' | sort -u)
+        _n=$(echo "$_found" | grep -c . || true)
+        if [ "$_n" -gt 1 ]; then
+            die "more than one unpacked release here, and this will not pick one:
+$(echo "$_found" | sed 's/^/              /')
+            Name it with --gateway-dir."
+        fi
+        if [ "$_n" -eq 0 ]; then
+            if [ -n "$_tgz" ]; then
+                die "--configure-gateway needs the release UNPACKED, and found only the tarball:
+$(echo "$_tgz" | tr ' ' '\n' | sed '/^$/d' | sort -u | sed 's/^/              /')
+            Verify it and unpack it first -- this script does neither for you:
+              gpg --verify SHA256SUMS.asc SHA256SUMS && sha256sum -c SHA256SUMS
+              tar xzf <the tarball>
+            then run this again from beside it, or name it with --gateway-dir."
+            fi
+            die "--configure-gateway found no FireFlo release: no scripts/fireflo-install and gateway/
+            in $PWD or $_here, nor in a fireflo-*-linux-*/ directory there.
+            Unpack the release you verified and name it with --gateway-dir."
+        fi
+        REL_DIR=$_found
+    fi
+    FI=$REL_DIR/scripts/fireflo-install
+    REL_VERSION=$(sed -n 's/^version[[:space:]]*//p' "$REL_DIR/MANIFEST" 2>/dev/null | head -1)
+}
+
+# One key of fireflo.env, the way fireflo-install reads it: the last line wins.
+gw_env_key() {
+    sed -n "s/^[[:space:]]*\(export[[:space:]][[:space:]]*\)\{0,1\}$1=//p" "$GW_ENV" 2>/dev/null | tail -1
+}
+
+# What a running gateway says about itself, from 'fireflo health' -- the
+# install's own CLI, which reads the token from fireflo.env. Sets GH_ANSWERED
+# (yes|no), GH_VERSION, GH_PROVIDER (memory|kafka), GH_BOOTSTRAP, and GH_DEPTH
+# with GH_DETAIL naming each queue that is not empty. Silent when it cannot ask.
+GH_PARSE='
+import json, sys
+d = json.load(sys.stdin)
+d = d.get("data", d) or {}
+bb = d.get("backbone") or {}
+depth = int(d.get("router_queue") or 0)
+parts = ["router_queue=%d" % depth] if depth else []
+for w in d.get("workers") or []:
+    q = int(w.get("queue_depth") or 0) + int(w.get("retry_queue_depth") or 0)
+    if q:
+        parts.append("%s=%d" % (w.get("name") or "?", q))
+    depth += q
+print(d.get("version") or "")
+print("kafka" if bb else "memory")
+print(bb.get("bootstrap") or "")
+print(depth)
+print(" ".join(parts))
+'
+gw_health() {
+    GH_ANSWERED=no; GH_VERSION=""; GH_PROVIDER=""; GH_BOOTSTRAP=""; GH_DEPTH=""; GH_DETAIL=""
+    [ -x "$GW_APP/bin/fireflo" ] && have python3 && have timeout || return 0
+    _gh=$(FIREFLO_CONF_DIR="$GW_CONF_DIR" timeout 20 "$GW_APP/bin/fireflo" health 2>/dev/null |
+        python3 -c "$GH_PARSE" 2>/dev/null) || return 0
+    [ -n "$_gh" ] || return 0
+    GH_ANSWERED=yes
+    GH_VERSION=$(echo "$_gh" | sed -n 1p)
+    GH_PROVIDER=$(echo "$_gh" | sed -n 2p)
+    GH_BOOTSTRAP=$(echo "$_gh" | sed -n 3p)
+    GH_DEPTH=$(echo "$_gh" | sed -n 4p)
+    GH_DETAIL=$(echo "$_gh" | sed -n 5p)
+}
+
+drain_steps() {
+    cat <<EOF
+            Drain it first:
+              1. stop customer intake: suspend its SMPP listeners or take it out of the load
+                 balancer, and pause whatever submits over HTTP
+              2. wait until 'FIREFLO_CONF_DIR=$GW_CONF_DIR $GW_APP/bin/fireflo health' shows
+                 router_queue 0 and every worker's queue_depth and retry_queue_depth 0
+              3. run this again with --yes-drained
+            The update stops the gateway and starts it on Kafka; whatever is in the in-memory
+            queue when it stops is lost, although each message was acknowledged to a customer.
+            Nothing was changed.
+EOF
+}
+
+# Decided BEFORE the "Proceed?" prompt and before anything is installed, so that
+# every refusal here leaves the host as it was. Sets GW_ACTION (install, update
+# or skip), GW_NODE_ARG (the --node-id to pass, or empty) and GW_PLAN.
+gw_preflight() {
+    find_release_dir
+    GW_ENV=$GW_CONF_DIR/fireflo.env
+    GW_ACTION=install; GW_ENV_READABLE=no; GW_RUNNING=no; GW_NODE_ARG=""
+    GW_APP=/opt/fireflo; GW_SVC=fireflo; GH_ANSWERED=no; GW_DRAIN_NOTE=""
+
+    # An install is a fireflo.env in the configuration directory, which is how
+    # fireflo-install itself tells 'install' from 'update'. A simulated host
+    # (FIREFLO_SETUP_OS) is a bare one: nothing is installed on it.
+    if [ "$FORCED_OS" != yes ]; then
+        if [ -e "$GW_ENV" ]; then
+            GW_ACTION=update
+        elif [ -d "$GW_CONF_DIR" ] && ! [ -x "$GW_CONF_DIR" ]; then
+            # only reachable without root, which only a dry run is
+            GW_ACTION=update
+            say "   (cannot look inside $GW_CONF_DIR without root; assuming it holds an install)"
+        elif [ "$GW_CONF_GIVEN" = no ]; then
+            # Not at the default place -- but somewhere else? Then which one is
+            # meant is not a thing to guess, and a second install beside it is
+            # never what this was asked for.
+            _others=$(ls -d /etc/fireflo/*/fireflo.env /etc/fireflo-*/fireflo.env \
+                /srv/fireflo/*/gateway/conf/fireflo.env /home/*/gateway/conf/fireflo.env 2>/dev/null || true)
+            if [ -n "$_others" ]; then
+                die "no install at $GW_CONF_DIR, and these are on this host:
+$(echo "$_others" | sed 's#/fireflo.env$##; s/^/              /')
+            Name the one to point at Kafka with --gateway-conf-dir. Nothing was changed."
+            fi
+        fi
+    fi
+
+    if [ "$GW_ACTION" = install ]; then
+        if [ -n "$GW_NODE_ID" ]; then
+            GW_NODE_ARG=$GW_NODE_ID
+        elif [ "$ROLE" = all ]; then
+            GW_NODE_ARG=gw-1
+        else
+            die "--role gateway --configure-gateway installs a new gateway here, and needs its --node-id:
+            gw-1 for the first node, gw-2 for the next. A default would give two hosts one id,
+            and two nodes with one id reclaim each other's credit."
+        fi
+        GW_PLAN="install, node $GW_NODE_ARG, onto $GW_BOOTSTRAP${REL_VERSION:+ -- FireFlo $REL_VERSION} from $REL_DIR"
+        return 0
+    fi
+
+    # an existing install: what it is, read rather than asked
+    if [ -r "$GW_ENV" ]; then
+        GW_ENV_READABLE=yes
+        _v=$(gw_env_key FIREFLO_APP_DIR);      GW_APP=${_v:-$GW_APP}
+        _v=$(gw_env_key FIREFLO_SERVICE_NAME); GW_SVC=${_v:-$GW_SVC}
+        _have_id=$(gw_env_key FIREFLO_INSTANCE_ID)
+        if [ -n "$GW_NODE_ID" ] && [ -n "$_have_id" ] && [ "$GW_NODE_ID" != "$_have_id" ]; then
+            die "this gateway is $_have_id (FIREFLO_INSTANCE_ID in $GW_ENV), not '$GW_NODE_ID'.
+            A node id is set once and never changed: a renamed node strands its credit holds.
+            Leave --node-id out to keep $_have_id. Nothing was changed."
+        fi
+        # Kafka mode keeps receipt correlation and the node table in PostgreSQL;
+        # a gateway without a database is refused at start -- after the stop.
+        if [ -z "$(gw_env_key FIREFLO_DB_URL)" ]; then
+            die "the install at $GW_CONF_DIR has no database (no FIREFLO_DB_URL in fireflo.env), and Kafka
+            mode needs one: receipt correlation moves into PostgreSQL, and the gateway refuses to start
+            on Kafka without it -- which it would find out after the update had stopped it.
+            Give it a database first (fireflo-install update --db-name ... --db-user ...), then run
+            this again. Nothing was changed."
+        fi
+    else
+        say "   (cannot read $GW_ENV without root; a real run reads its paths, node id and database)"
+    fi
+    GW_NODE_ARG=$GW_NODE_ID
+
+    # Is it running, and on what? Asked of the gateway itself.
+    gw_health
+    if [ "$GH_ANSWERED" = yes ]; then
+        GW_RUNNING=yes
+    elif have_systemd && systemctl is-active --quiet "$GW_SVC" 2>/dev/null; then
+        GW_RUNNING=yes
+    fi
+
+    if [ "$GH_PROVIDER" = kafka ]; then
+        if [ "$GH_BOOTSTRAP" = "$GW_BOOTSTRAP" ]; then
+            GW_ACTION=skip
+            GW_PLAN="leave alone: already on Kafka at $GW_BOOTSTRAP"
+            return 0
+        fi
+        die "the gateway at $GW_CONF_DIR is already on Kafka, at $GH_BOOTSTRAP, not $GW_BOOTSTRAP.
+            Moving a running cluster to another broker is not a switch this script makes. With every
+            node stopped (fireflo-install service stop, on each), run on the first:
+              sudo $FI update --from $REL_DIR/gateway --kafka-bootstrap $GW_BOOTSTRAP --migrate
+            and --no-migrate on the rest. Nothing was changed."
+    fi
+
+    if [ "$GW_RUNNING" = yes ]; then
+        if [ "$GH_ANSWERED" = yes ] && [ "${GH_DEPTH:-0}" -gt 0 ] 2>/dev/null; then
+            die "the gateway at $GW_CONF_DIR is running on the in-memory queue with $GH_DEPTH message(s)
+            still queued ($GH_DETAIL)$([ "$YES_DRAINED" = yes ] && echo ', whatever --yes-drained says').
+$(drain_steps)"
+        fi
+        if [ "$YES_DRAINED" != yes ]; then
+            die "the gateway at $GW_CONF_DIR is running on the in-memory queue, and switching it to Kafka
+            restarts it.$([ "$GH_ANSWERED" = yes ] && echo " Its queues read 0 now, but with intake open that is 0 for a moment.")
+$(drain_steps)"
+        fi
+        if [ "$GH_ANSWERED" = yes ]; then
+            GW_DRAIN_NOTE="running, drained (--yes-drained; health reads 0 queued)"
+        else
+            GW_DRAIN_NOTE="running, --yes-drained (NOT checked: 'fireflo health' did not answer)"
+        fi
+    else
+        GW_DRAIN_NOTE="not running, so nothing is queued in memory"
+    fi
+    _ver=""
+    if [ -n "$GH_VERSION" ] && [ -n "$REL_VERSION" ] && [ "$GH_VERSION" != "$REL_VERSION" ]; then
+        _ver="; ALSO UPGRADES $GH_VERSION -> $REL_VERSION"
+    fi
+    GW_PLAN="update $GW_CONF_DIR onto $GW_BOOTSTRAP --migrate${GW_NODE_ARG:+, node $GW_NODE_ARG} ($GW_DRAIN_NOTE$_ver), from $REL_DIR"
+}
+
+# The broker answers, or the gateway is not touched. The protocol where this
+# host has the broker's own client (kafka-topics.sh, rpk); a TCP connect to
+# each bootstrap entry otherwise -- fireflo-install then dials it properly,
+# with the credentials, before it writes anything.
+broker_answers() {
+    if [ "$DO_BROKER" = yes ] && [ "$BROKER" = kafka ] && [ -x "$KAFKA_HOME/bin/kafka-topics.sh" ]; then
+        timeout 15 "$KAFKA_HOME/bin/kafka-topics.sh" --bootstrap-server "$GW_BOOTSTRAP" --list >/dev/null 2>&1
+        return
+    fi
+    if [ "$DO_BROKER" = yes ] && [ "$BROKER" = redpanda ] && have rpk; then
+        rpk cluster info -X brokers="$GW_BOOTSTRAP" >/dev/null 2>&1
+        return
+    fi
+    for _e in $(echo "$GW_BOOTSTRAP" | tr ',' ' '); do
+        _p=${_e##*:}; _h=${_e%:*}; _h=${_h#\[}; _h=${_h%\]}
+        if have nc; then
+            nc -z -w 3 "$_h" "$_p" >/dev/null 2>&1 && return 0
+        elif have bash; then
+            timeout 3 bash -c 'exec 3<>"/dev/tcp/$1/$2"' _ "$_h" "$_p" >/dev/null 2>&1 && return 0
+        fi
+    done
+    return 1
+}
+
+wait_for_broker() {
+    if [ "$DRY_RUN" = yes ]; then
+        say "   would wait up to ${BROKER_WAIT}s for the broker at $GW_BOOTSTRAP to answer, and stop here if it does not"
+        return 0
+    fi
+    say "   Waiting up to ${BROKER_WAIT}s for the broker at $GW_BOOTSTRAP to answer."
+    _deadline=$(( $(date +%s) + BROKER_WAIT ))
+    while :; do
+        if broker_answers; then
+            say "   The broker answers on $GW_BOOTSTRAP."
+            return 0
+        fi
+        [ "$(date +%s)" -lt "$_deadline" ] || break
+        sleep 3
+    done
+    if [ "$DO_BROKER" = yes ] && [ "$BROKER" = kafka ]; then
+        _why="'systemctl status kafka', 'journalctl -u kafka' and $KAFKA_LOG_DIR/server.log say why."
+    elif [ "$DO_BROKER" = yes ]; then
+        _why="'systemctl status redpanda' and 'journalctl -u redpanda' say why."
+    else
+        _why="Check from this host: nc -zv <broker-ip> 9092. Is the broker up, is 9092 open to this
+            host in the broker's firewall, and does it advertise an address this host can reach
+            (--advertise-ip on the broker host)?"
+    fi
+    die "the broker at $GW_BOOTSTRAP did not answer within ${BROKER_WAIT}s, so the gateway was not touched.
+            $_why
+            Everything before this step is idempotent: run the same command again once it answers
+            (--broker-wait SEC to wait longer)."
+}
+
+# Hands over to fireflo-install. "$@" is what followed '--' on the command line.
+do_configure_gateway() {
+    step "Gateway"
+    if [ "$GW_ACTION" = skip ]; then
+        say "   The gateway at $GW_CONF_DIR is already on Kafka at $GW_BOOTSTRAP. Leaving its configuration alone."
+        GW_RESULT="already on kafka at $GW_BOOTSTRAP, left alone"
+        return 0
+    fi
+    wait_for_broker
+
+    # Again, now: installing the broker took minutes, and intake may have been
+    # reopened since the check before the prompt.
+    if [ "$GW_ACTION" = update ] && [ "$GW_RUNNING" = yes ] && [ "$DRY_RUN" != yes ]; then
+        gw_health
+        if [ "$GH_ANSWERED" = yes ] && [ "${GH_DEPTH:-0}" -gt 0 ] 2>/dev/null; then
+            die "the gateway has $GH_DEPTH message(s) queued in memory again ($GH_DETAIL), so it was not
+            switched. The broker is installed and running and stays so.
+$(drain_steps)"
+        fi
+    fi
+
+    if [ "$GW_ACTION" = update ]; then set -- --migrate "$@"; fi
+    if [ "$GW_ACTION" = install ] && [ "$ROLE" = gateway ]; then set -- --role gateway "$@"; fi
+    if [ -n "$GW_NODE_ARG" ]; then set -- --node-id "$GW_NODE_ARG" "$@"; fi
+    if [ "$GW_CONF_GIVEN" = yes ]; then set -- --conf-dir "$GW_CONF_DIR" "$@"; fi
+    if [ "$ASSUME_YES" = yes ]; then set -- --yes "$@"; fi
+    set -- "$GW_ACTION" --from "$REL_DIR/gateway" --kafka-bootstrap "$GW_BOOTSTRAP" "$@"
+    say "   Handing over to $FI $1. It dials the broker, creates the topics and writes the settings."
+    run "$FI" "$@" || {
+        _rc=$?
+        die "fireflo-install $1 stopped (exit $_rc) -- its own message above says why$([ "$_rc" -eq 2 ] && echo ', and with exit 2 it changed nothing').
+            The broker is installed and left running. Fix what it names and run this command again."
+    }
+    if [ "$DRY_RUN" = yes ]; then
+        GW_RESULT="would $1 onto $GW_BOOTSTRAP"
+    else
+        GW_RESULT="$1 onto kafka at $GW_BOOTSTRAP${GW_NODE_ARG:+, node $GW_NODE_ARG}, by $FI"
+    fi
+}
+
+# ---------------------------------------------------------------------------
 # notes
 # ---------------------------------------------------------------------------
 kafka_kraft_notes() {
@@ -1645,6 +2069,9 @@ refuses, which is correct. Give the gateways all three:
 
   --kafka-bootstrap $(echo "$SEED_IPS" | sed 's/,/:9092,/g'):9092
 EOF
+        summary_gateway_one_command "$(echo "$SEED_IPS" | sed 's/,/:9092,/g'):9092"
+    else
+        summary_gateway_one_command "$_bs"
     fi
 }
 
@@ -1701,6 +2128,7 @@ Hand the gateway the bootstrap address at install time:
 
   --kafka-bootstrap $_bs
 EOF
+    summary_gateway_one_command "$_bs"
 }
 
 summary_install_all() {
@@ -1782,6 +2210,56 @@ admins; outbound 5432 to the database host and 9000 to each gateway node.
 EOF
 }
 
+# After --configure-gateway: how to see that it worked.
+summary_gateway_check() {
+    _cli="${GW_APP:-/opt/fireflo}/bin/fireflo"
+    _env=""
+    [ "$GW_CONF_GIVEN" = no ] || _env="FIREFLO_CONF_DIR=$GW_CONF_DIR "
+    if [ "$DRY_RUN" = yes ]; then _gw_said="Once the gateway is pointed at the broker,"; else _gw_said="The gateway is pointed at the broker."; fi
+    cat <<EOF
+
+$_gw_said Check it the way an operator will:
+
+  sudo ${_env}$_cli health       backbone: "connected": true, "bootstrap": "$GW_BOOTSTRAP",
+                                         and "router_lag" near 0 once traffic flows
+  sudo ${_env}$_cli broker test --bootstrap $GW_BOOTSTRAP
+  sudo ${_env}$_cli verify
+
+"backbone" absent from health means the gateway is still on the in-memory queue.
+EOF
+    if [ "$ROLE" = gateway ]; then
+        cat <<'EOF'
+
+Firewall, this host: outbound 9092 to every broker and 5432 to the database
+host; inbound SMPP (2775), the HTTP API (8080) from customers and the load
+balancer, and 9000 from the panel host only. The broker host's firewall must
+let this host reach its 9092.
+EOF
+    fi
+    if [ "$GW_ACTION" = update ]; then
+        echo
+        echo "Reopen customer intake now: resume the listeners, put the node back in the load balancer."
+    fi
+}
+
+# The one-command form for each gateway host, printed by the broker roles.
+summary_gateway_one_command() {
+    cat <<EOF
+
+Or, on each gateway host, let this script do it once this broker answers: it
+waits for $1, then runs that host's fireflo-install -- install on a new
+host, update (drain first: --yes-drained) on one that already runs:
+
+  sudo ./setup.sh --role gateway --configure-gateway --kafka-bootstrap $1 --node-id gw-1 \\
+      -- --config-source db --bootstrap \\
+         --db-host <db-ip> --db-name fireflo --db-user fireflo --db-password-file /root/fireflo-db.pw
+
+Each further node: its own --node-id, and after the '--' the --join flags of
+'fireflo-install --help' (--join --config-source db --secrets-key-file <file>
+and the database flags) in place of --bootstrap.
+EOF
+}
+
 summary() {
     step "Done"
     printf '  %-12s %s\n' "host"       "$OS_PRETTY ($OS_NAME, $OS_ARCH, $PKG)"
@@ -1792,6 +2270,7 @@ summary() {
     printf '  %-12s %s\n' "node"       "${NODE_RESULT:-skipped}"
     printf '  %-12s %s\n' "tools"      "${TOOLS_RESULT:-skipped}"
     printf '  %-12s %s\n' "java"       "${JAVA_RESULT:-not installed -- the gateway is native and needs none}"
+    if [ "$CONFIGURE_GW" = yes ]; then printf '  %-12s %s\n' "gateway" "${GW_RESULT:-not configured}"; fi
     if [ "$PKG" = dnf ]; then
         _se=$(selinux_mode)
         if [ "$FORCED_OS" = yes ]; then _se_none="not checked (simulated host)"; else _se_none="not checked (no getenforce)"; fi
@@ -1811,6 +2290,12 @@ listeners and advertised.listeners in the config below to this host's address,
 restart it, and firewall 9092 to the gateways.
 EOF
                 summary_kafka_where
+            elif [ -n "${BROKER_RESULT:-}" ] && [ -n "$GW_RESULT" ]; then
+                cat <<'EOF'
+
+Redpanda is a single node on 127.0.0.1:9092 with no authentication, reachable
+from this host only unless you open 9092.
+EOF
             elif [ -n "${BROKER_RESULT:-}" ]; then
                 cat <<'EOF'
 
@@ -1821,7 +2306,7 @@ treatment: 'rpk redpanda config bootstrap --self <this-ip>' and the ACL and
 SASL steps that --role broker prints.
 EOF
             fi
-            summary_install_all
+            if [ -n "$GW_RESULT" ]; then summary_gateway_check; else summary_install_all; fi
             ;;
         db)
             summary_db_commands
@@ -1831,7 +2316,7 @@ EOF
             summary_broker_next
             ;;
         gateway)
-            summary_install_gateway
+            if [ -n "$GW_RESULT" ]; then summary_gateway_check; else summary_install_gateway; fi
             ;;
         panel)
             summary_install_panel
@@ -1839,11 +2324,15 @@ EOF
     esac
     selinux_notes
 
-    cat <<'EOF'
+    if [ -z "$GW_RESULT" ]; then
+        cat <<'EOF'
 
 Then check the host before installing anything:
 
   ./scripts/fireflo-install check
+EOF
+    fi
+    cat <<'EOF'
 
 Full documentation: https://docs.fireflo.au  (multi-host: README, "Multi-host and clustering")
 EOF
@@ -1898,6 +2387,26 @@ while [ $# -gt 0 ]; do
         # reason, rather than on 'unknown option' with none.
         --no-rabbitmq) die "RabbitMQ is no longer part of FireFlo (removed in 0.14). This script now installs Redpanda (or, with --broker kafka, Apache Kafka) for --role broker|all; see README 'Multi-host and clustering'." ;;
         --kafka-kraft-notes) kafka_kraft_notes; exit 0 ;;
+        --configure-gateway) CONFIGURE_GW=yes; shift ;;
+        --kafka-bootstrap) [ $# -ge 2 ] || die "--kafka-bootstrap needs HOST:PORT, e.g. 10.0.0.20:9092"
+                       GW_BOOTSTRAP=$2; shift 2 ;;
+        --kafka-bootstrap=*) GW_BOOTSTRAP=${1#--kafka-bootstrap=}; shift ;;
+        --node-id)     [ $# -ge 2 ] || die "--node-id needs an id, e.g. gw-1"
+                       GW_NODE_ID=$2; shift 2 ;;
+        --node-id=*)   GW_NODE_ID=${1#--node-id=}; shift ;;
+        --gateway-dir) [ $# -ge 2 ] || die "--gateway-dir needs the unpacked release directory"
+                       GW_DIR=$2; shift 2 ;;
+        --gateway-dir=*) GW_DIR=${1#--gateway-dir=}; shift ;;
+        --gateway-conf-dir) [ $# -ge 2 ] || die "--gateway-conf-dir needs a directory, e.g. /etc/fireflo"
+                       GW_CONF_DIR=$2; GW_CONF_GIVEN=yes; shift 2 ;;
+        --gateway-conf-dir=*) GW_CONF_DIR=${1#--gateway-conf-dir=}; GW_CONF_GIVEN=yes; shift ;;
+        --yes-drained) YES_DRAINED=yes; shift ;;
+        --broker-wait) [ $# -ge 2 ] || die "--broker-wait needs a number of seconds"
+                       BROKER_WAIT=$2; shift 2 ;;
+        --broker-wait=*) BROKER_WAIT=${1#--broker-wait=}; shift ;;
+        # The rest is fireflo-install's, untouched. It stays in "$@" -- this loop
+        # is at the top level -- for do_configure_gateway.
+        --)            shift; break ;;
         --dry-run)     DRY_RUN=yes; shift ;;
         --yes|-y)      ASSUME_YES=yes; shift ;;
         --help|-h)     usage 0 ;;
@@ -1950,6 +2459,58 @@ fi
 if [ -n "$ADVERTISE_IP" ] && [ "$ROLE" != broker ]; then
     die "--advertise-ip is for --role broker. --role all runs a single node on 127.0.0.1."
 fi
+
+# --configure-gateway and its options, refused rather than ignored like the rest.
+if [ "$CONFIGURE_GW" = no ]; then
+    if [ -n "$GW_BOOTSTRAP$GW_NODE_ID$GW_DIR" ] || [ "$GW_CONF_GIVEN" = yes ] ||
+       [ "$YES_DRAINED" = yes ] || [ "$BROKER_WAIT" != 120 ]; then
+        die "--kafka-bootstrap, --node-id, --gateway-dir, --gateway-conf-dir, --yes-drained and
+            --broker-wait are for --configure-gateway."
+    fi
+    [ $# -eq 0 ] || die "arguments after '--' are handed to fireflo-install, which only --configure-gateway runs."
+else
+    case $ROLE in
+        all)
+            [ -z "$GW_BOOTSTRAP" ] || die "--kafka-bootstrap is for --role gateway. --role all points the gateway at
+            the broker it installs, 127.0.0.1:9092."
+            GW_BOOTSTRAP=127.0.0.1:9092 ;;
+        gateway)
+            [ -n "$GW_BOOTSTRAP" ] || die "--role gateway --configure-gateway needs --kafka-bootstrap: the broker host's
+            address and port, e.g. --kafka-bootstrap 10.0.0.20:9092 (its --advertise-ip)." ;;
+        *)  die "--configure-gateway is for --role all or --role gateway. On a --role $ROLE host there is no
+            gateway; run it on each gateway host (the summary at the end prints the line)." ;;
+    esac
+    # host:port entries, comma-separated -- the shape fireflo-install refuses
+    # otherwise, refused here too so that it is before the broker is installed
+    for _e in $(echo "$GW_BOOTSTRAP" | tr ',' ' '); do
+        echo "$_e" | grep -Eq '^(\[[0-9A-Fa-f:]+\]|[A-Za-z0-9_.-]+):[0-9]{1,5}$' ||
+            die "--kafka-bootstrap: '$_e' is not host:port, e.g. 10.0.0.20:9092."
+    done
+    case $GW_BOOTSTRAP in *[[:space:]]*|,*|*,|*,,*) die "--kafka-bootstrap '$GW_BOOTSTRAP' is a comma-separated list with no spaces." ;; esac
+    if [ -n "$GW_NODE_ID" ]; then
+        echo "$GW_NODE_ID" | grep -Eq '^[a-z0-9][a-z0-9._-]{0,62}$' ||
+            die "--node-id '$GW_NODE_ID' is not a node id: lower-case letters, digits, '.', '_' and '-',
+            starting with a letter or digit, at most 63."
+    fi
+    case $GW_CONF_DIR in /*) ;; *) die "--gateway-conf-dir '$GW_CONF_DIR' is not an absolute path." ;; esac
+    echo "$BROKER_WAIT" | grep -Eq '^[1-9][0-9]*$' || die "--broker-wait '$BROKER_WAIT' is not a number of seconds."
+    # What this script decides is not also decided after '--': two answers to one
+    # question, and fireflo-install would take whichever came last.
+    for _a in "$@"; do
+        case $_a in
+            --kafka-bootstrap|--kafka-bootstrap=*|--no-broker|--from|--from=*|--node-id|--node-id=*|\
+            --migrate|--no-migrate|--role|--role=*)
+                die "after '--': $_a is this script's to decide. --configure-gateway passes --from, --kafka-bootstrap,
+            --role, --migrate and --node-id itself; give --node-id to setup.sh, before the '--'." ;;
+            --conf-dir|--conf-dir=*|--tenant|--tenant=*)
+                die "after '--': $_a would make fireflo-install look at a different install from the one this
+            script checked. Name its configuration directory with --gateway-conf-dir instead." ;;
+            --dry-run|--yes)
+                die "after '--': $_a belongs before the '--', to setup.sh. A dry run prints the fireflo-install
+            line instead of running it; --yes is passed on to fireflo-install." ;;
+        esac
+    done
+fi
 if [ -n "$SEED_IPS" ]; then
     _n=$(echo "$SEED_IPS" | tr ',' '\n' | grep -c .)
     [ "$_n" -eq 3 ] || die "--ips lists $_n addresses; a Redpanda cluster here is exactly three. One node needs no --ips."
@@ -1992,6 +2553,10 @@ if [ "$DO_BROKER" = yes ] && [ "$BROKER" = kafka ] && [ "$WITH_JAVA" = no ]; the
     fi
 fi
 
+# The gateway, for the same reason: every refusal about it -- no release, no
+# node id, an undrained queue -- comes before the prompt and before the broker.
+if [ "$CONFIGURE_GW" = yes ]; then gw_preflight; fi
+
 say "FireFlo host setup"
 say "  host        $OS_PRETTY ($OS_NAME, $OS_ARCH, $PKG)"
 say "  role        $ROLE"
@@ -2008,6 +2573,12 @@ else
 fi
 say "  node        $([ "$DO_NODE" = yes ] && echo "yes, $NODE_INSTALL_MAJOR" || echo skip)"
 say "  java        $([ "$WITH_JAVA" = yes ] && echo "yes, Temurin 25" || echo "skip -- not needed to RUN FireFlo")"
+if [ "$CONFIGURE_GW" = yes ]; then
+    say "  gateway     $GW_PLAN"
+    if [ $# -gt 0 ]; then say "              and to fireflo-install: $*"; fi
+else
+    say "  gateway     not configured (--configure-gateway does it)"
+fi
 if [ "$DRY_RUN" = yes ]; then say "  DRY RUN -- nothing will be changed"; fi
 if [ "$DO_BROKER" = yes ] && [ "$BROKER" = redpanda ]; then broker_resource_check; fi
 
@@ -2030,5 +2601,8 @@ fi
 if [ "$DO_NODE"        = yes ]; then do_node;            fi
 if [ "$DO_GW_TOOLS"    = yes ]; then do_gateway_tools;   fi
 if [ "$DO_PANEL_TOOLS" = yes ]; then do_panel_tools;     fi
+# last: the broker it waits for is installed above, and so are psql, nc and
+# python3, which fireflo-install and the drain check lean on
+if [ "$CONFIGURE_GW"   = yes ]; then do_configure_gateway "$@"; fi
 
 summary
