@@ -18,15 +18,15 @@ new box or one already running.
 
 | | |
 |---|---|
-| **Version** | 0.15.2, with control panel 0.15.2.0. **Schema 1.125.0** (two registry rows and eight nullable call-record columns; a 0.15.1 gateway runs on it, so rolling back is the previous binary). A customer's rate comes from the port, never from the vendor: a listener's Throughput limit is the port's submit budget split between its active customers (min of the Default rate ceiling and tps ÷ active), a login's own TPS is a dedicated rate that comes first and may exceed its account's ceiling, a listener's tps no longer paces receipts, a slow vendor is refused at its backlog limit instead of capping every client, one gateway part can be restarted on its own (`fireflo restart`), each SMPP worker counts its receipts, and the panel shows every time in one display zone (see [the 0.15.2 notes](#0152-with-control-panel-01520)). **Check each listener's `tps` and each login's TPS, and that the write-behind queue is empty, before upgrading.** Before it: 0.15.1, with control panel 0.15.1.0 — PostgreSQL off the SMSC path (see [the 0.15.1 notes](#0151-with-control-panel-01510)). Before it: 0.15.0, with control panel 0.15.0.0 — **schema 1.114.0** (**take a dump first**; an update migrates; a Kafka cluster stops every node first; a 0.14 gateway cannot run on the new schema, so rolling back is `fireflo db restore` of that dump, never `pg_restore --clean`): live and archive call-record tables with a nightly mover (on by default, 01:30 UTC, three live days, nothing deleted), a redesigned Archives page, `fireflo db restore`, faster statements, Accounts and receipt lookups, two-step sign-in for panel operators with an authenticator (opt-in; set `FIREFLO_SECRETS_KEY` first) and two panel sign-in security fixes (see [the 0.15.0 notes](#0150-with-control-panel-01500)). Before it: 0.14.4, with control panel 0.14.4.0 — **schema 1.111.0** (an update migrates; a Kafka cluster stops every node first): a gateway killed outright no longer leaves its last seconds of spending uncharged (charged once from the priced call records when it restarts or is reaped), refunds of settled charges written at once, statements that open on **Show** instead of timing out, faster and bounded usage rollups, the nightly run settling the two days before yesterday, and the OMNI sync feed answering within its 5 s timeout; operators run `backfillOutcomeAccounts` once (see [the 0.14.4 notes](#0144-with-control-panel-01440)). Before it: 0.14.3 — **schema 1.110.0** (an update migrates; a Kafka cluster stops every node first): exactly-once routing on the Kafka backbone (router transactions), REST batches that survive a restart with status and cancel endpoints and durable callbacks, an SMPP submit whose outcome is unknown no longer sent twice, and a Kafka topics page in the control panel (see [the 0.14.3 notes](#0143-with-control-panel-01430)). Before it: 0.14.2 — fixes, no schema change (1.109.0), an ordinary update: the native gateway no longer names itself after the build machine (every native node was `thinkpad.local`); Kafka mode no longer strands messages on a route-group member no node has bound, nor drops a vendor redelivery whose first take was abandoned; `FIREFLO_QUEUE_PROVIDER` / `FIREFLO_KAFKA_BOOTSTRAP` in `fireflo.env` choose the backbone; REST batches pace on the Kafka backlog; tenant-aware installers (see [the 0.14.2 notes](#0142-with-control-panel-01420)). Before it: 0.14.1 — fixes, no schema change (1.109.0), an ordinary update: two billing defects found by the 0.14.0 end-to-end runs (a funded message could be refused `0x402` while a credit refill finished; submits expiring beside a failed `enquire_link` were lost), three SMPP submits now refused before any charge (empty `source_addr` `0x0A`, a segment too long for its concatenation header `0x01`, an unknown command id `ESME_RINVCMDID`), per-account bind limits applied, the portal overview no longer hidden by an operator session in the same browser, and `setup.sh --configure-gateway` — Kafka installed and the gateway pointed at it in one command (see [the 0.14.1 notes](#0141-with-control-panel-01410)). Before it: 0.14.0 — **breaking: RabbitMQ is removed** (the queue is in memory, the default, or Kafka; an install still on RabbitMQ must be drained first, see [Upgrading from 0.13.x](#upgrading-from-013x)); optional Kafka backbone, which is also cluster mode: several gateway nodes on one PostgreSQL and one Kafka; a message no routing rule matches is refused at once instead of accepted and refunded; copy routes are unbilled and silent; `setup.sh` gains host roles, a broker choice (Redpanda or Apache Kafka) and RHEL-family 9+ hosts; schema 1.109.0, upgrading is a maintenance window (see [the 0.14.0 notes](#earlier-builds)). Before it: 0.13.5 billing and receipt fixes (a long message refunded once, late receipts delivered, every part's receipt counted); 0.13.4.4 stats pages that no longer time out; 0.13.4 and 0.13.3 native management port fixes; 0.13.2 session rows and per-account listener view; 0.13.1 `health.currency`; and from 0.13.0, **breaking**: the management port is GraphQL-only (`/ops` is gone), guarded by an address allow-list, with metrics on the main port, the platform API for OMNI, the slow query log and refusals by listener with fail2ban bans (see [the 0.13.0 notes](#earlier-builds)) |
-| **File** | `fireflo-0.15.2-linux-x86_64.tar.gz` |
-| **SHA-256** | `5876a90a6b34e92066449a914722563d7edb5f4186158484191836a1854105f3` |
-| **Built** | 2026-11-01, from gateway commit `0a5b5572` with control panel `v0.15.2.0`, see [the 0.15.2 notes](#0152-with-control-panel-01520) |
-| **Control panel** | 0.15.2.0, included at `panel/`, from commit `8b08d8d` (tag `v0.15.2.0`) |
+| **Version** | 0.15.4, with control panel 0.15.4.0. **Schema 1.127.0** (one ledger entry type and two registry rows; a 0.15.2 gateway runs on it, so rolling back is the previous binary). No delivery receipt or call-record row is let go before PostgreSQL has it: a vendor's receipt is held in Kafka (`fireflo.receipts.in`, created at start) or the local log until the database records it, so a slow database delays DLRs instead of losing them; the local log is write-ahead in Kafka mode; a database error never drops a row. Also: debit an account's balance (panel and OMNI's `debit`), copy sender IDs and templates to several accounts, and the nightly usage rollup fixed (see [the 0.15.4 notes](#0154-with-control-panel-01540)). **OMNI must accept ledger entries of type `DEBIT` with a negative delta; check the write-behind queue is empty before upgrading.** Before it: 0.15.2, with control panel 0.15.2.0 — a customer's rate from the port, never from the vendor (see [the 0.15.2 notes](#0152-with-control-panel-01520)). Before it: 0.15.1, with control panel 0.15.1.0 — PostgreSQL off the SMSC path (see [the 0.15.1 notes](#0151-with-control-panel-01510)). Before it: 0.15.0, with control panel 0.15.0.0 — **schema 1.114.0** (**take a dump first**; an update migrates; a Kafka cluster stops every node first; a 0.14 gateway cannot run on the new schema, so rolling back is `fireflo db restore` of that dump, never `pg_restore --clean`): live and archive call-record tables with a nightly mover (on by default, 01:30 UTC, three live days, nothing deleted), a redesigned Archives page, `fireflo db restore`, faster statements, Accounts and receipt lookups, two-step sign-in for panel operators with an authenticator (opt-in; set `FIREFLO_SECRETS_KEY` first) and two panel sign-in security fixes (see [the 0.15.0 notes](#0150-with-control-panel-01500)). Before it: 0.14.4, with control panel 0.14.4.0 — **schema 1.111.0** (an update migrates; a Kafka cluster stops every node first): a gateway killed outright no longer leaves its last seconds of spending uncharged (charged once from the priced call records when it restarts or is reaped), refunds of settled charges written at once, statements that open on **Show** instead of timing out, faster and bounded usage rollups, the nightly run settling the two days before yesterday, and the OMNI sync feed answering within its 5 s timeout; operators run `backfillOutcomeAccounts` once (see [the 0.14.4 notes](#0144-with-control-panel-01440)). Before it: 0.14.3 — **schema 1.110.0** (an update migrates; a Kafka cluster stops every node first): exactly-once routing on the Kafka backbone (router transactions), REST batches that survive a restart with status and cancel endpoints and durable callbacks, an SMPP submit whose outcome is unknown no longer sent twice, and a Kafka topics page in the control panel (see [the 0.14.3 notes](#0143-with-control-panel-01430)). Before it: 0.14.2 — fixes, no schema change (1.109.0), an ordinary update: the native gateway no longer names itself after the build machine (every native node was `thinkpad.local`); Kafka mode no longer strands messages on a route-group member no node has bound, nor drops a vendor redelivery whose first take was abandoned; `FIREFLO_QUEUE_PROVIDER` / `FIREFLO_KAFKA_BOOTSTRAP` in `fireflo.env` choose the backbone; REST batches pace on the Kafka backlog; tenant-aware installers (see [the 0.14.2 notes](#0142-with-control-panel-01420)). Before it: 0.14.1 — fixes, no schema change (1.109.0), an ordinary update: two billing defects found by the 0.14.0 end-to-end runs (a funded message could be refused `0x402` while a credit refill finished; submits expiring beside a failed `enquire_link` were lost), three SMPP submits now refused before any charge (empty `source_addr` `0x0A`, a segment too long for its concatenation header `0x01`, an unknown command id `ESME_RINVCMDID`), per-account bind limits applied, the portal overview no longer hidden by an operator session in the same browser, and `setup.sh --configure-gateway` — Kafka installed and the gateway pointed at it in one command (see [the 0.14.1 notes](#0141-with-control-panel-01410)). Before it: 0.14.0 — **breaking: RabbitMQ is removed** (the queue is in memory, the default, or Kafka; an install still on RabbitMQ must be drained first, see [Upgrading from 0.13.x](#upgrading-from-013x)); optional Kafka backbone, which is also cluster mode: several gateway nodes on one PostgreSQL and one Kafka; a message no routing rule matches is refused at once instead of accepted and refunded; copy routes are unbilled and silent; `setup.sh` gains host roles, a broker choice (Redpanda or Apache Kafka) and RHEL-family 9+ hosts; schema 1.109.0, upgrading is a maintenance window (see [the 0.14.0 notes](#earlier-builds)). Before it: 0.13.5 billing and receipt fixes (a long message refunded once, late receipts delivered, every part's receipt counted); 0.13.4.4 stats pages that no longer time out; 0.13.4 and 0.13.3 native management port fixes; 0.13.2 session rows and per-account listener view; 0.13.1 `health.currency`; and from 0.13.0, **breaking**: the management port is GraphQL-only (`/ops` is gone), guarded by an address allow-list, with metrics on the main port, the platform API for OMNI, the slow query log and refusals by listener with fail2ban bans (see [the 0.13.0 notes](#earlier-builds)) |
+| **File** | `fireflo-0.15.4-linux-x86_64.tar.gz` |
+| **SHA-256** | `4b6504fc54469bbe0ebc0f90bd7640927eed7234cb47c0df84b7e79b66d31b1d` |
+| **Built** | 2026-11-03, from gateway commit `0611f4ea` with control panel `v0.15.4.0`, see [the 0.15.4 notes](#0154-with-control-panel-01540) |
+| **Control panel** | 0.15.4.0, included at `panel/`, from commit `420b69b` (tag `v0.15.4.0`) |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.15.2-linux-jvm.tar.gz`, SHA-256 `e2dca0d60a29e0a002a22505fb62d7efb3ed81e0f75baed1db79b8726607ee8c`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.15.4-linux-jvm.tar.gz`, SHA-256 `2cc6afcefc92478c16265ffb9092d9f90023f3a297b4acf018322f5e9646fda5`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -54,7 +54,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.15.2-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.15.4-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -77,7 +77,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.15.2-linux-jvm.tar.gz && cd fireflo-0.15.2-linux-jvm
+tar xzf fireflo-0.15.4-linux-jvm.tar.gz && cd fireflo-0.15.4-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -132,7 +132,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.15.2-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.15.4-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -175,8 +175,8 @@ before anything else (the summary `setup.sh` prints has the lines).
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.15.2-linux-x86_64.tar.gz
-cd fireflo-0.15.2-linux-x86_64
+tar xzf fireflo-0.15.4-linux-x86_64.tar.gz
+cd fireflo-0.15.4-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -291,7 +291,7 @@ form of this — one box, an install already running, a broker on its own host �
 is in [Install and configure Kafka](#install-and-configure-kafka).
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.15.2 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.15.4 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -406,7 +406,7 @@ sudo -u postgres createuser --pwprompt fireflo
 sudo -u postgres createdb --owner=fireflo fireflo
 umask 077 && printf '%s' 'THE-DB-PASSWORD' > /root/fireflo-db.pw
 
-tar xzf fireflo-0.15.2-linux-x86_64.tar.gz      # after verifying it
+tar xzf fireflo-0.15.4-linux-x86_64.tar.gz      # after verifying it
 sudo ./setup.sh --role all --broker kafka --configure-gateway -- \
     --config-source db --bootstrap \
     --db-name fireflo --db-user fireflo --db-password-file /root/fireflo-db.pw
@@ -448,7 +448,7 @@ it for you on this path:
 
 ```
 sudo ./setup.sh --role all --broker kafka
-cd fireflo-0.15.2-linux-x86_64
+cd fireflo-0.15.4-linux-x86_64
 sudo ./scripts/fireflo-install update --from ./gateway --kafka-bootstrap 127.0.0.1:9092 --migrate
 ```
 
@@ -601,7 +601,8 @@ before another machine can take it.
 ## Earlier builds
 
 **Only the current release is published here.** Builds before 0.12.10 have been
-withdrawn and their tarballs removed from this tree. 0.15.1's last tarballs (with
+withdrawn and their tarballs removed from this tree. 0.15.2's last tarballs (with
+control panel 0.15.2.0) are in this repository's history at commit `d94bdec`. 0.15.1's last tarballs (with
 control panel 0.15.1.0) are in this repository's history at commit `248f76a`. 0.15.0's last tarballs (with
 control panel 0.15.0.0) are in this repository's history at commit `52d90ac`. 0.14.4's last tarballs (with
 control panel 0.14.4.0) are in this repository's history at commit `0080756`. 0.14.3's last tarballs (with
@@ -639,6 +640,85 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.15.4 with control panel 0.15.4.0
+
+No delivery receipt and no call-record row is let go before PostgreSQL has it. A vendor's receipt is
+taken into Kafka (or the local log in memory mode) before the vendor is answered, and matched at the
+database's pace; rows the router and the vendors produce are on disk before their Kafka offset is
+committed. An operator, or OMNI, can debit an account's balance. Operators can copy sender IDs and
+templates to several accounts at once. **Schema 1.127.0** (from 1.125.0: one ledger entry type and two
+registry rows, nothing rewritten): an update migrates in seconds and a 0.15.2 gateway runs on the new
+schema, so rolling back is the previous binary (but do not debit after a rollback: 0.15.2 does not count
+a debit in its reconciliation). 0.15.3 was cut in the repository but never released; everything it
+carried is here. Gateway `0611f4ea`, control panel 0.15.4.0 (`420b69b`).
+
+**Why.** A staging test at 100 submits/s found that when the database was slow for more than 10 s, the
+gateway answered a vendor's receipt with `ESME_RTHROTTLED` so the vendor would send it again — and a
+vendor that does not resend (SMPPSim, for one) lost that DLR. Restarting the gateway's PostgreSQL
+connection lost nothing; a slow database lost receipts.
+
+**What changes**
+
+- **Receipt custody.** Each vendor receipt is appended to a new Kafka topic, `fireflo.receipts.in`
+  (keyed vendor and operator message id, group `fireflo-receipts`), and the vendor is answered OK only
+  once Kafka has it. A matcher records it in the receipt store and commits the offset only after the
+  match and its rows are written. A slow or absent database delays DLRs; it no longer loses them. In
+  memory mode the local log plays the same part. `ESME_RTHROTTLED` for a receipt is now sent only when
+  Kafka or the local log itself cannot take it.
+- **Write-ahead in Kafka mode.** The local log (`$FIREFLO_DATA_DIR/persist/log`) takes every
+  persistence write before the router, vendor and deliver consumers commit their Kafka offsets, so a
+  crash replays what PostgreSQL had not yet written. New setting `smsg.persist.log.mode`
+  (`write-ahead`, the default in both modes; `spill-only` as before).
+- **A database error never drops a row.** A write that fails because the database is unavailable is
+  kept and retried, also inside the one-row-at-a-time fallback; the call-record writer no longer
+  swallows an error; deadlocks and lock timeouts are retried. `fireflo restart db --hard` pauses the
+  writers, waits for the batches in flight, restarts the pool and resumes.
+- **Debit an account.** Platform GraphQL `debit(account, input: {amount, currency, reference, reason})`
+  beside `topUp` (and `POST /manage/accounts/{id}/debits`), capability `account_debit`. Credit held by
+  this node is released first so it counts; more than the available balance is refused and nothing is
+  written; a postpaid or archived account is refused; the same reference again answers `duplicate`.
+  One `DEBIT` ledger row (V1.126.0); the ledger feed returns it with a negative delta.
+- **Health and GraphQL.** `receipts_in` (depth, oldest age, in and matched per second, per vendor, state
+  OK / SLOW past 5 s / BACKING_UP past 60 s), `persist_log_mode`, GraphQL `receiptsIn`, capability
+  `receipt_custody`.
+- **Fixed: the nightly usage_daily rollup timed out** at every start and every night on a database with
+  history (since 0.15.1), so daily usage was not rolled up. It now asks only from its retention floor
+  (`FIREFLO_CDR_KEEP_DAYS`, 90), with the statement timeout lifted, grouping before the lookup. The first
+  run after the update catches up every missed day.
+- **Fixed:** the router's first transaction after a start committed at once instead of after its
+  commit interval.
+- **Control panel 0.15.4.0:**
+  - **Debit** beside Add credit on Account › Billing (operators, prepaid accounts only): amount,
+    reference and reason, a confirm step showing the balance before and after, the gateway's refusal
+    shown as given. The money history shows "Debit · reason".
+  - **Receipts waiting to be matched** on Queues, "waiting to match" on each vendor card, and the
+    Database card saying what happens to receipts while the database is slow or away.
+  - **Copy sender IDs and templates to several accounts** from Account › Approvals and from Assets ›
+    Headers / Templates: tick rows, "Copy to accounts…", add target accounts in a typeahead. Approved
+    rows stay approved (or copy as pending); nothing already in a target is overwritten; login-only
+    rows are skipped unless widened to the whole account; a DLT template id is flagged; every copy is
+    in the audit log.
+
+**What an install notices**
+
+- A new Kafka topic, `fireflo.receipts.in`, created by the gateway at start and by
+  `fireflo broker init`.
+- **In Kafka mode the local log now grows with traffic** and is trimmed as PostgreSQL catches up;
+  `smsg.persist.log.max.mb` still caps it. Keep `FIREFLO_DATA_DIR` on a disk with room.
+- Vendors no longer receive `ESME_RTHROTTLED` for receipts because the database is slow.
+- **A platform that syncs the ledger (OMNI) must accept `entryType` `DEBIT` with a negative `delta`.**
+- The nightly line `usage_daily rolled up … lines written or restated` again.
+- The panel expects schema 1.127.0.
+
+**Upgrading:** `fireflo-install update --migrate`, then the panel. Check the write-behind queue is empty
+first (`fireflo health`: `persist_depth` all 0). A Kafka cluster stops every node first, as for every
+migration. **Rollback:** the previous binary and panel; the schema can stay at 1.127.0.
+
+**Known issues:**
+- Credit held by another node is not released by a debit; it is counted once that node settles it.
+- The statement month picker decides the current month by the browser's calendar.
+- Carried from 0.15.2: an account's first second at a new port share can run about 10 % over it.
 
 ### 0.15.2 with control panel 0.15.2.0
 
