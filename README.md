@@ -18,15 +18,17 @@ new box or one already running.
 
 | | |
 |---|---|
-| **Version** | 0.15.6, with control panel 0.15.6.0. Fixes, **no schema change** (1.127.0), an ordinary update: a gateway killed outright no longer loses call records at its next start, and shows no phantom `persist_depth` afterwards (which on 0.15.5 made `fireflo-install update` refuse); the first message after Release held credit or a debit is no longer refused `creditPending` (see [the 0.15.6 notes](#0156-with-control-panel-01560)). **Updating a 0.15.5 that shows `persist_depth.cdr = 1`: restart it once first, or pass `--allow-queued-writes`.** Before it: 0.15.5, with control panel 0.15.5.0. Fixes, **no schema change** (1.127.0, as 0.15.4), an ordinary update: a fresh or just-funded account's first message is charged instead of refused `creditPending` (0x14); an SMPP `submit_sm` `validity_period` is honoured and the vendor is sent what is left of it (**a malformed or already-past one is now refused `ESME_RINVEXPIRY` 0x62**); `cdr_submit.client_ref` is written, so OMNI's `messages` feed has `clientRef`; `fireflo-install update` refuses to stop a gateway with queued writes (see [the 0.15.5 notes](#0155-with-control-panel-01550)). Before it: 0.15.4, with control panel 0.15.4.0. **Schema 1.127.0** (one ledger entry type and two registry rows; a 0.15.2 gateway runs on it, so rolling back is the previous binary). No delivery receipt or call-record row is let go before PostgreSQL has it: a vendor's receipt is held in Kafka (`fireflo.receipts.in`, created at start) or the local log until the database records it, so a slow database delays DLRs instead of losing them; the local log is write-ahead in Kafka mode; a database error never drops a row. Also: debit an account's balance (panel and OMNI's `debit`), copy sender IDs and templates to several accounts, and the nightly usage rollup fixed (see [the 0.15.4 notes](#0154-with-control-panel-01540)). **OMNI must accept ledger entries of type `DEBIT` with a negative delta; check the write-behind queue is empty before upgrading.** Before it: 0.15.2, with control panel 0.15.2.0 — a customer's rate from the port, never from the vendor (see [the 0.15.2 notes](#0152-with-control-panel-01520)). Before it: 0.15.1, with control panel 0.15.1.0 — PostgreSQL off the SMSC path (see [the 0.15.1 notes](#0151-with-control-panel-01510)). Before it: 0.15.0, with control panel 0.15.0.0 — **schema 1.114.0** (**take a dump first**; an update migrates; a Kafka cluster stops every node first; a 0.14 gateway cannot run on the new schema, so rolling back is `fireflo db restore` of that dump, never `pg_restore --clean`): live and archive call-record tables with a nightly mover (on by default, 01:30 UTC, three live days, nothing deleted), a redesigned Archives page, `fireflo db restore`, faster statements, Accounts and receipt lookups, two-step sign-in for panel operators with an authenticator (opt-in; set `FIREFLO_SECRETS_KEY` first) and two panel sign-in security fixes (see [the 0.15.0 notes](#0150-with-control-panel-01500)). Before it: 0.14.4, with control panel 0.14.4.0 — **schema 1.111.0** (an update migrates; a Kafka cluster stops every node first): a gateway killed outright no longer leaves its last seconds of spending uncharged (charged once from the priced call records when it restarts or is reaped), refunds of settled charges written at once, statements that open on **Show** instead of timing out, faster and bounded usage rollups, the nightly run settling the two days before yesterday, and the OMNI sync feed answering within its 5 s timeout; operators run `backfillOutcomeAccounts` once (see [the 0.14.4 notes](#0144-with-control-panel-01440)). Before it: 0.14.3 — **schema 1.110.0** (an update migrates; a Kafka cluster stops every node first): exactly-once routing on the Kafka backbone (router transactions), REST batches that survive a restart with status and cancel endpoints and durable callbacks, an SMPP submit whose outcome is unknown no longer sent twice, and a Kafka topics page in the control panel (see [the 0.14.3 notes](#0143-with-control-panel-01430)). Before it: 0.14.2 — fixes, no schema change (1.109.0), an ordinary update: the native gateway no longer names itself after the build machine (every native node was `thinkpad.local`); Kafka mode no longer strands messages on a route-group member no node has bound, nor drops a vendor redelivery whose first take was abandoned; `FIREFLO_QUEUE_PROVIDER` / `FIREFLO_KAFKA_BOOTSTRAP` in `fireflo.env` choose the backbone; REST batches pace on the Kafka backlog; tenant-aware installers (see [the 0.14.2 notes](#0142-with-control-panel-01420)). Before it: 0.14.1 — fixes, no schema change (1.109.0), an ordinary update: two billing defects found by the 0.14.0 end-to-end runs (a funded message could be refused `0x402` while a credit refill finished; submits expiring beside a failed `enquire_link` were lost), three SMPP submits now refused before any charge (empty `source_addr` `0x0A`, a segment too long for its concatenation header `0x01`, an unknown command id `ESME_RINVCMDID`), per-account bind limits applied, the portal overview no longer hidden by an operator session in the same browser, and `setup.sh --configure-gateway` — Kafka installed and the gateway pointed at it in one command (see [the 0.14.1 notes](#0141-with-control-panel-01410)). Before it: 0.14.0 — **breaking: RabbitMQ is removed** (the queue is in memory, the default, or Kafka; an install still on RabbitMQ must be drained first, see [Upgrading from 0.13.x](#upgrading-from-013x)); optional Kafka backbone, which is also cluster mode: several gateway nodes on one PostgreSQL and one Kafka; a message no routing rule matches is refused at once instead of accepted and refunded; copy routes are unbilled and silent; `setup.sh` gains host roles, a broker choice (Redpanda or Apache Kafka) and RHEL-family 9+ hosts; schema 1.109.0, upgrading is a maintenance window (see [the 0.14.0 notes](#earlier-builds)). Before it: 0.13.5 billing and receipt fixes (a long message refunded once, late receipts delivered, every part's receipt counted); 0.13.4.4 stats pages that no longer time out; 0.13.4 and 0.13.3 native management port fixes; 0.13.2 session rows and per-account listener view; 0.13.1 `health.currency`; and from 0.13.0, **breaking**: the management port is GraphQL-only (`/ops` is gone), guarded by an address allow-list, with metrics on the main port, the platform API for OMNI, the slow query log and refusals by listener with fail2ban bans (see [the 0.13.0 notes](#earlier-builds)) |
-| **File** | `fireflo-0.15.6-linux-x86_64.tar.gz` |
-| **SHA-256** | `4868b9fb1977b584e80ad9422f36ca45ac514506fe0e50caa151fdf30a918581` |
-| **Built** | 2026-11-04, from gateway commit `b3f1c937` with control panel `v0.15.6.0`, see [the 0.15.6 notes](#0156-with-control-panel-01560) |
-| **Control panel** | 0.15.6.0, included at `panel/`, from commit `20ff257` (tag `v0.15.6.0`) |
+| **Version** | 0.15.9, with control panel 0.15.9.0. **Schema 1.129.0** (from 1.127.0: two audit event names, two new empty tables and 13 settings registry rows, nothing rewritten; a 0.15.6 gateway runs on it, so rolling back is the previous binary): update with `--migrate`. **0.15.7 and 0.15.8 were cut but never released; 0.15.9 carries both, so this is the update from 0.15.6.** A gRPC API (`fireflo.v1`, the frozen `api/fireflo.proto`) on its own port, **off until `FIREFLO_GRPC_PORT` is set** (the installer's `--grpc`): Login once for a session token, `Send` and `SendStream` with the same fields, checks, prices and rate ceiling as `POST /secure/send`, and a durable per-login receipt feed (`Subscribe`, or `Pull` + `Ack`, at least once) for HTTP logins without a webhook. From 0.15.7 and 0.15.8: a funded account's message waits for its credit block instead of being refused `creditPending`; resellers manage the accounts beneath them over REST (`/secure/accounts`) and in the portal's Sub-accounts pages; no accepted message is lost when a vendor's connection dies mid-send; a raised or deleted rate override applies from the next submit; no phantom vendor depth after a `kill -9` in Kafka mode (see [the 0.15.9 notes](#0159-with-control-panel-01590)). **With gRPC on, REST `dlr=yes` without a `dlr-url` is accepted and its receipts go to the feed (it was `400`); with gRPC off nothing changes. Credit transfers now refuse a suspended or archived child account in both directions (`409`).** Before it: 0.15.6, with control panel 0.15.6.0. Fixes, **no schema change** (1.127.0), an ordinary update: a gateway killed outright no longer loses call records at its next start, and shows no phantom `persist_depth` afterwards (which on 0.15.5 made `fireflo-install update` refuse); the first message after Release held credit or a debit is no longer refused `creditPending` (see [the 0.15.6 notes](#0156-with-control-panel-01560)). **Updating a 0.15.5 that shows `persist_depth.cdr = 1`: restart it once first, or pass `--allow-queued-writes`.** Before it: 0.15.5, with control panel 0.15.5.0. Fixes, **no schema change** (1.127.0, as 0.15.4), an ordinary update: a fresh or just-funded account's first message is charged instead of refused `creditPending` (0x14); an SMPP `submit_sm` `validity_period` is honoured and the vendor is sent what is left of it (**a malformed or already-past one is now refused `ESME_RINVEXPIRY` 0x62**); `cdr_submit.client_ref` is written, so OMNI's `messages` feed has `clientRef`; `fireflo-install update` refuses to stop a gateway with queued writes (see [the 0.15.5 notes](#0155-with-control-panel-01550)). Before it: 0.15.4, with control panel 0.15.4.0. **Schema 1.127.0** (one ledger entry type and two registry rows; a 0.15.2 gateway runs on it, so rolling back is the previous binary). No delivery receipt or call-record row is let go before PostgreSQL has it: a vendor's receipt is held in Kafka (`fireflo.receipts.in`, created at start) or the local log until the database records it, so a slow database delays DLRs instead of losing them; the local log is write-ahead in Kafka mode; a database error never drops a row. Also: debit an account's balance (panel and OMNI's `debit`), copy sender IDs and templates to several accounts, and the nightly usage rollup fixed (see [the 0.15.4 notes](#0154-with-control-panel-01540)). **OMNI must accept ledger entries of type `DEBIT` with a negative delta; check the write-behind queue is empty before upgrading.** Before it: 0.15.2, with control panel 0.15.2.0 — a customer's rate from the port, never from the vendor (see [the 0.15.2 notes](#0152-with-control-panel-01520)). Before it: 0.15.1, with control panel 0.15.1.0 — PostgreSQL off the SMSC path (see [the 0.15.1 notes](#0151-with-control-panel-01510)). Before it: 0.15.0, with control panel 0.15.0.0 — **schema 1.114.0** (**take a dump first**; an update migrates; a Kafka cluster stops every node first; a 0.14 gateway cannot run on the new schema, so rolling back is `fireflo db restore` of that dump, never `pg_restore --clean`): live and archive call-record tables with a nightly mover (on by default, 01:30 UTC, three live days, nothing deleted), a redesigned Archives page, `fireflo db restore`, faster statements, Accounts and receipt lookups, two-step sign-in for panel operators with an authenticator (opt-in; set `FIREFLO_SECRETS_KEY` first) and two panel sign-in security fixes (see [the 0.15.0 notes](#0150-with-control-panel-01500)). Before it: 0.14.4, with control panel 0.14.4.0 — **schema 1.111.0** (an update migrates; a Kafka cluster stops every node first): a gateway killed outright no longer leaves its last seconds of spending uncharged (charged once from the priced call records when it restarts or is reaped), refunds of settled charges written at once, statements that open on **Show** instead of timing out, faster and bounded usage rollups, the nightly run settling the two days before yesterday, and the OMNI sync feed answering within its 5 s timeout; operators run `backfillOutcomeAccounts` once (see [the 0.14.4 notes](#0144-with-control-panel-01440)). Before it: 0.14.3 — **schema 1.110.0** (an update migrates; a Kafka cluster stops every node first): exactly-once routing on the Kafka backbone (router transactions), REST batches that survive a restart with status and cancel endpoints and durable callbacks, an SMPP submit whose outcome is unknown no longer sent twice, and a Kafka topics page in the control panel (see [the 0.14.3 notes](#0143-with-control-panel-01430)). Before it: 0.14.2 — fixes, no schema change (1.109.0), an ordinary update: the native gateway no longer names itself after the build machine (every native node was `thinkpad.local`); Kafka mode no longer strands messages on a route-group member no node has bound, nor drops a vendor redelivery whose first take was abandoned; `FIREFLO_QUEUE_PROVIDER` / `FIREFLO_KAFKA_BOOTSTRAP` in `fireflo.env` choose the backbone; REST batches pace on the Kafka backlog; tenant-aware installers (see [the 0.14.2 notes](#0142-with-control-panel-01420)). Before it: 0.14.1 — fixes, no schema change (1.109.0), an ordinary update: two billing defects found by the 0.14.0 end-to-end runs (a funded message could be refused `0x402` while a credit refill finished; submits expiring beside a failed `enquire_link` were lost), three SMPP submits now refused before any charge (empty `source_addr` `0x0A`, a segment too long for its concatenation header `0x01`, an unknown command id `ESME_RINVCMDID`), per-account bind limits applied, the portal overview no longer hidden by an operator session in the same browser, and `setup.sh --configure-gateway` — Kafka installed and the gateway pointed at it in one command (see [the 0.14.1 notes](#0141-with-control-panel-01410)). Before it: 0.14.0 — **breaking: RabbitMQ is removed** (the queue is in memory, the default, or Kafka; an install still on RabbitMQ must be drained first, see [Upgrading from 0.13.x](#upgrading-from-013x)); optional Kafka backbone, which is also cluster mode: several gateway nodes on one PostgreSQL and one Kafka; a message no routing rule matches is refused at once instead of accepted and refunded; copy routes are unbilled and silent; `setup.sh` gains host roles, a broker choice (Redpanda or Apache Kafka) and RHEL-family 9+ hosts; schema 1.109.0, upgrading is a maintenance window (see [the 0.14.0 notes](#earlier-builds)). Before it: 0.13.5 billing and receipt fixes (a long message refunded once, late receipts delivered, every part's receipt counted); 0.13.4.4 stats pages that no longer time out; 0.13.4 and 0.13.3 native management port fixes; 0.13.2 session rows and per-account listener view; 0.13.1 `health.currency`; and from 0.13.0, **breaking**: the management port is GraphQL-only (`/ops` is gone), guarded by an address allow-list, with metrics on the main port, the platform API for OMNI, the slow query log and refusals by listener with fail2ban bans (see [the 0.13.0 notes](#earlier-builds)) |
+| **File** | `fireflo-0.15.9-linux-x86_64.tar.gz` |
+| **SHA-256** | `edaf79ef1c3f156472a4a684fff40d6f4fb710ab392f0b083300a4b6c5f48795` |
+| **Built** | 2026-11-09, from gateway commit `970d6e35` (tag `v0.15.9`) with control panel `v0.15.9.0`, see [the 0.15.9 notes](#0159-with-control-panel-01590) |
+| **Control panel** | 0.15.9.0, included at `panel/`, from commit `48f2f48` (tag `v0.15.9.0`) |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.15.6-linux-jvm.tar.gz`, SHA-256 `71a8d29b4eecbb4adc0bde972bc6a17aec84e9138ea9de521e8b738e853aaab2`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.15.9-linux-jvm.tar.gz`, SHA-256 `2b999d1969fb335eb02260ccf6ce023451c22d7231eade74c4b3fa667f5b4828`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+
+**Signatures:** `SHA256SUMS.asc` and `SHA256SUMS-jvm.asc` for 0.15.9 are added by the maintainer's next commit; until then `sha256sum -c` checks the download, and `gpg --verify` has nothing to check.
 
 Verify before installing. The checksum proves the download is intact; the
 signature proves it came from us:
@@ -54,7 +56,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.15.6-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.15.9-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -77,7 +79,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.15.6-linux-jvm.tar.gz && cd fireflo-0.15.6-linux-jvm
+tar xzf fireflo-0.15.9-linux-jvm.tar.gz && cd fireflo-0.15.9-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -132,7 +134,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.15.6-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.15.9-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -175,8 +177,8 @@ before anything else (the summary `setup.sh` prints has the lines).
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.15.6-linux-x86_64.tar.gz
-cd fireflo-0.15.6-linux-x86_64
+tar xzf fireflo-0.15.9-linux-x86_64.tar.gz
+cd fireflo-0.15.9-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -291,7 +293,7 @@ form of this — one box, an install already running, a broker on its own host �
 is in [Install and configure Kafka](#install-and-configure-kafka).
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.15.6 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.15.9 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -406,7 +408,7 @@ sudo -u postgres createuser --pwprompt fireflo
 sudo -u postgres createdb --owner=fireflo fireflo
 umask 077 && printf '%s' 'THE-DB-PASSWORD' > /root/fireflo-db.pw
 
-tar xzf fireflo-0.15.6-linux-x86_64.tar.gz      # after verifying it
+tar xzf fireflo-0.15.9-linux-x86_64.tar.gz      # after verifying it
 sudo ./setup.sh --role all --broker kafka --configure-gateway -- \
     --config-source db --bootstrap \
     --db-name fireflo --db-user fireflo --db-password-file /root/fireflo-db.pw
@@ -448,7 +450,7 @@ it for you on this path:
 
 ```
 sudo ./setup.sh --role all --broker kafka
-cd fireflo-0.15.6-linux-x86_64
+cd fireflo-0.15.9-linux-x86_64
 sudo ./scripts/fireflo-install update --from ./gateway --kafka-bootstrap 127.0.0.1:9092 --migrate
 ```
 
@@ -601,7 +603,10 @@ before another machine can take it.
 ## Earlier builds
 
 **Only the current release is published here.** Builds before 0.12.10 have been
-withdrawn and their tarballs removed from this tree. 0.15.2's last tarballs (with
+withdrawn and their tarballs removed from this tree. 0.15.7 and 0.15.8 were cut but never released (0.15.9 carries
+both). 0.15.6's tarballs (with control panel 0.15.6.0) are in this repository's history at commit `c4461d3`.
+0.15.5's (with control panel 0.15.5.0) at commit `9567ae4`. 0.15.4's (with control panel 0.15.4.0) at commit
+`82119c5`. 0.15.2's last tarballs (with
 control panel 0.15.2.0) are in this repository's history at commit `d94bdec`. 0.15.1's last tarballs (with
 control panel 0.15.1.0) are in this repository's history at commit `248f76a`. 0.15.0's last tarballs (with
 control panel 0.15.0.0) are in this repository's history at commit `52d90ac`. 0.14.4's last tarballs (with
@@ -640,6 +645,286 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.15.9 with control panel 0.15.9.0
+
+A gRPC API for sending messages and collecting delivery receipts, on its own port and **off until you turn
+it on**. It carries the same send fields as `POST /secure/send`, for clients that want a long-lived
+connection and higher throughput, and a durable per-login receipt feed (a stream, or Pull + Ack) for HTTP
+logins that have no webhook. **0.15.7 and 0.15.8 were cut in the repository (2026-11-05 and 2026-11-08) but
+never released; 0.15.9 carries both** (the credit park and recent-rate blocks from 0.15.7; the reseller REST
+API, V1.128.0, faster background SQL, the phantom vendor depth, rate override and lost-message-at-teardown
+fixes from 0.15.8, listed below), so this is the update from 0.15.6. **Schema 1.129.0** (from 1.127.0:
+V1.128.0 adds two audit event names to one CHECK, V1.129.0 two new empty tables and 13 settings registry rows;
+nothing rewritten), so update with `--migrate`; a 0.15.6 gateway runs on 1.129.0 unchanged, so rolling back
+is the previous binary. Gateway `970d6e35`, control panel 0.15.9.0 (`48f2f48`).
+
+**What changes in 0.15.9**
+
+- **The gRPC API (`fireflo.v1`), on its own port.** Set `FIREFLO_GRPC_PORT` (the installer's `--grpc` or
+  `--grpc-port N`) and restart. Both services share that port; it is never the REST port and never the
+  management port. The contract is the frozen file `api/fireflo.proto` (also published with the public
+  docs): fields and numbers only ever get added.
+  - **Login once, then a session token.** `AuthService.Login(system_id, password)` checks exactly what a REST
+    send's Basic header is checked against: an HTTP-type login, its allowed addresses, a constant-time
+    compare. It returns a session token (`ffg1.…`) that goes in `authorization: Bearer …` on every call. A
+    token lives on the node that issued it: idle 1 hour (`smsg.grpc.session.idle.seconds`), at most 24 hours
+    (`smsg.grpc.session.max.seconds`), at most 64 per login (`smsg.grpc.session.max.per.login`, the oldest
+    idle one is dropped). A token is bound to the client's address. The login is checked again on every call,
+    so a login that is switched off is cut off at its next call.
+  - **`SessionExpired` is never a ban.** A restart forgets every token, so every connected client is refused
+    `UNAUTHENTICATED` / `SESSION_EXPIRED` at once and must log in again. That refusal is logged
+    `auth.refused surface=grpc reason=sessionExpired`, and the shipped fail2ban filter ignores it. Every other
+    gRPC login refusal (`surface=grpc`) counts toward a ban exactly as a REST one does.
+  - **`SendService.Send`** has the same fields as `POST /secure/send` (`to`, `from`, `content` or
+    `hex_content`, `coding`, `priority`, `validity_period`, `sdt`, `dlr`, `dlr_level`, `custom_tlvs`,
+    `client_ref`, `product`, `dlr_url`) and goes through the same checks, pricing and credit. It answers
+    `message_id`, `duplicate`, `price`, `currency`, `segments`, `unrated`. **`SendService.SendStream`** is the
+    same per message on one bidirectional stream: each request carries a `correlation_id` that comes back on
+    its result, results come in any order, a refusal is a result rather than the end of the stream, and at
+    most `smsg.grpc.stream.max.inflight` (256) sends are in progress per stream.
+  - **Every refusal carries an `ErrorDetail`** with the REST status and code a REST client would have got
+    (`http_status`, `code`, `message`, `retry_after_seconds`, `message_id`, `field`), plus `RetryInfo` where a
+    retry makes sense. Mapping: 400 → `INVALID_ARGUMENT`; no credit → `FAILED_PRECONDITION`; rate limit →
+    `RESOURCE_EXHAUSTED`; the 403 family → `PERMISSION_DENIED`; queue full, shutting down, vendor or database
+    trouble → `UNAVAILABLE` with a retry time; outcome unknown → **`UNKNOWN`** with the `message_id`, so client
+    retry policies do not resend it on their own (resend only with `client_ref`).
+  - **The rate ceiling is shared with REST.** `smsg.restapi.maxRate.<account>` (then `.default`) is per
+    account, in messages per second, counted across REST and gRPC together. Over it: REST 429, gRPC
+    `RESOURCE_EXHAUSTED`. A burst on one transport can use the account's whole rate.
+  - **Receipt feed, `ReceiptService`.** An HTTP-sent message (REST or gRPC) that asks for receipts and has
+    no `dlr_url` has its receipts queued for its login: `Subscribe` (a server stream that sends what is
+    unacknowledged first, then new receipts as they come, up to `smsg.grpc.receipts.window` (1000)
+    unacknowledged on the stream), or `Pull` (up to 1000, long-poll up to 20 s), then `Ack` (up to 1000
+    tokens per call; repeats are counted `already_gone`, not an error). **A message with a `dlr_url` gets the
+    webhook and only the webhook.** Delivery is at least once: an unacknowledged receipt is delivered again
+    after its lease (`smsg.grpc.receipts.lease.seconds`, 120 s) or as soon as its stream closes, with
+    `delivery_count` up by one. A receipt fields match the webhook JSON, plus `ack_token` and
+    `delivery_count`. Unacknowledged receipts are kept `smsg.grpc.receipts.retention.days` (the receipt
+    retention, 7 days); a login holding `smsg.grpc.receipts.max.per.login` (1,000,000) gets no more queued
+    until it reads its feed. The feed is the PostgreSQL table `dlr_grpc_queue` in Kafka mode and with
+    `smsg.dlr.store=postgres`, and the receipt store's MVStore file in memory mode, so a Subscribe or Pull
+    on any node sees every node's receipts.
+  - **Receipts are not lost when a node crashes while it queues them.** The vendor's receipt is let go only
+    once the feed holds the customer's. A node killed between its receipt store closing the message and the
+    feed row being written queues that receipt again when the receipt is replayed. If the client had already
+    acknowledged the first copy, it receives the receipt a second time (at least once).
+  - Health gains a `grpc` block (`enabled`, `host`, `port`, `tls`, `sessions`, `streams {send}`,
+    `receipts {enabled, store, depth, oldest_age_seconds, logins_at_cap, top[]}`), with metrics
+    `fireflo.grpc.*` (sends and results by code, sessions, stream in-flight, receipts queued, delivered,
+    acknowledged and redelivered, the oldest unacknowledged receipt's age). Capabilities `grpc_ingress` and
+    `grpc_receipts`. Server reflection is on (`FIREFLO_GRPC_REFLECTION`), so `grpcurl list` works without the
+    proto. Plain HTTP/2 (h2c) by default: TLS is the proxy's job, or set Quarkus's gRPC TLS variables.
+  - A refusal before a message exists is written to `cdr_rejected` with `ingress = 'GRPC'`. Rows written
+    later in a message's life still say `HTTP`, as for REST.
+  - `fireflo load --protocol grpc|rest` drives the new API (and REST) with the same schedule and summary as
+    an SMPP load run.
+  - Documented in `docs/28-grpc-api.md` (with cross-links in 01, 03, 06, 07, 08, 09, 15, 27) and on the
+    public docs site (gRPC page, en/es/fr/pt).
+
+- **Behaviour change, REST: `dlr=yes` with no `dlr-url` is accepted when gRPC is on.** Until now that request
+  was refused `400` (`Mandatory argument dlr-url is not found.`). With `FIREFLO_GRPC_PORT` set and
+  `smsg.grpc.receipts.enabled` on (the default), it is accepted and its receipts go to the login's gRPC feed.
+  With gRPC off it is still `400`, exactly as before. No request that was accepted before is answered
+  differently.
+
+- **Control panel 0.15.9.0.** Pairs with schema 1.129.0. The Queues page has a gRPC card (on or off, port,
+  sessions, send streams, feed depth, oldest unacknowledged receipt, logins at their cap, the deepest
+  logins). The API reference page and the operator API docs have a gRPC section. Security rows and the
+  refused-ingress filter know the `grpc` surface. The new `smsg.grpc.*` keys appear on the settings pages
+  with their kind, unit, default and label. The optional panel setting `GATEWAY_GRPC_ADDRESS` is the address
+  the API docs show customers.
+
+**Also in this release: 0.15.7 and 0.15.8 (cut, never released)**
+
+- **A funded account is no longer refused `creditPending` while its next block is being reserved** (from
+  0.15.7). The message read "Credit could not be reserved in time; nothing was charged. Send it again
+  shortly" (SMPP `0x14`, REST 503).
+  - **Before:** credit is spent from a block the gateway holds in memory. Straight after a start, or after a
+    quiet spell, an account held only the smallest block (20 messages at its price), and the next block was
+    sized from the account's average rate since the start, near zero then. A burst could use up the block
+    before the database answered the reservation of the next one, and every message in that gap was
+    refused, uncharged. A production customer was refused this way on its first burst after an upgrade
+    restart.
+  - **Now:** a message that finds the block empty while the next one is being reserved waits for it and is
+    charged when it lands. Messages wait in arrival order and no thread waits. Nothing is spent before the
+    money is reserved, so a balance never goes below zero.
+    - **The longest wait:** half of `smsg.balance.block.seconds`, kept between 0.5 and 2 seconds (2 s at the
+      default of 10). A message still waiting past that is refused `0x14` / 503, uncharged, as before.
+    - **The limit:** more than 10,000 messages waiting on one account are refused at once (a memory guard,
+      not a setting).
+    - A message whose SMPP session closes while it waits is never charged. A stopping gateway refuses the
+      waiting messages `ESME_RTHROTTLED` (`0x58`), uncharged.
+  - **Blocks are sized from recent traffic:** the last 10 seconds, not the average since the start; an
+    account with a TPS limit holds at least 2 seconds of its allowed rate from its bind (the TPS floor); the
+    next block is reserved earlier when the database answered slowly last time.
+  - **Staging** (an existing funded account, restart, idle, then a burst over 3 sessions at 300 to
+    1,000/s): 0.15.6 refused 1–3 messages, all `creditPending`, in 5 of 7 runs; the fix refused none in 9
+    runs, one after a 30-minute idle; charged = accepted × price in every run.
+  - **Settings, unchanged:**
+    - `smsg.balance.block.min.messages`: global, default 20. The smallest block, in messages at the
+      account's price.
+    - `smsg.balance.block.seconds`: global, default 10. Seconds of traffic per block; it also sets the
+      longest wait above.
+    - `smsg.balance.refill.watermark.percent`: global, default 50. The next block is reserved when this much
+      of the block in hand is left.
+
+- **The reseller REST API, `/secure/accounts`** (capability `reseller_api`). An account marked as a
+  reseller manages the accounts beneath it with its own HTTP login (Basic, or a Bearer token from
+  `POST /token`):
+  - list and create accounts (each gets one HTTP login with a generated password, shown once, and optional
+    opening credit); read, rename, suspend and resume one;
+  - list, create and change an account's logins: switch on or off, allowed IP addresses (up to 50), session
+    limits (`max_sessions`, `max_tx`, `max_rx`, `max_trx`), a chosen SMPP system id of up to 15 characters,
+    a generated new password;
+  - **recharge** moves credit down from the reseller's own spendable balance (`402` when it does not cover
+    it; only the platform creates money), **withdraw** takes it back (releasing the child's held credit
+    first), and the account's transfers are listed;
+  - product, allowed products and `max_tps` stay operator-only (`400` if sent); an unknown field is `400`;
+  - a caller that is not a reseller, or is suspended or archived, gets `404` on every route; another
+    reseller's account is `404 No such account`; a repeated `idempotency_key` is `409` `DUPLICATE` naming the
+    transfer already made;
+  - every change is recorded in the customer access log (`detail.via = api`, with the caller's login).
+
+  Documented in `docs/06-http-api.md` and `docs/reseller-api.md`; the OpenAPI file is regenerated.
+
+- **The portal's Sub-accounts pages** (control panel 0.15.8.0, in 0.15.9.0). A reseller signed in to the customer portal
+  sees **Sub-accounts** in place of Accounts: the list (held and sent totals, search, state filter), a
+  new-account form, and each account's Balance tab (available, reserved, spent this month; recharge and
+  withdraw; transfers) and Logins tab (enable, allowed IPs, session limits, new password; speed and message
+  types read-only). The API reference page gains a reseller-only "Managing your accounts" section. The
+  portal follows the same rules as the REST API.
+
+- **Behaviour changes:**
+  - **A credit transfer refuses a suspended or archived child in both directions** (`409`), on
+    `/secure/transfers` as on the new routes; before, a transfer to or from one went through.
+    `/secure/transfers` also answers `402` when the payer is short.
+  - **Suspending an account, or switching a login off, drops its SMPP binds on the gateway node that
+    answered only.** Other nodes refuse those logins' new binds from their next configuration poll and leave
+    binds already open alone. Likewise a new password works at once on the answering node, and the old one
+    stops on each other node at its next poll.
+  - **In the portal**, a recharge or withdraw sent twice with the same idempotency key answers the
+    transfer already made (`duplicate: true`) rather than an error, and the older portal routes (catalogue,
+    credentials, transfer) now follow the same rules, so an HTTP login made there gets a password too.
+
+- **Fixed: no accepted message is lost when a vendor's connection dies mid-send.** When a vendor's
+  connection died with a full window, one message per vendor sending thread could be accepted and charged
+  and then never sent, with no call record and no receipt: the message was being written as the dead
+  connection was torn down, and the teardown's reclaim missed it. Such a message is now sent again; a
+  reclaimed message is still never sent twice. Found by the panel e2e case TC-05.03.01-P04 (4 of 400
+  messages on every run); present since 0.14.3.
+
+- **Fixed: a raised or deleted rate override applies from the next submit.** After a submit at 2/s, deleting
+  `conf.maxRate.<account>` (2/s → unlimited) still left the next permit 500 ms away, so a burst on the same
+  bind met `0x58` until it ran out. A raise now takes effect at once; a cut still keeps the time the faster
+  rate booked.
+
+- **Fixed: no phantom vendor depth after a `kill -9` in Kafka mode** (known issue in 0.15.6/0.15.7). A
+  restarted node showed a depth of 2 per vendor, `vendor.stalled` at ERROR every minute and every vendor
+  connection recycled, until traffic flowed. Nothing was lost; it is gone now. A vendor whose feed is caught
+  up is logged `vendor.depth.unreadable` at INFO at most once every 5 minutes, and not recycled.
+
+- **Fixed: pre-warm gives a thin account one message and skips archived ones.** An account holding less
+  than the 20-message floor failed its pre-warm at every start (`balance.prewarm ... failed=1`) and its
+  first message was refused `creditPending`; it now gets a block of what it can afford, and one that cannot
+  cover a single message is logged `short=`. Disabled accounts (every archived one is) are no longer
+  pre-warmed, so a restart no longer reserves a block for each archived account.
+
+- **Faster background SQL:** the hourly usage restate is one join on `cdr_final` instead of a lookup per
+  message, and the receipt deadline sweep prunes old day partitions and runs in 1-hour slices. No index or
+  setting changes.
+
+**Configuration and database (what an install notices)**
+
+- **Schema 1.128.0** (from 0.15.8). V1.128.0 replaces one CHECK constraint on `app_customer_access_log` (two
+  event names added, `child_login_updated` and `child_transfer`); PostgreSQL checks the existing rows once,
+  under a brief lock on that table. No data is rewritten and no setting is added.
+- **Schema 1.129.0.** V1.129.0 creates:
+  - `dlr_grpc_queue`, the receipt feed: one row per receipt owed to an HTTP login, with a unique dedupe key
+    (message, state, progress or outcome, error), the webhook payload, and who holds it and since when.
+    Indexes `(system_id, id)`, `(saved_at)` and `(claimed_by)` (partial). Fillfactor 90 and aggressive
+    autovacuum settings on it.
+  - `dlr_grpc_queue_key`: one row, the key acknowledgement tokens are signed with, written by the first
+    gateway that needs it, so a token from one node is accepted on another and after a restart.
+  - 13 settings registry rows (platform scope, read hot): `smsg.grpc.session.idle.seconds`,
+    `smsg.grpc.session.max.seconds`, `smsg.grpc.session.max.per.login`, `smsg.grpc.proxy.forwarding`,
+    `smsg.grpc.proxy.hops`, `smsg.grpc.stream.max.inflight`, `smsg.grpc.receipts.enabled`,
+    `smsg.grpc.receipts.lease.seconds`, `smsg.grpc.receipts.window`, `smsg.grpc.receipts.pull.max`,
+    `smsg.grpc.receipts.poll.ms`, `smsg.grpc.receipts.max.per.login`, `smsg.grpc.receipts.retention.days`.
+    No setting value is written, so every key keeps its built-in default until you set it.
+  - Nothing existing is rewritten. Both tables stay empty until gRPC is on and a message asks for receipts
+    without a `dlr-url`.
+- **New environment variables** (read at start; gRPC is off unless the first is set):
+  - `FIREFLO_GRPC_PORT`: the gRPC port; setting it turns gRPC on (`8090` is the usual choice). Unset, the
+    gateway holds an ephemeral port on loopback and answers every call `UNAVAILABLE` / `GRPC_DISABLED`, so an
+    upgrade can never fail to start because a port is taken.
+  - `FIREFLO_GRPC_HOST`: bind address, default `127.0.0.1` (a proxy on the same host). `0.0.0.0` for a proxy
+    elsewhere or direct clients.
+  - `FIREFLO_GRPC_MAX_MESSAGE_SIZE`: largest inbound message, default 1 MiB.
+  - `FIREFLO_GRPC_REFLECTION`: server reflection, default on.
+- **Behind a proxy:** `smsg.grpc.proxy.forwarding` and `smsg.grpc.proxy.hops` default to REST's proxy
+  settings. A proxy that does not forward the client address makes every refusal carry the proxy's address,
+  and fail2ban would ban the proxy: check the address in `auth-failed.log` after turning gRPC on.
+- **An install that does not set `FIREFLO_GRPC_PORT` notices nothing in behaviour:** the two empty tables, the
+  13 registry rows, health `grpc.enabled = false` and the panel's gRPC card showing Off.
+- `fireflo-install update` refreshes the fail2ban filter (its `ignoreregex` gains `sessionExpired`). The
+  installer gains `--grpc`, `--grpc-port N` and `--grpc-host H`; it prints the firewall port to open and, with
+  a proxy, the forwarding setting to check.
+- The panel must be 0.15.9.0 (it expects schema 1.129.0), and the platform API's status (`platformStatus`) expects 1.129.0.
+- A new capability, `reseller_api`. Resellers see Sub-accounts in the portal and the reseller section in
+  the API reference; nobody else sees a difference.
+- From 0.15.7: no `0x14` `creditPending` on a burst from a funded account. New metrics `fireflo.balance.credit.parked`
+  (how long messages waited) and `fireflo.balance.credit.parked.waiting` (how many wait now); a WARN
+  `balance.credit.parked account=… waited_ms=… messages=…` at most once per account per 10 s, informational
+  (those messages were accepted). `balance.credit.pending` now means a message waited the full time and was
+  still refused.
+- An account with a TPS limit holds a slightly larger block in `reserved` after a bind; it is returned on a
+  clean stop, as before.
+- After a `kill -9` in Kafka mode, no `vendor.stalled` lines and no vendor recycling while idle.
+- `balance.prewarm` lines carry `short=`.
+
+`0x14` (ESME_RMSGQFUL) still answers other transient refusals: a vendor backlog, the inbound queue full, the
+database not answering. Those are told apart by `cdr_rejected.reason`. It is not a rate limit; that is
+`0x58`.
+
+
+**Upgrading:** from 0.15.6 (0.15.7 and 0.15.8 were never released): `fireflo-install update --migrate`
+(schema 1.127.0 → 1.129.0), then the panel. Check the write-behind queue
+is empty first (`fireflo health`: `persist_depth` all 0). A Kafka cluster stops every node first, as for
+every migration. To turn gRPC on: `fireflo-install update --grpc` (or set `FIREFLO_GRPC_PORT` in
+`fireflo.env`) and open the port, or route it through your proxy as h2c. **Rollback:** the previous binary
+and panel (0.15.6 / 0.15.6.0); the schema can stay at 1.129.0 (receipts still queued in `dlr_grpc_queue` wait there until a
+0.15.9 is back or retention removes them).
+
+**Staging (192.168.1.101, Kafka mode, gRPC on at 8090):** gRPC smoke (Login; Send x10 with receipts, Pull + Ack 10/10; Send x10, Subscribe + Ack 10/10) and server
+reflection (the three `fireflo.v1` services) pass. At 1,000/s for 60 s with receipts, gRPC (stream, 4
+channels) and REST both held 1,000/s with nothing refused (gateway-side p50 50 ms over gRPC, 204 ms over
+REST); SMPP managed 277/s that run, refused `0x14` while the box fell behind. At 3,000/s the staging box (8 GB,
+swap full under the other services it hosts) could not keep up on any transport: gRPC 884/s, REST 139/s, SMPP
+841/s, with `OUTCOME_UNKNOWN` answers from slow Kafka writes. Money: balance + reserved + spent unchanged
+through every run, no message both charged and refused, and spent equals one price per accepted message
+except the outcome-unknown charges, which the resolver settles after the deadline. A gateway restart in the
+middle of a gRPC stream: the client got `SESSION_EXPIRED`, logged in again, and nothing bannable was written.
+The two-node kill test (laptop nodes, the staging Kafka) lost and duplicated no receipt (400 of 400, each
+queued once). The box stopped answering after the second kill -9 pass and needed a restart by hand, so the
+reseller suite, the credit-park burst and the panel's gRPC e2e cases were not run on it.
+
+**Throughput above 1,000/s is not proven for this release.** The design target for gRPC was 2,000–3,000/s;
+the staging box could not host that load, and the owner chose to ship on the 1,000/s result (gRPC p50 50 ms
+against REST's 204 ms at the same rate), the unit and two-node proofs. A bench on a larger host is a
+follow-up.
+
+**Known issues:**
+- Carried from 0.15.8: a stop under load records a few percent fewer `cdr_rejected` `shuttingDown` rows than
+  it answered `ESME_RTHROTTLED` (refused, uncharged and answered correctly; only the record is short).
+- Carried from 0.15.4: credit held by another node is not released by a debit; it is counted once that node
+  settles it.
+- Carried from 0.15.2: an account's first second at a new port share can run about 10 % over it.
+- In memory mode with the MVStore receipt store, a crash between the store's close and the feed row being
+  written is not recovered the way the PostgreSQL store recovers it (that store keeps no closed single-part
+  message to look up).
+- gRPC session tokens live on the node that issued them: behind a load balancer that moves a client's calls
+  to another node, the client gets `SESSION_EXPIRED` and must log in again.
 
 ### 0.15.6 with control panel 0.15.6.0
 
