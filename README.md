@@ -28,8 +28,6 @@ new box or one already running.
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
 | **ARM (aarch64)** | `fireflo-0.15.11-linux-jvm.tar.gz`, SHA-256 `8df18e5359ca768daf096bda149346bd959be24e70980d6d9fa65764d088223b`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
-**Signatures:** `SHA256SUMS.asc` and `SHA256SUMS-jvm.asc` for 0.15.11 are added by the maintainer's next commit; until then `sha256sum -c` checks the download, and `gpg --verify` has nothing to check.
-
 
 
 Verify before installing. The checksum proves the download is intact; the
