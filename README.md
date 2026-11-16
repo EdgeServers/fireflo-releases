@@ -18,15 +18,15 @@ new box or one already running.
 
 | | |
 |---|---|
-| **Version** | 0.15.12, with control panel 0.15.12.0. **No schema change** (1.129.0): from 0.15.9, 0.15.10 or 0.15.12 an ordinary update, `fireflo-install update` **without** `--migrate`; from 0.15.6 with `--migrate` (1.127.0 → 1.129.0). Rolling back to 0.15.12 is the previous binary. The platform `balance` answer now also says `free`, the stored balance without the block a node has set aside: a platform that added `balance` and `reserved` counted that block twice. Needed where OMNI funds the gateway from an SMS pocket (OMNI 1.5.14 reads it); no new configuration key, nothing an existing deployment has to set |
-| **File** | `fireflo-0.15.12-linux-x86_64.tar.gz` |
-| **SHA-256** | `ebdbf7d275c7d6a5c5d80909cc8f832b9fa29484e52b4bf0d3df01f85ce79c1e` |
-| **Built** | 2026-11-16, from gateway commit `9df6a75f` (tag `v0.15.12`) with control panel `v0.15.12.0`, see [the 0.15.12 notes](#01512-with-control-panel-015120) |
-| **Control panel** | 0.15.12.0, included at `panel/`, from commit `f7c0dcc` (tag `v0.15.12.0`) |
+| **Version** | 0.15.13, with control panel 0.15.13.0. **No schema change** (1.129.0): from 0.15.9, 0.15.10, 0.15.11 or 0.15.12 an ordinary update, `fireflo-install update` **without** `--migrate`; from 0.15.6 with `--migrate` (1.127.0 → 1.129.0). Rolling back to 0.15.12 is the previous binary. An internal release: the prepaid balance engine now reads and writes its tables through one interface, with the same statements, in the same transactions and the same order. Nothing an operator, a customer or a platform can observe changes; no new configuration key, nothing an existing deployment has to set |
+| **File** | `fireflo-0.15.13-linux-x86_64.tar.gz` |
+| **SHA-256** | `d2c07e22359dcdd3a2b48717d540dfdef74f519fbda59f0d77cae0708b6eca11` |
+| **Built** | 2026-11-17, from gateway commit `3d227132` (tag `v0.15.13`) with control panel `v0.15.13.0`, see [the 0.15.13 notes](#01513-with-control-panel-015130) |
+| **Control panel** | 0.15.13.0, included at `panel/`, from commit `21d088d` (tag `v0.15.13.0`) |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.15.12-linux-jvm.tar.gz`, SHA-256 `2f2f077845e7ea6a9486c2947cec0d1a60ce38995708a90f8ab8970c0ce97b13`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.15.13-linux-jvm.tar.gz`, SHA-256 `162c03f46f9b6d646a325a2e2823e3415c8720bc05d8bde618ccbe63bcc5eb47`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 
 
@@ -56,7 +56,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.15.12-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.15.13-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -79,7 +79,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.15.12-linux-jvm.tar.gz && cd fireflo-0.15.12-linux-jvm
+tar xzf fireflo-0.15.13-linux-jvm.tar.gz && cd fireflo-0.15.13-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -134,7 +134,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.15.12-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.15.13-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -177,8 +177,8 @@ before anything else (the summary `setup.sh` prints has the lines).
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.15.12-linux-x86_64.tar.gz
-cd fireflo-0.15.12-linux-x86_64
+tar xzf fireflo-0.15.13-linux-x86_64.tar.gz
+cd fireflo-0.15.13-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -293,7 +293,7 @@ form of this — one box, an install already running, a broker on its own host �
 is in [Install and configure Kafka](#install-and-configure-kafka).
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.15.12 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.15.13 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -408,7 +408,7 @@ sudo -u postgres createuser --pwprompt fireflo
 sudo -u postgres createdb --owner=fireflo fireflo
 umask 077 && printf '%s' 'THE-DB-PASSWORD' > /root/fireflo-db.pw
 
-tar xzf fireflo-0.15.12-linux-x86_64.tar.gz      # after verifying it
+tar xzf fireflo-0.15.13-linux-x86_64.tar.gz      # after verifying it
 sudo ./setup.sh --role all --broker kafka --configure-gateway -- \
     --config-source db --bootstrap \
     --db-name fireflo --db-user fireflo --db-password-file /root/fireflo-db.pw
@@ -450,7 +450,7 @@ it for you on this path:
 
 ```
 sudo ./setup.sh --role all --broker kafka
-cd fireflo-0.15.12-linux-x86_64
+cd fireflo-0.15.13-linux-x86_64
 sudo ./scripts/fireflo-install update --from ./gateway --kafka-bootstrap 127.0.0.1:9092 --migrate
 ```
 
@@ -603,7 +603,9 @@ before another machine can take it.
 ## Earlier builds
 
 **Only the current release is published here.** Builds before 0.12.10 have been
-withdrawn and their tarballs removed from this tree. 0.15.10's tarballs (with control panel 0.15.10.0) are in this
+withdrawn and their tarballs removed from this tree. 0.15.12's tarballs (with control panel 0.15.12.0) are in this
+repository's history at commit `614940f`. 0.15.11's tarballs (with control panel 0.15.11.0) are in this
+repository's history at commit `affa3f5`. 0.15.10's tarballs (with control panel 0.15.10.0) are in this
 repository's history at commit `69e47a0`. 0.15.9's tarballs (with control panel 0.15.9.0) are in this
 repository's history at commit `6ea31fd`. 0.15.7 and 0.15.8 were cut but never released (0.15.9 carries
 both). 0.15.6's tarballs (with control panel 0.15.6.0) are in this repository's history at commit `c4461d3`.
@@ -647,6 +649,38 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.15.13 with control panel 0.15.13.0
+
+**An internal release with no behaviour change. No schema change (1.129.0, unchanged): upgrade from
+0.15.9, 0.15.10, 0.15.11 or 0.15.12 with `fireflo-install update` without `--migrate`**; from 0.15.6 with
+`--migrate` (1.127.0 → 1.129.0, as for 0.15.9). Rolling back to 0.15.12 is the previous binary. Gateway
+`3d227132` (tag `v0.15.13`), control panel 0.15.13.0 (`21d088d`, tag `v0.15.13.0`), which keeps
+`EXPECTED_SCHEMA_VERSION` 1.129.0 and changes nothing but its version. No new configuration key, nothing
+an existing deployment has to set.
+
+**What changes in 0.15.13**
+
+The prepaid balance engine — reserving a block for a node, settling what was spent, refunds, the
+reservation log and the reconcile after a crash — now reads and writes its tables through one internal
+interface. The statements are the 0.15.12 statements, character for character, run in the same
+transactions and the same order. Log lines, metrics, the REST, SMPP, gRPC and platform answers are all
+unchanged. This is groundwork for a later release and adds nothing an installation can use yet.
+
+**How it was checked**
+
+- The full test suite (3,046 tests) and the balance tests against a real PostgreSQL, crash recovery
+  included.
+- Side by side with 0.15.12 at 3,000 messages a second for 150 seconds, twice each, with prepaid billing,
+  PostgreSQL billing records and delivery receipts on: both versions accepted every message, refused
+  none, priced every record, and funded = balance + reserved + spent held exactly after every run.
+
+**Who needs it**
+
+Nobody has to update for a fix or a feature. Update when convenient; it is the base later releases
+build on.
+
+**Control panel 0.15.13.0:** version only.
 
 ### 0.15.12 with control panel 0.15.12.0
 
