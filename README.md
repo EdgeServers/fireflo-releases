@@ -18,15 +18,17 @@ new box or one already running.
 
 | | |
 |---|---|
-| **Version** | 0.15.11, with control panel 0.15.11.0. **No schema change** (1.129.0): from 0.15.9 or 0.15.10 an ordinary update, `fireflo-install update` **without** `--migrate`; from 0.15.6 with `--migrate` (1.127.0 → 1.129.0). Rolling back to 0.15.10 is the previous binary. A fix release: a message whose cost was eleven times its price or more had a margin percentage past what `cdr_submit.margin_pct` holds, PostgreSQL refused the row, and the record of a sent, charged message went to the spill with `cdr.record.lost`; the percentage now saturates at ±999.9999 and the row is written. After updating, `fireflo queue archive spill` imports what was spilled. Everything in 0.15.10 (platform sessions on the gRPC port, the Kafka router that no longer re-routes history) is unchanged |
-| **File** | `fireflo-0.15.11-linux-x86_64.tar.gz` |
-| **SHA-256** | `d600575eb8b5d1bed0bccdf0802586c33729735525035494db6966a5f5d231fe` |
-| **Built** | 2026-11-15, from gateway commit `9f7a476e` (tag `v0.15.11`) with control panel `v0.15.11.0`, see [the 0.15.11 notes](#01511-with-control-panel-015110) |
-| **Control panel** | 0.15.11.0, included at `panel/`, from commit `a11b7b1` (tag `v0.15.11.0`) |
+| **Version** | 0.15.12, with control panel 0.15.12.0. **No schema change** (1.129.0): from 0.15.9, 0.15.10 or 0.15.12 an ordinary update, `fireflo-install update` **without** `--migrate`; from 0.15.6 with `--migrate` (1.127.0 → 1.129.0). Rolling back to 0.15.12 is the previous binary. The platform `balance` answer now also says `free`, the stored balance without the block a node has set aside: a platform that added `balance` and `reserved` counted that block twice. Needed where OMNI funds the gateway from an SMS pocket (OMNI 1.5.14 reads it); no new configuration key, nothing an existing deployment has to set |
+| **File** | `fireflo-0.15.12-linux-x86_64.tar.gz` |
+| **SHA-256** | `ebdbf7d275c7d6a5c5d80909cc8f832b9fa29484e52b4bf0d3df01f85ce79c1e` |
+| **Built** | 2026-11-16, from gateway commit `9df6a75f` (tag `v0.15.12`) with control panel `v0.15.12.0`, see [the 0.15.12 notes](#01512-with-control-panel-015120) |
+| **Control panel** | 0.15.12.0, included at `panel/`, from commit `f7c0dcc` (tag `v0.15.12.0`) |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.15.11-linux-jvm.tar.gz`, SHA-256 `8df18e5359ca768daf096bda149346bd959be24e70980d6d9fa65764d088223b`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.15.12-linux-jvm.tar.gz`, SHA-256 `2f2f077845e7ea6a9486c2947cec0d1a60ce38995708a90f8ab8970c0ce97b13`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+
+**Signatures:** `SHA256SUMS.asc` and `SHA256SUMS-jvm.asc` for 0.15.12 are added by the maintainer's next commit; until then `sha256sum -c` checks the download, and `gpg --verify` has nothing to check.
 
 
 
@@ -56,7 +58,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.15.11-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.15.12-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -79,7 +81,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.15.11-linux-jvm.tar.gz && cd fireflo-0.15.11-linux-jvm
+tar xzf fireflo-0.15.12-linux-jvm.tar.gz && cd fireflo-0.15.12-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -134,7 +136,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.15.11-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.15.12-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -177,8 +179,8 @@ before anything else (the summary `setup.sh` prints has the lines).
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.15.11-linux-x86_64.tar.gz
-cd fireflo-0.15.11-linux-x86_64
+tar xzf fireflo-0.15.12-linux-x86_64.tar.gz
+cd fireflo-0.15.12-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -293,7 +295,7 @@ form of this — one box, an install already running, a broker on its own host �
 is in [Install and configure Kafka](#install-and-configure-kafka).
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.15.11 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.15.12 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -408,7 +410,7 @@ sudo -u postgres createuser --pwprompt fireflo
 sudo -u postgres createdb --owner=fireflo fireflo
 umask 077 && printf '%s' 'THE-DB-PASSWORD' > /root/fireflo-db.pw
 
-tar xzf fireflo-0.15.11-linux-x86_64.tar.gz      # after verifying it
+tar xzf fireflo-0.15.12-linux-x86_64.tar.gz      # after verifying it
 sudo ./setup.sh --role all --broker kafka --configure-gateway -- \
     --config-source db --bootstrap \
     --db-name fireflo --db-user fireflo --db-password-file /root/fireflo-db.pw
@@ -450,7 +452,7 @@ it for you on this path:
 
 ```
 sudo ./setup.sh --role all --broker kafka
-cd fireflo-0.15.11-linux-x86_64
+cd fireflo-0.15.12-linux-x86_64
 sudo ./scripts/fireflo-install update --from ./gateway --kafka-bootstrap 127.0.0.1:9092 --migrate
 ```
 
@@ -647,6 +649,43 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.15.12 with control panel 0.15.12.0
+
+**The platform balance answer now says the plain stored balance. No schema change (1.129.0, unchanged):
+upgrade from 0.15.9, 0.15.10 or 0.15.11 with `fireflo-install update` without `--migrate`**; from 0.15.6
+with `--migrate` (1.127.0 → 1.129.0, as for 0.15.9). Rolling back to 0.15.11 is the previous binary.
+Gateway `9df6a75f` (tag `v0.15.12`), control panel 0.15.12.0 (`f7c0dcc`, tag `v0.15.12.0`), which keeps
+`EXPECTED_SCHEMA_VERSION` 1.129.0 and changes nothing but its version. No new configuration key, nothing
+an existing deployment has to set.
+
+**What was wrong**
+
+The platform `balance` query answers `balance`, `reserved` and `spent`. `balance` is what the account can
+spend right now: for an account the answering node is serving, that is the stored balance *plus the
+unspent part of the node's block* — and that block is also inside `reserved`. A platform that worked out
+what an account has left as `balance + reserved` therefore counted the block twice while the account was
+sending, and only then. OMNI 1.5.12 and 1.5.13 did exactly that: an account holding 199.9880 was shown as
+200.0800, and OMNI's reconcile wrote the difference into its own records. Nothing in the answer said
+whether the block was already inside `balance`, so a platform could not correct for it.
+
+The gateway's own figures were right throughout: `credits − debits − spent = balance column + reserved`.
+
+**What changes in 0.15.12**
+
+- `Balance.free` on the platform `balance` query: `account_balance.balance` as stored, without any block.
+  **`free + reserved` is what an account has left**, in every state of the node.
+- Capability `balance_free`, so a platform asks for the field only where it exists.
+- `balance`, `reserved`, `spent` and `enforced` are unchanged in name and meaning. `/secure/balance` is
+  unchanged.
+
+**Who needs it**
+
+Installations where OMNI funds the gateway from an SMS pocket. OMNI 1.5.14 reads `free` where the gateway
+announces `balance_free`; against an older gateway it shows the pocket figure as "about" and refuses to
+reconcile. A gateway that no platform reads balances from gains nothing and loses nothing by updating.
+
+**Control panel 0.15.12.0:** version only.
 
 ### 0.15.11 with control panel 0.15.11.0
 
