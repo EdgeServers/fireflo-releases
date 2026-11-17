@@ -18,15 +18,15 @@ new box or one already running.
 
 | | |
 |---|---|
-| **Version** | 0.16.0, with control panel 0.16.0.0. **Schema 1.129.0 → 1.131.0**: from 0.15.9 or newer, `fireflo-install update` **with** `--migrate` (on a Kafka install `--migrate` on the first node, `--no-migrate` on the rest); from 0.15.6 the same command (1.127.0 → 1.131.0). Adds **units accounts**: a child account that holds message units per product and no money, its messages charged to its parent; no units is refused with its own status (SMPP `0x403` by default). An existing deployment notices nothing until a platform creates a units account. One new configuration key, `conf.status.noUnits`; nothing has to be set |
-| **File** | `fireflo-0.16.0-linux-x86_64.tar.gz` |
-| **SHA-256** | `41169e56341a90983dc9a04237602812e340a014332e22deb713e4a5c5f18a66` |
-| **Built** | 2026-11-17, from gateway commit `0257a680` (tag `v0.16.0`) with control panel `v0.16.0.0`, see [the 0.16.0 notes](#0160-with-control-panel-01600) |
-| **Control panel** | 0.16.0.0, included at `panel/`, from commit `d1ba86a` (tag `v0.16.0.0`) |
+| **Version** | 0.16.1, with control panel 0.16.1.0. **No schema change** (1.131.0): from 0.16.0 an ordinary update, `fireflo-install update` **without** `--migrate`; from 0.15.9 to 0.15.13 with `--migrate` (1.129.0 → 1.131.0, as for 0.16.0). Rolling back to 0.16.0 is the previous binary. A performance fix: the background job that expires message parts with no final outcome reads its window in pages instead of reading and sorting all of it for every batch. What it closes, and when, is unchanged; no new configuration key, nothing an existing deployment has to set |
+| **File** | `fireflo-0.16.1-linux-x86_64.tar.gz` |
+| **SHA-256** | `c53104a2099d5eb98ed534313c0e5e3d3331304207b3c036422bd8b1cfad47d1` |
+| **Built** | 2026-11-17, from gateway commit `4603b4de` (tag `v0.16.1`) with control panel `v0.16.1.0`, see [the 0.16.1 notes](#0161-with-control-panel-01610) |
+| **Control panel** | 0.16.1.0, included at `panel/`, from commit `409d786` (tag `v0.16.1.0`) |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.16.0-linux-jvm.tar.gz`, SHA-256 `10f97bc89071b9444de964eb1e467e6d8a9375f2ff4494e28a3573714fd51819`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.16.1-linux-jvm.tar.gz`, SHA-256 `7a770b06797f25d6c49562dc24cc037e25faab7542e2d1a6c7ab729fa738c5f7`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 
 
@@ -56,7 +56,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.16.0-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.16.1-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -79,7 +79,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.16.0-linux-jvm.tar.gz && cd fireflo-0.16.0-linux-jvm
+tar xzf fireflo-0.16.1-linux-jvm.tar.gz && cd fireflo-0.16.1-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -134,7 +134,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.16.0-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.16.1-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -177,8 +177,8 @@ before anything else (the summary `setup.sh` prints has the lines).
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.16.0-linux-x86_64.tar.gz
-cd fireflo-0.16.0-linux-x86_64
+tar xzf fireflo-0.16.1-linux-x86_64.tar.gz
+cd fireflo-0.16.1-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -293,7 +293,7 @@ form of this — one box, an install already running, a broker on its own host �
 is in [Install and configure Kafka](#install-and-configure-kafka).
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.16.0 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.16.1 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -408,7 +408,7 @@ sudo -u postgres createuser --pwprompt fireflo
 sudo -u postgres createdb --owner=fireflo fireflo
 umask 077 && printf '%s' 'THE-DB-PASSWORD' > /root/fireflo-db.pw
 
-tar xzf fireflo-0.16.0-linux-x86_64.tar.gz      # after verifying it
+tar xzf fireflo-0.16.1-linux-x86_64.tar.gz      # after verifying it
 sudo ./setup.sh --role all --broker kafka --configure-gateway -- \
     --config-source db --bootstrap \
     --db-name fireflo --db-user fireflo --db-password-file /root/fireflo-db.pw
@@ -450,7 +450,7 @@ it for you on this path:
 
 ```
 sudo ./setup.sh --role all --broker kafka
-cd fireflo-0.16.0-linux-x86_64
+cd fireflo-0.16.1-linux-x86_64
 sudo ./scripts/fireflo-install update --from ./gateway --kafka-bootstrap 127.0.0.1:9092 --migrate
 ```
 
@@ -603,7 +603,8 @@ before another machine can take it.
 ## Earlier builds
 
 **Only the current release is published here.** Builds before 0.12.10 have been
-withdrawn and their tarballs removed from this tree. 0.15.13's tarballs (with control panel 0.15.13.0) are in this
+withdrawn and their tarballs removed from this tree. 0.16.0's tarballs (with control panel 0.16.0.0) are in this
+repository's history at commit `4de324d`. 0.15.13's tarballs (with control panel 0.15.13.0) are in this
 repository's history at commit `5e350c9`. 0.15.12's tarballs (with control panel 0.15.12.0) are in this
 repository's history at commit `614940f`. 0.15.11's tarballs (with control panel 0.15.11.0) are in this
 repository's history at commit `affa3f5`. 0.15.10's tarballs (with control panel 0.15.10.0) are in this
@@ -650,6 +651,41 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.16.1 with control panel 0.16.1.0
+
+**A performance fix to one background job. No schema change (1.131.0, unchanged): upgrade from 0.16.0
+with `fireflo-install update` without `--migrate`**; from 0.15.9 to 0.15.13 with `--migrate`
+(1.129.0 → 1.131.0, as for 0.16.0). Rolling back to 0.16.0 is the previous binary. Gateway `4603b4de`
+(tag `v0.16.1`), control panel 0.16.1.0 (`409d786`, tag `v0.16.1.0`), which keeps
+`EXPECTED_SCHEMA_VERSION` 1.131.0 and changes nothing but its version. No new configuration key,
+nothing an existing deployment has to set.
+
+**What changes in 0.16.1**
+
+The expiry sweep is the background job that closes message parts which never got a final outcome,
+recording them as EXPIRED.
+
+- **Before:** each batch of the sweep read and sorted its whole time window before taking its first
+  10,000 rows, and a full batch then read the same window again from the start. The cost grew with
+  the size of the call-record table and with every batch.
+- **Now:** each batch reads the next 10,000 submits after where the last one stopped, straight off
+  the existing time index, with no sort.
+- **Unchanged:** which parts are closed and when. A retry of a part still counts, and each part is
+  closed once.
+
+**How it was checked**
+
+- The full test suite (3,092 tests), and the sweep's own tests and the call-record tests against a
+  real PostgreSQL (42 tests).
+- It was not measured on a production-sized table for this release.
+
+**Who needs it**
+
+An installation with a large call-record table, where this job's query shows in the slow-query log.
+Others can take it when convenient.
+
+**Control panel 0.16.1.0:** version only.
 
 ### 0.16.0 with control panel 0.16.0.0
 
