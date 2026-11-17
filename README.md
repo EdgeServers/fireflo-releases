@@ -18,15 +18,15 @@ new box or one already running.
 
 | | |
 |---|---|
-| **Version** | 0.16.1, with control panel 0.16.1.1 (the gateway is unchanged; the tarballs were re-cut with the newer panel, which moves long instructions under a setting's label behind an info button). **No schema change** (1.131.0): from 0.16.0 an ordinary update, `fireflo-install update` **without** `--migrate`; from 0.15.9 to 0.15.13 with `--migrate` (1.129.0 → 1.131.0, as for 0.16.0). Rolling back to 0.16.0 is the previous binary. A performance fix: the background job that expires message parts with no final outcome reads its window in pages instead of reading and sorting all of it for every batch. What it closes, and when, is unchanged; no new configuration key, nothing an existing deployment has to set |
-| **File** | `fireflo-0.16.1-linux-x86_64.tar.gz` |
-| **SHA-256** | `23c1ddb67f8b5d5b3610495bb558ce3d70765b7b3bf92df92fa6892bf08dcff9` |
-| **Built** | 2026-11-17, from gateway commit `4603b4de` (tag `v0.16.1`) with control panel `v0.16.1.1`, see [the 0.16.1.1 notes](#0161-with-control-panel-01611) |
-| **Control panel** | 0.16.1.1, included at `panel/`, from commit `46321b8` (tag `v0.16.1.1`) |
+| **Version** | 0.16.2, with control panel 0.16.2.0. **Schema 1.131.0 → 1.132.0**: from 0.16.0 or 0.16.1, `fireflo-install update` **with** `--migrate` (on a Kafka install `--migrate` on the first node, `--no-migrate` on the rest); the migration adds one settings-registry row and nothing else. Rolling back to 0.16.1 is the previous binary. **Behaviour change:** a message sent over the HTTP API, gRPC or the platform API with no `coding` is now sent as Unicode when its text has a character the GSM alphabet cannot carry — it arrives readable, and is counted at 70 characters a message (67 a part) instead of 160 (153), so such messages take more parts than before. One new setting, `smsg.restapi.coding.autodetect`, on by default; tell affected API customers first — see the notes |
+| **File** | `fireflo-0.16.2-linux-x86_64.tar.gz` |
+| **SHA-256** | `4a233a316b7f53e8c1f4db40be49e34b48f786b5e2fc163574c2caf74eb44bed` |
+| **Built** | 2026-11-18, from gateway commit `edf993a3` (tag `v0.16.2`) with control panel `v0.16.2.0`, see [the 0.16.2 notes](#0162-with-control-panel-01620) |
+| **Control panel** | 0.16.2.0, included at `panel/`, from commit `7df5280` (tag `v0.16.2.0`) |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.16.1-linux-jvm.tar.gz`, SHA-256 `426adfceacb332e76dbc8e3f6481c6cf5995cc74b88b041a69bc86709090d130`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.16.2-linux-jvm.tar.gz`, SHA-256 `f8d8b056687fa445ed46ec1196e04e56d5f49172978df5966fe1482b35ba2597`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 
 
@@ -56,7 +56,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.16.1-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.16.2-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -79,7 +79,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.16.1-linux-jvm.tar.gz && cd fireflo-0.16.1-linux-jvm
+tar xzf fireflo-0.16.2-linux-jvm.tar.gz && cd fireflo-0.16.2-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -134,7 +134,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.16.1-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.16.2-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -177,8 +177,8 @@ before anything else (the summary `setup.sh` prints has the lines).
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.16.1-linux-x86_64.tar.gz
-cd fireflo-0.16.1-linux-x86_64
+tar xzf fireflo-0.16.2-linux-x86_64.tar.gz
+cd fireflo-0.16.2-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -293,7 +293,7 @@ form of this — one box, an install already running, a broker on its own host �
 is in [Install and configure Kafka](#install-and-configure-kafka).
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.16.1 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.16.2 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -408,7 +408,7 @@ sudo -u postgres createuser --pwprompt fireflo
 sudo -u postgres createdb --owner=fireflo fireflo
 umask 077 && printf '%s' 'THE-DB-PASSWORD' > /root/fireflo-db.pw
 
-tar xzf fireflo-0.16.1-linux-x86_64.tar.gz      # after verifying it
+tar xzf fireflo-0.16.2-linux-x86_64.tar.gz      # after verifying it
 sudo ./setup.sh --role all --broker kafka --configure-gateway -- \
     --config-source db --bootstrap \
     --db-name fireflo --db-user fireflo --db-password-file /root/fireflo-db.pw
@@ -450,7 +450,7 @@ it for you on this path:
 
 ```
 sudo ./setup.sh --role all --broker kafka
-cd fireflo-0.16.1-linux-x86_64
+cd fireflo-0.16.2-linux-x86_64
 sudo ./scripts/fireflo-install update --from ./gateway --kafka-bootstrap 127.0.0.1:9092 --migrate
 ```
 
@@ -603,7 +603,8 @@ before another machine can take it.
 ## Earlier builds
 
 **Only the current release is published here.** Builds before 0.12.10 have been
-withdrawn and their tarballs removed from this tree. 0.16.1's first tarballs (with control panel 0.16.1.0) are in this
+withdrawn and their tarballs removed from this tree. 0.16.1's last tarballs (with control panel 0.16.1.1) are in this
+repository's history at commit `ec8df96`; its first (with control panel 0.16.1.0) are in this
 repository's history at commit `68e1715`. 0.16.0's tarballs (with control panel 0.16.0.0) are in this
 repository's history at commit `4de324d`. 0.15.13's tarballs (with control panel 0.15.13.0) are in this
 repository's history at commit `5e350c9`. 0.15.12's tarballs (with control panel 0.15.12.0) are in this
@@ -652,6 +653,76 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.16.2 with control panel 0.16.2.0
+
+**A message sent with no coding goes as Unicode when its text needs it. Schema 1.131.0 → 1.132.0:
+upgrade from 0.16.0 or 0.16.1 with `fireflo-install update --migrate`** (on a Kafka install `--migrate`
+on the first node and `--no-migrate` on the others). The migration adds one settings-registry row and
+nothing else: no table, no column, nothing rewritten. Gateway `edf993a3` (tag `v0.16.2`), control panel
+0.16.2.0 (`7df5280`, tag `v0.16.2.0`), which expects schema 1.132.0: update the control panel with the
+gateway, or it reports the schema newer than it expects. Rolling back to 0.16.1 is the previous binary;
+0.16.1 runs against 1.132.0 unchanged.
+
+**What was wrong**
+
+The gateway never chose an alphabet. A `POST /secure/send` or `/secure/sendbatch`, a gRPC `Send` or
+`SendStream`, or a platform send that named no `coding` was sent in the default (GSM) alphabet whatever
+its text held, and every character that alphabet lacks went to the carrier as a question mark. A
+99-character message in Hindi arrived as 99 question marks, and was counted as one part where a
+readable Unicode message of that length is two.
+
+**What changes in 0.16.2 — a behaviour change**
+
+- A message with no `coding` whose text has a character the GSM alphabet cannot carry — another script,
+  an emoji, a curly quote, a non-breaking space — is sent as Unicode (UCS-2, coding 8). It arrives
+  readable.
+- It is then counted, priced and charged as Unicode: 70 characters in a single message and 67 in each
+  part of a longer one, instead of 160 and 153. **Such messages take more parts, and cost more, than they
+  did** — what a readable message of that length always needed.
+- Text that fits the GSM alphabet is unchanged.
+- A `coding` the caller names is always kept, `0` included; in a batch, a `coding` in `globals` counts as
+  named for every message.
+- `GET /secure/rate` and the control panel's message tester count the same way, so a quote matches the
+  send.
+- SMPP is not affected: an SMPP client always names its own `data_coding`.
+
+**The setting**
+
+`smsg.restapi.coding.autodetect` — platform-wide (HTTP API, gRPC and the platform send), on by default,
+changed from the control panel's Gateway settings page ("Send Unicode automatically") and read on every
+send, so no restart. Off, a send with no `coding` goes out in the default alphabet as it did before
+0.16.2.
+
+**Before you update: tell the customers it affects**
+
+A customer whose API integration sends non-GSM text without `coding` will see part counts and charges
+rise for those messages. The gateway's customer-notices guide has the query that lists the accounts to
+tell (those whose HTTP or gRPC traffic went out in the default alphabet in the last 30 days — the
+candidates; the record does not keep enough to say which texts were affected) and the notice to send.
+If you need time, update and switch the setting off, tell them, then switch it on.
+
+**Also in 0.16.2**
+
+- The published API documents no longer declare `coding` with a default of 0. A client generated from
+  them would always send 0, which is kept as named, so it would never get Unicode automatically. The
+  field itself is unchanged.
+- `fireflo load` decides between GSM-7 and Unicode from the same tables the gateway encodes with.
+
+**Control panel 0.16.2.0**
+
+- "Send Unicode automatically" on the Gateway settings page, under the HTTP API.
+- "Test a message", Pricing: under the message text, what it is as you type — "Unicode · 99 characters
+  · 2 parts".
+
+**How it was checked**
+
+- The full test suite (3,126 tests) and the migration and platform tests against a real PostgreSQL.
+- On a staging installation, sent through the platform API with no coding named: Hindi went out as
+  Unicode in two parts; the same text with `coding: 0` named stayed as named; English stayed in the
+  default alphabet; a curly apostrophe went as Unicode.
+- Not checked on a live installation: the setting switched off, and a customer login over plain HTTP.
+  Tests cover both.
 
 ### 0.16.1 with control panel 0.16.1.1
 
