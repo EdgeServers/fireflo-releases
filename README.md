@@ -18,15 +18,15 @@ new box or one already running.
 
 | | |
 |---|---|
-| **Version** | 0.16.2, with control panel 0.16.2.0. **Schema 1.131.0 → 1.132.0**: from 0.16.0 or 0.16.1, `fireflo-install update` **with** `--migrate` (on a Kafka install `--migrate` on the first node, `--no-migrate` on the rest); the migration adds one settings-registry row and nothing else. Rolling back to 0.16.1 is the previous binary. **Behaviour change:** a message sent over the HTTP API, gRPC or the platform API with no `coding` is now sent as Unicode when its text has a character the GSM alphabet cannot carry — it arrives readable, and is counted at 70 characters a message (67 a part) instead of 160 (153), so such messages take more parts than before. One new setting, `smsg.restapi.coding.autodetect`, on by default; tell affected API customers first — see the notes |
-| **File** | `fireflo-0.16.2-linux-x86_64.tar.gz` |
-| **SHA-256** | `4a233a316b7f53e8c1f4db40be49e34b48f786b5e2fc163574c2caf74eb44bed` |
-| **Built** | 2026-11-18, from gateway commit `edf993a3` (tag `v0.16.2`) with control panel `v0.16.2.0`, see [the 0.16.2 notes](#0162-with-control-panel-01620) |
-| **Control panel** | 0.16.2.0, included at `panel/`, from commit `7df5280` (tag `v0.16.2.0`) |
+| **Version** | 0.16.3, with control panel 0.16.3.0. **No schema change** (1.132.0): from 0.16.2 an ordinary update, `fireflo-install update` **without** `--migrate`; from 0.16.0 or 0.16.1 with `--migrate` (1.131.0 → 1.132.0, as for 0.16.2 — read the 0.16.2 notes first: it changes how a send with no `coding` is sent and counted). Rolling back to 0.16.2 is the previous binary. A fix: a message that had to wait for its account's credit or units, and whose answer came late on a stalled server, failed as an internal error — and a charge in that late answer was not given back. It now waits for the answer, and a late charge is returned. No new configuration key, nothing an existing deployment has to set |
+| **File** | `fireflo-0.16.3-linux-x86_64.tar.gz` |
+| **SHA-256** | `3d3b39aeca4f48a6d8c344c36282d3f4eb1b6cbf7989826e78600d86b0db2cfd` |
+| **Built** | 2026-11-18, from gateway commit `c178b87e` (tag `v0.16.3`) with control panel `v0.16.3.0`, see [the 0.16.3 notes](#0163-with-control-panel-01630) |
+| **Control panel** | 0.16.3.0, included at `panel/`, from commit `3070cf8` (tag `v0.16.3.0`) |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.16.2-linux-jvm.tar.gz`, SHA-256 `f8d8b056687fa445ed46ec1196e04e56d5f49172978df5966fe1482b35ba2597`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.16.3-linux-jvm.tar.gz`, SHA-256 `5b963deede33ef0e69aeb8c7cedeedbfbdd48bd004245c284a30638cdd432fa5`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 
 
@@ -56,7 +56,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.16.2-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.16.3-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -79,7 +79,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.16.2-linux-jvm.tar.gz && cd fireflo-0.16.2-linux-jvm
+tar xzf fireflo-0.16.3-linux-jvm.tar.gz && cd fireflo-0.16.3-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -134,7 +134,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.16.2-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.16.3-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -177,8 +177,8 @@ before anything else (the summary `setup.sh` prints has the lines).
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.16.2-linux-x86_64.tar.gz
-cd fireflo-0.16.2-linux-x86_64
+tar xzf fireflo-0.16.3-linux-x86_64.tar.gz
+cd fireflo-0.16.3-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -293,7 +293,7 @@ form of this — one box, an install already running, a broker on its own host �
 is in [Install and configure Kafka](#install-and-configure-kafka).
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.16.2 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.16.3 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -408,7 +408,7 @@ sudo -u postgres createuser --pwprompt fireflo
 sudo -u postgres createdb --owner=fireflo fireflo
 umask 077 && printf '%s' 'THE-DB-PASSWORD' > /root/fireflo-db.pw
 
-tar xzf fireflo-0.16.2-linux-x86_64.tar.gz      # after verifying it
+tar xzf fireflo-0.16.3-linux-x86_64.tar.gz      # after verifying it
 sudo ./setup.sh --role all --broker kafka --configure-gateway -- \
     --config-source db --bootstrap \
     --db-name fireflo --db-user fireflo --db-password-file /root/fireflo-db.pw
@@ -450,7 +450,7 @@ it for you on this path:
 
 ```
 sudo ./setup.sh --role all --broker kafka
-cd fireflo-0.16.2-linux-x86_64
+cd fireflo-0.16.3-linux-x86_64
 sudo ./scripts/fireflo-install update --from ./gateway --kafka-bootstrap 127.0.0.1:9092 --migrate
 ```
 
@@ -603,7 +603,8 @@ before another machine can take it.
 ## Earlier builds
 
 **Only the current release is published here.** Builds before 0.12.10 have been
-withdrawn and their tarballs removed from this tree. 0.16.1's last tarballs (with control panel 0.16.1.1) are in this
+withdrawn and their tarballs removed from this tree. 0.16.2's tarballs (with control panel 0.16.2.0) are in this
+repository's history at commit `9633487`. 0.16.1's last tarballs (with control panel 0.16.1.1) are in this
 repository's history at commit `ec8df96`; its first (with control panel 0.16.1.0) are in this
 repository's history at commit `68e1715`. 0.16.0's tarballs (with control panel 0.16.0.0) are in this
 repository's history at commit `4de324d`. 0.15.13's tarballs (with control panel 0.15.13.0) are in this
@@ -653,6 +654,66 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.16.3 with control panel 0.16.3.0
+
+**A fix to how a message waits for its credit or units. No schema change (1.132.0, unchanged):
+upgrade from 0.16.2 with `fireflo-install update` without `--migrate`**; from 0.16.0 or 0.16.1 with
+`--migrate` (1.131.0 → 1.132.0, as for 0.16.2 — and read the 0.16.2 notes below first, since that
+release changes how a send with no `coding` is sent and counted). Rolling back to 0.16.2 is the previous
+binary. Gateway `c178b87e` (tag `v0.16.3`), control panel 0.16.3.0 (`3070cf8`, tag `v0.16.3.0`), which
+keeps `EXPECTED_SCHEMA_VERSION` 1.132.0 and changes nothing but its version. No new configuration key,
+nothing an existing deployment has to set.
+
+**What was wrong**
+
+When an account's credit block or units block is not in hand, a message waits a moment for the next one:
+it is parked, and a background step answers it — charged, or refused. The request waiting on that answer
+gives up after the park time. If the background step had already taken the message off the queue but
+had not yet delivered its answer, the request waited another half second and then failed with an
+internal error (`parked credit charge was answered but not completed`).
+
+- **It was seen once**, on a staging server that was overloaded and swapping, on a send over gRPC. That
+  time the late answer was a refusal, so nothing was taken.
+- **The risk:** had the late answer been a charge, the money or the units would have been taken for a
+  message that was never sent, and nothing gave them back.
+- It needs a server stalled for more than half a second at exactly that moment. It affects sends over
+  the HTTP API, gRPC and the platform API; it has been possible for money since 0.15.7 and for units
+  since 0.16.0. SMPP does not wait this way and was never affected.
+
+**What changes in 0.16.3**
+
+- A request whose message the background step has taken now waits up to 5 seconds for the answer. The
+  step always answers what it took.
+- If the answer still has not come, the request is refused as "pending", uncharged — the ordinary
+  "send it again shortly" answer (HTTP `503`, gRPC `UNAVAILABLE`), not an internal error. When the answer
+  does land, a charge in it is given back at once.
+- The background step delivers its answers before it writes its warning to the log; a slow log write
+  was part of what delayed the answer.
+
+**What you may see in the log**
+
+- ERROR `balance.park.late`: a request gave up on an answer that was more than 5 seconds late. The
+  message was refused uncharged. The server is stalling: look at CPU, swap and the log disk.
+- WARN `balance.park.late.refunded`: the late answer was a charge, and it was given back.
+- ERROR `balance.park.late.refund.failed`: a late charge could not be given back. This should not
+  happen; send the line to support.
+
+**How it was checked**
+
+- New tests for a late answer that is still taken, a late charge given back exactly once, a late
+  refusal that gives nothing back, and the ordinary give-up.
+- The full test suite (3,130 tests), and the units tests against a real PostgreSQL.
+- Not reproduced on a live installation: it needs a stalled server. The staging allowance was checked
+  after the original incident and added up exactly.
+
+**Who needs it**
+
+Any installation on 0.15.7 or newer that takes traffic over the HTTP API, gRPC or the platform API —
+which includes every installation OMNI sends through. It matters most on servers that run close to
+their memory or disk limits.
+
+**Control panel 0.16.3.0:** version only.
 
 ### 0.16.2 with control panel 0.16.2.0
 
