@@ -18,15 +18,15 @@ new box or one already running.
 
 | | |
 |---|---|
-| **Version** | 0.15.13, with control panel 0.15.13.0. **No schema change** (1.129.0): from 0.15.9, 0.15.10, 0.15.11 or 0.15.12 an ordinary update, `fireflo-install update` **without** `--migrate`; from 0.15.6 with `--migrate` (1.127.0 → 1.129.0). Rolling back to 0.15.12 is the previous binary. An internal release: the prepaid balance engine now reads and writes its tables through one interface, with the same statements, in the same transactions and the same order. Nothing an operator, a customer or a platform can observe changes; no new configuration key, nothing an existing deployment has to set |
-| **File** | `fireflo-0.15.13-linux-x86_64.tar.gz` |
-| **SHA-256** | `d2c07e22359dcdd3a2b48717d540dfdef74f519fbda59f0d77cae0708b6eca11` |
-| **Built** | 2026-11-17, from gateway commit `3d227132` (tag `v0.15.13`) with control panel `v0.15.13.0`, see [the 0.15.13 notes](#01513-with-control-panel-015130) |
-| **Control panel** | 0.15.13.0, included at `panel/`, from commit `21d088d` (tag `v0.15.13.0`) |
+| **Version** | 0.16.0, with control panel 0.16.0.0. **Schema 1.129.0 → 1.131.0**: from 0.15.9 or newer, `fireflo-install update` **with** `--migrate` (on a Kafka install `--migrate` on the first node, `--no-migrate` on the rest); from 0.15.6 the same command (1.127.0 → 1.131.0). Adds **units accounts**: a child account that holds message units per product and no money, its messages charged to its parent; no units is refused with its own status (SMPP `0x403` by default). An existing deployment notices nothing until a platform creates a units account. One new configuration key, `conf.status.noUnits`; nothing has to be set |
+| **File** | `fireflo-0.16.0-linux-x86_64.tar.gz` |
+| **SHA-256** | `41169e56341a90983dc9a04237602812e340a014332e22deb713e4a5c5f18a66` |
+| **Built** | 2026-11-17, from gateway commit `0257a680` (tag `v0.16.0`) with control panel `v0.16.0.0`, see [the 0.16.0 notes](#0160-with-control-panel-01600) |
+| **Control panel** | 0.16.0.0, included at `panel/`, from commit `d1ba86a` (tag `v0.16.0.0`) |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.15.13-linux-jvm.tar.gz`, SHA-256 `162c03f46f9b6d646a325a2e2823e3415c8720bc05d8bde618ccbe63bcc5eb47`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.16.0-linux-jvm.tar.gz`, SHA-256 `10f97bc89071b9444de964eb1e467e6d8a9375f2ff4494e28a3573714fd51819`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 
 
@@ -56,7 +56,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.15.13-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.16.0-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -79,7 +79,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.15.13-linux-jvm.tar.gz && cd fireflo-0.15.13-linux-jvm
+tar xzf fireflo-0.16.0-linux-jvm.tar.gz && cd fireflo-0.16.0-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -134,7 +134,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.15.13-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.16.0-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -177,8 +177,8 @@ before anything else (the summary `setup.sh` prints has the lines).
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.15.13-linux-x86_64.tar.gz
-cd fireflo-0.15.13-linux-x86_64
+tar xzf fireflo-0.16.0-linux-x86_64.tar.gz
+cd fireflo-0.16.0-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -293,7 +293,7 @@ form of this — one box, an install already running, a broker on its own host �
 is in [Install and configure Kafka](#install-and-configure-kafka).
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.15.13 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.16.0 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -408,7 +408,7 @@ sudo -u postgres createuser --pwprompt fireflo
 sudo -u postgres createdb --owner=fireflo fireflo
 umask 077 && printf '%s' 'THE-DB-PASSWORD' > /root/fireflo-db.pw
 
-tar xzf fireflo-0.15.13-linux-x86_64.tar.gz      # after verifying it
+tar xzf fireflo-0.16.0-linux-x86_64.tar.gz      # after verifying it
 sudo ./setup.sh --role all --broker kafka --configure-gateway -- \
     --config-source db --bootstrap \
     --db-name fireflo --db-user fireflo --db-password-file /root/fireflo-db.pw
@@ -450,7 +450,7 @@ it for you on this path:
 
 ```
 sudo ./setup.sh --role all --broker kafka
-cd fireflo-0.15.13-linux-x86_64
+cd fireflo-0.16.0-linux-x86_64
 sudo ./scripts/fireflo-install update --from ./gateway --kafka-bootstrap 127.0.0.1:9092 --migrate
 ```
 
@@ -603,7 +603,8 @@ before another machine can take it.
 ## Earlier builds
 
 **Only the current release is published here.** Builds before 0.12.10 have been
-withdrawn and their tarballs removed from this tree. 0.15.12's tarballs (with control panel 0.15.12.0) are in this
+withdrawn and their tarballs removed from this tree. 0.15.13's tarballs (with control panel 0.15.13.0) are in this
+repository's history at commit `5e350c9`. 0.15.12's tarballs (with control panel 0.15.12.0) are in this
 repository's history at commit `614940f`. 0.15.11's tarballs (with control panel 0.15.11.0) are in this
 repository's history at commit `affa3f5`. 0.15.10's tarballs (with control panel 0.15.10.0) are in this
 repository's history at commit `69e47a0`. 0.15.9's tarballs (with control panel 0.15.9.0) are in this
@@ -649,6 +650,62 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.16.0 with control panel 0.16.0.0
+
+**Units accounts. Schema 1.129.0 → 1.131.0: upgrade from 0.15.9 or newer with `fireflo-install update
+--migrate`** (on a Kafka install `--migrate` on the first node and `--no-migrate` on the others); from
+0.15.6 the same command (1.127.0 → 1.131.0). Gateway `0257a680` (tag `v0.16.0`), control panel 0.16.0.0
+(`d1ba86a`, tag `v0.16.0.0`), which expects schema 1.131.0: update the control panel with the gateway, or
+it reports the schema newer than it expects. Rolling back to 0.15.13 is the previous binary: a 0.15.x
+gateway runs against 1.131.0 unchanged. Roll back only before any units account exists — 0.15.x does not
+know them.
+
+**What an existing deployment notices: nothing, until a units account is created**, and one is created
+only by a platform through the platform API. The two migrations add empty tables, one nullable column on
+the call record (`cdr_submit.unit_account`, a catalogue-only change whatever the table's size), five
+defaulted columns on `ingress_outcome_unknown`, and one registry row. One configuration key is added,
+`conf.status.noUnits` (per listener, default `0x00000403`); nothing has to be set. Every login of an
+ordinary account takes the 0.15.13 path.
+
+**What is new in 0.16.0**
+
+- **Units accounts.** A child account can be a *units account*: it holds message units per product and
+  no money. One unit is one message part. Its logins send as usual, over SMPP, the HTTP API and gRPC;
+  each part takes one unit from the units account and is charged in money, at the parent's prices, to
+  the parent. A send needs both: a unit on the units account and credit on the parent.
+- **Counted live, on the message path.** Units are counted by the same engine that counts prepaid
+  credit: no database call on the message path, exact after a crash, and every refund of a message
+  (vendor refusal, expiry, drop) gives its unit back once.
+- **Its own refusal.** No units left: SMPP status `conf.status.noUnits` (default `0x403`, deliberately
+  not the no-credit `0x402`), HTTP `402` code `NO_UNITS`, gRPC `FAILED_PRECONDITION` / `NO_UNITS`. A
+  brief `unitsPending` (SMPP `0x14`, HTTP `503` with `Retry-After`) is answered while units held by
+  another node come back; nothing is charged for either. Both are recorded with the refused messages
+  under their own reason.
+- **Platform API** (capability `unit_accounts`): create a units account under a parent, give, take back
+  and move units by reference (safe to repeat), read balances, the unit ledger and usage, and set a
+  units account's own speed limits. The capability is announced only while prepaid enforcement is on
+  and every live node runs 0.16.0. Money top-ups and debits are refused for a units account.
+- **A units login is not its parent on the self-service API.** Its balance answer shows its own units,
+  never the parent's money; the rate quote, transfers and registrations answer `403` `UNITS_LOGIN`.
+
+**Control panel 0.16.0.0**
+
+- A units account's page shows units left and used per product, the account that pays, its logins, its
+  speed limits and its unit ledger, and offers no money action.
+- A parent account's Billing lists its sub-accounts, with units left per product and a "no units" state.
+- The Refused page and the delivery check name `noUnits` and `unitsPending`; the listener settings show
+  the new status.
+
+**How it was checked**
+
+- The full test suite (3,092 tests) and the units, balance and platform tests against a real PostgreSQL:
+  two nodes on one allowance, kill and reconcile, refunds before, during and after settlement.
+- Side by side with 0.15.13 at 3,000 messages a second for 150 seconds, twice each, and again through a
+  units login: every message accepted, none refused.
+- A full cycle on a staging installation over the panel, the API and SMPP: units given, passed on,
+  spent one per part, refused at zero with nothing charged, given again and taken back.
+
 
 ### 0.15.13 with control panel 0.15.13.0
 
