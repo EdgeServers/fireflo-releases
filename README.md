@@ -18,15 +18,15 @@ new box or one already running.
 
 | | |
 |---|---|
-| **Version** | 0.16.1, with control panel 0.16.1.0. **No schema change** (1.131.0): from 0.16.0 an ordinary update, `fireflo-install update` **without** `--migrate`; from 0.15.9 to 0.15.13 with `--migrate` (1.129.0 → 1.131.0, as for 0.16.0). Rolling back to 0.16.0 is the previous binary. A performance fix: the background job that expires message parts with no final outcome reads its window in pages instead of reading and sorting all of it for every batch. What it closes, and when, is unchanged; no new configuration key, nothing an existing deployment has to set |
+| **Version** | 0.16.1, with control panel 0.16.1.1 (the gateway is unchanged; the tarballs were re-cut with the newer panel, which moves long instructions under a setting's label behind an info button). **No schema change** (1.131.0): from 0.16.0 an ordinary update, `fireflo-install update` **without** `--migrate`; from 0.15.9 to 0.15.13 with `--migrate` (1.129.0 → 1.131.0, as for 0.16.0). Rolling back to 0.16.0 is the previous binary. A performance fix: the background job that expires message parts with no final outcome reads its window in pages instead of reading and sorting all of it for every batch. What it closes, and when, is unchanged; no new configuration key, nothing an existing deployment has to set |
 | **File** | `fireflo-0.16.1-linux-x86_64.tar.gz` |
-| **SHA-256** | `c53104a2099d5eb98ed534313c0e5e3d3331304207b3c036422bd8b1cfad47d1` |
-| **Built** | 2026-11-17, from gateway commit `4603b4de` (tag `v0.16.1`) with control panel `v0.16.1.0`, see [the 0.16.1 notes](#0161-with-control-panel-01610) |
-| **Control panel** | 0.16.1.0, included at `panel/`, from commit `409d786` (tag `v0.16.1.0`) |
+| **SHA-256** | `23c1ddb67f8b5d5b3610495bb558ce3d70765b7b3bf92df92fa6892bf08dcff9` |
+| **Built** | 2026-11-17, from gateway commit `4603b4de` (tag `v0.16.1`) with control panel `v0.16.1.1`, see [the 0.16.1.1 notes](#0161-with-control-panel-01611) |
+| **Control panel** | 0.16.1.1, included at `panel/`, from commit `46321b8` (tag `v0.16.1.1`) |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.16.1-linux-jvm.tar.gz`, SHA-256 `7a770b06797f25d6c49562dc24cc037e25faab7542e2d1a6c7ab729fa738c5f7`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.16.1-linux-jvm.tar.gz`, SHA-256 `426adfceacb332e76dbc8e3f6481c6cf5995cc74b88b041a69bc86709090d130`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 
 
@@ -603,7 +603,8 @@ before another machine can take it.
 ## Earlier builds
 
 **Only the current release is published here.** Builds before 0.12.10 have been
-withdrawn and their tarballs removed from this tree. 0.16.0's tarballs (with control panel 0.16.0.0) are in this
+withdrawn and their tarballs removed from this tree. 0.16.1's first tarballs (with control panel 0.16.1.0) are in this
+repository's history at commit `68e1715`. 0.16.0's tarballs (with control panel 0.16.0.0) are in this
 repository's history at commit `4de324d`. 0.15.13's tarballs (with control panel 0.15.13.0) are in this
 repository's history at commit `5e350c9`. 0.15.12's tarballs (with control panel 0.15.12.0) are in this
 repository's history at commit `614940f`. 0.15.11's tarballs (with control panel 0.15.11.0) are in this
@@ -651,6 +652,32 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.16.1 with control panel 0.16.1.1
+
+Same gateway (`4603b4de`, tag `v0.16.1`, schema 1.131.0); the tarballs carry the newer control panel
+(`46321b8`, tag `v0.16.1.1`). Install or update as for any 0.16.1 build; `fireflo-panel-install update`
+brings an existing panel to it. No schema change, no configuration key, nothing to set.
+
+**What changes in control panel 0.16.1.1**
+
+- **Long instructions move behind an info button.** The explanation under a setting's label is
+  written to be complete, and in a settings row's narrow column it could run to ten or fifteen lines
+  and push the value it explained off the screen. The page now shows one short line saying what the
+  setting is, with an info button beside the label that opens the full text, unchanged. This covers
+  the Gateway settings page, listener and vendor settings, and the login, account, product,
+  sender ID, template, portal registration and call-record archive forms: 75 instructions.
+- **Rate and limit fields answer four questions.** For a field that sets how fast or how much someone
+  may send — a listener's Throughput limit and Default rate ceiling, a vendor's Throughput and backlog
+  limits, the HTTP default rate limit, an account's own rate on a port, a units account's speed
+  limits — the popover shows Scope, What it limits, Precedence and Over the limit, one under the
+  other, instead of a paragraph.
+- **Gateway settings:** the "More / Less" link that expanded a hint inline is now the same popover, so
+  opening an explanation no longer moves the rows below it.
+- A help text that still runs past two lines is cut there and gets the info button by itself. A
+  setting's key name wraps anywhere instead of breaking mid-word.
+
+Nothing a setting does has changed, and no explanation was removed.
 
 ### 0.16.1 with control panel 0.16.1.0
 
