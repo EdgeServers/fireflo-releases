@@ -18,15 +18,15 @@ new box or one already running.
 
 | | |
 |---|---|
-| **Version** | 0.16.3, with control panel 0.16.3.0. **No schema change** (1.132.0): from 0.16.2 an ordinary update, `fireflo-install update` **without** `--migrate`; from 0.16.0 or 0.16.1 with `--migrate` (1.131.0 → 1.132.0, as for 0.16.2 — read the 0.16.2 notes first: it changes how a send with no `coding` is sent and counted). Rolling back to 0.16.2 is the previous binary. A fix: a message that had to wait for its account's credit or units, and whose answer came late on a stalled server, failed as an internal error — and a charge in that late answer was not given back. It now waits for the answer, and a late charge is returned. No new configuration key, nothing an existing deployment has to set |
-| **File** | `fireflo-0.16.3-linux-x86_64.tar.gz` |
-| **SHA-256** | `3d3b39aeca4f48a6d8c344c36282d3f4eb1b6cbf7989826e78600d86b0db2cfd` |
-| **Built** | 2026-11-18, from gateway commit `c178b87e` (tag `v0.16.3`) with control panel `v0.16.3.0`, see [the 0.16.3 notes](#0163-with-control-panel-01630) |
-| **Control panel** | 0.16.3.0, included at `panel/`, from commit `3070cf8` (tag `v0.16.3.0`) |
+| **Version** | 0.16.4, with control panel 0.16.4.0. **No schema change** (1.132.0): from 0.16.2 or 0.16.3 an ordinary update, `fireflo-install update` **without** `--migrate`; from 0.16.0 or 0.16.1 with `--migrate` (1.131.0 → 1.132.0, as for 0.16.2 — read the 0.16.2 notes first). Rolling back to 0.16.3 is the previous binary and panel. A security release: no example login is live, the preprocessor folder is set on the host only, wrong tokens are recorded, every refused login gets one answer, and the control panel keeps several operator screens for admins. Read [what you will notice](#0164-with-control-panel-01640) before updating. No new configuration key |
+| **File** | `fireflo-0.16.4-linux-x86_64.tar.gz` |
+| **SHA-256** | `81368d028c0df726ebc7dae3e61b4b2113c56678536c0ec67315830b55549a8c` |
+| **Built** | 2026-11-19, from gateway commit `07674633` (tag `v0.16.4`) with control panel `v0.16.4.0`, see [the 0.16.4 notes](#0164-with-control-panel-01640) |
+| **Control panel** | 0.16.4.0, included at `panel/`, from commit `943ab2a` (tag `v0.16.4.0`) |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.16.3-linux-jvm.tar.gz`, SHA-256 `5b963deede33ef0e69aeb8c7cedeedbfbdd48bd004245c284a30638cdd432fa5`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.16.4-linux-jvm.tar.gz`, SHA-256 `bfc555f1b7d98191b4f161944515a56356f7395cb5a24888008b2e74e0e6e953`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 
 
@@ -56,7 +56,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.16.3-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.16.4-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -79,7 +79,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.16.3-linux-jvm.tar.gz && cd fireflo-0.16.3-linux-jvm
+tar xzf fireflo-0.16.4-linux-jvm.tar.gz && cd fireflo-0.16.4-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -134,7 +134,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.16.3-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.16.4-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -177,8 +177,8 @@ before anything else (the summary `setup.sh` prints has the lines).
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.16.3-linux-x86_64.tar.gz
-cd fireflo-0.16.3-linux-x86_64
+tar xzf fireflo-0.16.4-linux-x86_64.tar.gz
+cd fireflo-0.16.4-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -293,7 +293,7 @@ form of this — one box, an install already running, a broker on its own host �
 is in [Install and configure Kafka](#install-and-configure-kafka).
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.16.3 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.16.4 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -408,7 +408,7 @@ sudo -u postgres createuser --pwprompt fireflo
 sudo -u postgres createdb --owner=fireflo fireflo
 umask 077 && printf '%s' 'THE-DB-PASSWORD' > /root/fireflo-db.pw
 
-tar xzf fireflo-0.16.3-linux-x86_64.tar.gz      # after verifying it
+tar xzf fireflo-0.16.4-linux-x86_64.tar.gz      # after verifying it
 sudo ./setup.sh --role all --broker kafka --configure-gateway -- \
     --config-source db --bootstrap \
     --db-name fireflo --db-user fireflo --db-password-file /root/fireflo-db.pw
@@ -450,7 +450,7 @@ it for you on this path:
 
 ```
 sudo ./setup.sh --role all --broker kafka
-cd fireflo-0.16.3-linux-x86_64
+cd fireflo-0.16.4-linux-x86_64
 sudo ./scripts/fireflo-install update --from ./gateway --kafka-bootstrap 127.0.0.1:9092 --migrate
 ```
 
@@ -654,6 +654,85 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.16.4 with control panel 0.16.4.0
+
+**A security release. No schema change (1.132.0, unchanged): upgrade from 0.16.2 or 0.16.3 with
+`fireflo-install update` without `--migrate`**; from 0.16.0 or 0.16.1 with `--migrate` (1.131.0 →
+1.132.0, as for 0.16.2 — read the 0.16.2 notes below first). Rolling back to 0.16.3 is the previous
+binary and the previous panel. Gateway `07674633` (tag `v0.16.4`), control panel 0.16.4.0 (`943ab2a`, tag
+`v0.16.4.0`), which keeps `EXPECTED_SCHEMA_VERSION` 1.132.0. No new configuration key.
+
+Upgrade the gateway and the control panel together. **Read "What you will notice" first**: a few things
+that used to work are now refused on purpose.
+
+**Gateway**
+
+- **No example login is live.** The sample logins in `conf.example/credentials.yml` are commented out.
+  A login whose password or key still starts with `REPLACE_WITH_` is disabled when the file is loaded,
+  with an ERROR line `credential.disabled` naming it. `fireflo verify` fails while one is left.
+- **The preprocessor folder and interpreters are set on the gateway host only.**
+  `smsg.preprocessor.dir`, `.python`, `.java` and `.bash` are read from the host's own file or
+  environment; a value in the configuration database is ignored, with a warning naming the key. The
+  on/off and "editable" switches are unchanged.
+- **A wrong token is recorded.** A wrong or missing read token on `GET /q/metrics`, and a token the
+  operator API on the ops port did not accept, are written to `auth-failed.log` like any refused login,
+  so fail2ban can act on it. The control panel's Security page shows them as "Metrics" and "Ops port".
+- **One answer for every refused login.** An SMPP bind answers `ESME_RINVPASWD` (0x0E) for an unknown
+  system id, a name that is not an SMPP login, an address that is not on the login's allowed list, and
+  a wrong password alike. It used to answer 0x0F or 0x0D for the first three, which told a caller which
+  names exist. The HTTP API gives one status and one body for all of them. The real reason is still in
+  `auth-failed.log` and on the Security page.
+- **Passwords inside a longer value are masked** in the configuration views of the operator API (a
+  database or broker address that carries its password), not only keys named as secrets.
+- **A capture does not carry bind passwords.** In a client watch's pcap file the password of a bind is
+  written as asterisks; the rest of the capture is unchanged.
+
+**Control panel 0.16.4.0**
+
+- **Preprocessor settings:** the folder and interpreter fields are refused for everyone, with a message
+  that they are set on the gateway host. The two switches need an admin.
+- **A reseller cannot act on its own account** through the customer-management screens: changing its
+  own credit, billing mode or suspension answers "not found".
+- **Admin only:** pcap and capture downloads, the gateway configuration file viewer, the diagnostics
+  bundle, and "Copy text" on connection instructions (each copy is recorded in the audit log).
+- **Sign-in limits** keep counting under load instead of resetting, and an unknown client address no
+  longer locks everyone out together. Set `TRUSTED_PROXY_HOPS` so the panel can see client addresses;
+  it warns at startup when it cannot.
+- **The operator login from environment variables** (`OPERATOR_USERNAME` / `OPERATOR_PASSWORD`) works
+  only when no configuration database is set.
+- **Sessions last 12 hours** and renew while in use. The panel sends the HSTS header on HTTPS.
+- **Updated libraries:** Next.js 16.4.6, sharp 0.35.5, nodemailer 10.6.0.
+- The panel source in the release no longer carries its test suite, design mock-ups or internal notes.
+
+**What you will notice**
+
+- **An example login left in `credentials.yml`** stops working, and `fireflo-install update` ends "did
+  not verify" until the line is removed or given a real password. Check before updating:
+  `grep -n REPLACE_WITH_ /etc/fireflo/credentials.yml` (your configuration folder, if it is elsewhere).
+- **A preprocessor folder or interpreter set in the database** is ignored; the host's value, or the
+  default folder, is used. Set it in the host's configuration.
+- **SMPP clients that tell refusals apart by code** see 0x0E where they saw 0x0F or 0x0D.
+- **A monitor polling `/q/metrics` without its token** leaves a line in `auth-failed.log` each time and
+  can be banned by fail2ban. Give it the token.
+- **Operators (not admins)** lose the downloads, the configuration viewer, diagnostics and the password
+  copy listed above.
+- **A panel with a configuration database that still signed in with `OPERATOR_PASSWORD`** can no longer
+  do so. `fireflo-panel-install update` moves that account into the database; or add one with
+  `fireflo user add --email … --role admin --generate`.
+- **Everyone is signed out after 12 hours without use.**
+
+**How it was checked**
+
+- The full gateway test suite (3,154 tests) and the control panel's (2,016), with new tests for each
+  change above.
+- On a staging gateway: the bind answers for an unknown login, a wrong password and an HTTP-only name;
+  the recorded lines for wrong tokens on both ports; one body for refused HTTP logins.
+- The end-to-end suite of the control panel and gateway together (385 automated cases): no case that
+  passes on 0.16.3 fails on 0.16.4.
+- The native binary's start-up checks.
+- Not exercised on a live installation: the address-restricted bind refusal, the database-set
+  preprocessor keys, and the control panel's signed-in screens.
 
 ### 0.16.3 with control panel 0.16.3.0
 
