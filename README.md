@@ -18,15 +18,15 @@ new box or one already running.
 
 | | |
 |---|---|
-| **Version** | 0.16.4, with control panel 0.16.4.0. **No schema change** (1.132.0): from 0.16.2 or 0.16.3 an ordinary update, `fireflo-install update` **without** `--migrate`; from 0.16.0 or 0.16.1 with `--migrate` (1.131.0 → 1.132.0, as for 0.16.2 — read the 0.16.2 notes first). Rolling back to 0.16.3 is the previous binary and panel. A security release: no example login is live, the preprocessor folder is set on the host only, wrong tokens are recorded, every refused login gets one answer, and the control panel keeps several operator screens for admins. Read [what you will notice](#0164-with-control-panel-01640) before updating. No new configuration key |
-| **File** | `fireflo-0.16.4-linux-x86_64.tar.gz` |
-| **SHA-256** | `81368d028c0df726ebc7dae3e61b4b2113c56678536c0ec67315830b55549a8c` |
-| **Built** | 2026-11-19, from gateway commit `07674633` (tag `v0.16.4`) with control panel `v0.16.4.0`, see [the 0.16.4 notes](#0164-with-control-panel-01640) |
-| **Control panel** | 0.16.4.0, included at `panel/`, from commit `943ab2a` (tag `v0.16.4.0`) |
+| **Version** | 0.16.5, with control panel 0.16.5.0. **No schema change** (1.132.0): from 0.16.2, 0.16.3 or 0.16.4 an ordinary update, `fireflo-install update` **without** `--migrate`; from 0.16.0 or 0.16.1 with `--migrate` (1.131.0 → 1.132.0, as for 0.16.2 — read the 0.16.2 notes first). Coming from 0.16.3 or older, read [what 0.16.4 changes](#0164-with-control-panel-01640) too. Rolling back to 0.16.4 is the previous binary. A fix: a long message could be recorded with no price and no currency when the vendor answered a later segment before the first; the customer was charged correctly, the record lost the amount. No new configuration key |
+| **File** | `fireflo-0.16.5-linux-x86_64.tar.gz` |
+| **SHA-256** | `37e3335ba9714dfc04cb10d5a7c4c31451765aa5ae9b0c809ce15ef067c8852a` |
+| **Built** | 2026-11-19, from gateway commit `09477b3e` (tag `v0.16.5`) with control panel `v0.16.5.0`, see [the 0.16.5 notes](#0165-with-control-panel-01650) |
+| **Control panel** | 0.16.5.0, included at `panel/`, from commit `3f604fc` (tag `v0.16.5.0`) |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.16.4-linux-jvm.tar.gz`, SHA-256 `bfc555f1b7d98191b4f161944515a56356f7395cb5a24888008b2e74e0e6e953`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.16.5-linux-jvm.tar.gz`, SHA-256 `0ec7c68c1f54e765e9faa01d2be1dc6e758ad667a9a8cb008dd33f91f215075a`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 
 
@@ -56,7 +56,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.16.4-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.16.5-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -79,7 +79,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.16.4-linux-jvm.tar.gz && cd fireflo-0.16.4-linux-jvm
+tar xzf fireflo-0.16.5-linux-jvm.tar.gz && cd fireflo-0.16.5-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -134,7 +134,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.16.4-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.16.5-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -177,8 +177,8 @@ before anything else (the summary `setup.sh` prints has the lines).
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.16.4-linux-x86_64.tar.gz
-cd fireflo-0.16.4-linux-x86_64
+tar xzf fireflo-0.16.5-linux-x86_64.tar.gz
+cd fireflo-0.16.5-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -293,7 +293,7 @@ form of this — one box, an install already running, a broker on its own host �
 is in [Install and configure Kafka](#install-and-configure-kafka).
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.16.4 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.16.5 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -408,7 +408,7 @@ sudo -u postgres createuser --pwprompt fireflo
 sudo -u postgres createdb --owner=fireflo fireflo
 umask 077 && printf '%s' 'THE-DB-PASSWORD' > /root/fireflo-db.pw
 
-tar xzf fireflo-0.16.4-linux-x86_64.tar.gz      # after verifying it
+tar xzf fireflo-0.16.5-linux-x86_64.tar.gz      # after verifying it
 sudo ./setup.sh --role all --broker kafka --configure-gateway -- \
     --config-source db --bootstrap \
     --db-name fireflo --db-user fireflo --db-password-file /root/fireflo-db.pw
@@ -450,7 +450,7 @@ it for you on this path:
 
 ```
 sudo ./setup.sh --role all --broker kafka
-cd fireflo-0.16.4-linux-x86_64
+cd fireflo-0.16.5-linux-x86_64
 sudo ./scripts/fireflo-install update --from ./gateway --kafka-bootstrap 127.0.0.1:9092 --migrate
 ```
 
@@ -654,6 +654,63 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.16.5 with control panel 0.16.5.0
+
+**A fix to how a long message is recorded. No schema change (1.132.0, unchanged): upgrade from 0.16.2,
+0.16.3 or 0.16.4 with `fireflo-install update` without `--migrate`**; from 0.16.0 or 0.16.1 with
+`--migrate` (1.131.0 → 1.132.0, as for 0.16.2 — read the 0.16.2 notes below first). Coming from 0.16.3 or
+older, read the 0.16.4 notes too: that release refuses a few things on purpose. Rolling back to 0.16.4 is
+the previous binary. Gateway `09477b3e` (tag `v0.16.5`), control panel 0.16.5.0 (`3f604fc`, tag
+`v0.16.5.0`), which changes nothing but its version. No new configuration key.
+
+**What was wrong**
+
+A long message — one sent in two or more segments — has one record in the message list, written when its
+first segment is accepted by the vendor, with the price for all segments. Sometimes that record was
+written with **no price and no currency** (and no cost), and its margin shown as unknown, although the
+vendor had accepted the message.
+
+- **When:** the vendor answered a later segment before the first one, or the first segment was throttled
+  and accepted on a retry after a later one. With vendors that answer in order it never happened.
+- **The customer was charged correctly**, once, when the message was accepted. Balances and the ledger
+  were right.
+- **What was lost** was that message's price and cost in the message list, in exports, and in the revenue
+  and margin figures.
+- In every release from 0.15.1 to 0.16.4.
+
+**What changes in 0.16.5**
+
+- A long message's record carries its price and currency whichever segment the vendor answers first.
+- The log line `message.submit.accepted.again billed=false` is no longer written for every long message.
+  It was a warning about a message "accepted twice", logged once for each later segment of each long
+  message. It now appears only when a message really was accepted twice.
+
+**Records already written**
+
+The update does not change them. To count the affected records on an installation:
+
+```
+SELECT count(*) FROM cdr_submit WHERE part_count > 1 AND price IS NULL AND submit_status = 0;
+```
+
+Those messages were charged at the time; only the record lacks the amount.
+
+**How it was checked**
+
+- A new test for "segment 2 accepted before segment 1": it fails on 0.16.4 (the record has no price) and
+  passes on 0.16.5. Tests for segments accepted in order and for a first segment accepted twice.
+- The full test suite (3,157 tests).
+- On a staging gateway, 120 two- and three-part messages sent over SMPP: every one recorded once, with
+  price and currency, and charged once. The staging vendor answers in order, so the out-of-order case
+  itself is covered by the test, not by a live run.
+
+**Who needs it**
+
+Any installation on 0.15.1 or newer that sends long messages to vendors which answer segments out of
+order or throttle — in practice, most real vendor connections.
+
+**Control panel 0.16.5.0:** version only.
 
 ### 0.16.4 with control panel 0.16.4.0
 
