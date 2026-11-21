@@ -18,15 +18,15 @@ new box or one already running.
 
 | | |
 |---|---|
-| **Version** | 0.16.5, with control panel 0.16.5.0. **No schema change** (1.132.0): from 0.16.2, 0.16.3 or 0.16.4 an ordinary update, `fireflo-install update` **without** `--migrate`; from 0.16.0 or 0.16.1 with `--migrate` (1.131.0 → 1.132.0, as for 0.16.2 — read the 0.16.2 notes first). Coming from 0.16.3 or older, read [what 0.16.4 changes](#0164-with-control-panel-01640) too. Rolling back to 0.16.4 is the previous binary. A fix: a long message could be recorded with no price and no currency when the vendor answered a later segment before the first; the customer was charged correctly, the record lost the amount. No new configuration key |
-| **File** | `fireflo-0.16.5-linux-x86_64.tar.gz` |
-| **SHA-256** | `37e3335ba9714dfc04cb10d5a7c4c31451765aa5ae9b0c809ce15ef067c8852a` |
-| **Built** | 2026-11-19, from gateway commit `09477b3e` (tag `v0.16.5`) with control panel `v0.16.5.0`, see [the 0.16.5 notes](#0165-with-control-panel-01650) |
-| **Control panel** | 0.16.5.0, included at `panel/`, from commit `3f604fc` (tag `v0.16.5.0`) |
+| **Version** | 0.17.0, with control panel 0.17.0.0. **Schema 1.133.0** (two new, empty tables): update with `fireflo-install update --migrate`, gateway first, then the control panel. Account tags: the operator tags accounts and names a tag in routing rules, price rules and filters, with tag prices between an account's own price and the default. Nothing behaves differently until a tag is made and used. One manual `GRANT` when the control panel writes through its own database role — see [the 0.17.0 notes](#0170-with-control-panel-01700). Rolling back is the previous binary and control panel. No new configuration key |
+| **File** | `fireflo-0.17.0-linux-x86_64.tar.gz` |
+| **SHA-256** | `deb4303b7acc95e96b3c95aff739bfee7500d679e1101df5bf0f1c5bb201eb7a` |
+| **Built** | 2026-11-21, from gateway commit `8f57ae25` (tag `v0.17.0`) with control panel `v0.17.0.0`, see [the 0.17.0 notes](#0170-with-control-panel-01700) |
+| **Control panel** | 0.17.0.0, included at `panel/`, from commit `78d7aa8` (tag `v0.17.0.0`) |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.16.5-linux-jvm.tar.gz`, SHA-256 `0ec7c68c1f54e765e9faa01d2be1dc6e758ad667a9a8cb008dd33f91f215075a`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.17.0-linux-jvm.tar.gz`, SHA-256 `8d977b15cd9aa3a27c1d04c377e2424a26de6ed81b1d3310093971923801ac3a`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 
 
@@ -56,7 +56,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.16.5-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.17.0-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -79,7 +79,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.16.5-linux-jvm.tar.gz && cd fireflo-0.16.5-linux-jvm
+tar xzf fireflo-0.17.0-linux-jvm.tar.gz && cd fireflo-0.17.0-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -134,7 +134,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.16.5-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.17.0-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -177,8 +177,8 @@ before anything else (the summary `setup.sh` prints has the lines).
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.16.5-linux-x86_64.tar.gz
-cd fireflo-0.16.5-linux-x86_64
+tar xzf fireflo-0.17.0-linux-x86_64.tar.gz
+cd fireflo-0.17.0-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -293,7 +293,7 @@ form of this — one box, an install already running, a broker on its own host �
 is in [Install and configure Kafka](#install-and-configure-kafka).
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.16.5 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.17.0 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -408,7 +408,7 @@ sudo -u postgres createuser --pwprompt fireflo
 sudo -u postgres createdb --owner=fireflo fireflo
 umask 077 && printf '%s' 'THE-DB-PASSWORD' > /root/fireflo-db.pw
 
-tar xzf fireflo-0.16.5-linux-x86_64.tar.gz      # after verifying it
+tar xzf fireflo-0.17.0-linux-x86_64.tar.gz      # after verifying it
 sudo ./setup.sh --role all --broker kafka --configure-gateway -- \
     --config-source db --bootstrap \
     --db-name fireflo --db-user fireflo --db-password-file /root/fireflo-db.pw
@@ -450,7 +450,7 @@ it for you on this path:
 
 ```
 sudo ./setup.sh --role all --broker kafka
-cd fireflo-0.16.5-linux-x86_64
+cd fireflo-0.17.0-linux-x86_64
 sudo ./scripts/fireflo-install update --from ./gateway --kafka-bootstrap 127.0.0.1:9092 --migrate
 ```
 
@@ -654,6 +654,83 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.17.0 with control panel 0.17.0.0
+
+**Account tags for routing, pricing and filters. Schema 1.133.0 (two new, empty tables): upgrade with
+`fireflo-install update --migrate`.** Control panel 0.17.0.0 expects schema 1.133.0, so update the gateway
+first. No new configuration key. Nothing behaves differently until a tag is made, put on an account and named by
+a rule or a price. Rolling back is the previous binary and control panel; the two tables can stay. Gateway
+`8f57ae25` (tag `v0.17.0`), control panel 0.17.0.0 (`78d7aa8`, tag `v0.17.0.0`).
+
+**One manual step when the control panel writes through its own database role.** The migration grants the
+panel's roles nothing, because their names are an installation's own. After the update, as the owner of the
+tables:
+
+```
+GRANT SELECT, INSERT, UPDATE, DELETE ON app_tag, app_account_tag TO <the panel's writing role>;
+```
+
+An installation whose panel connects as the tables' owner needs nothing. Without the grant the Tags page shows
+a permission error; messages are unaffected.
+
+**What a tag is**
+
+A name the operator puts on accounts — "otp", "premium", "bank". An account can carry several. Only the
+operator sets them: resellers and customers never see or change tags. A reseller's units sub-account also
+carries its parent's tags, so tagging a reseller covers its customers. Database configuration only: with
+configuration in files there are no accounts to tag and a rule on a tag matches nothing.
+
+**Where a tag can be used**
+
+- **Routing rules, price rules and named filters**: a new condition, "Account tag" — has this tag, has all of
+  these, has any of these, has no tag, and each negated. So a rule that sends to a preprocessor can use it too.
+- **Prices**: a new "Tag prices" level between an account's own prices and the default. The order is the
+  account's own price, then its tags' prices, then the default. When an account has several tags with prices,
+  the tag higher in the Tags list wins. The rate quote, the tester and an account's tariff page show which
+  price applies and why.
+- **Lists and reports**: filter accounts, usage and messages by tag. The filter reads the tags an account has
+  now; a message does not record the tags its account had when it was sent.
+
+A change to a tag or to who carries it is adopted at the next configuration poll (within 30 seconds), and
+bound SMPP sessions are re-priced. The licence rule for configuration changes applies as for any change.
+
+**Control panel 0.17.0.0**
+
+- **Tags page** beside Filters: label, description, colour, order, enabled, how many accounts carry it and
+  which rules, filters and prices name it. A tag still named somewhere cannot be deleted. A disabled tag
+  matches nothing and prices nothing but stays on its accounts.
+- Tags picker on an account, a Tags column and filter in the accounts list.
+- "Account tag" in the guided conditions of the filter wizard, route rules and price rules; picking a tag
+  where a filter is chosen adds the condition for you.
+- "Tag prices" in pricing.
+- Fixed: a duplicate price rule is found whatever order its conditions are in.
+- Fixed: a bad filter on the usage API answers 400 with its reason, not 500.
+
+**For integrations**
+
+- Platform API (capability `account_tags`, announced with database configuration): `tags`, `Account.tags`,
+  `Account.effectiveTags`, `accounts(tag:)`, `setAccountTags` (add and remove, never replace),
+  `ProvisionInput.tags` (applied only when the account is created).
+- Management REST: `tags` on `GET /manage/accounts/{id}`, `PUT /manage/accounts/{id}/tags`.
+- The reseller API is unchanged. Preprocessors may be sent the read-only field `tags`.
+
+**Also changed**
+
+- A units sub-account is quoted the price it is charged: the quote and the tester price it as its paying
+  parent, which is what the charge has always used.
+
+**How it was checked**
+
+- The full test suite (3,322 tests), with new tests for every condition form, the price order, adoption and
+  the API.
+- On a staging rig: the migration, assignment, all condition forms, the price order, SMPP re-pricing, and bad
+  rules refused with the old configuration kept. At 300 messages a second (the rig's limit) no case with tags
+  was slower than the same case without. 3,000 a second with tags has not been measured.
+- The control panel's tag screens in a browser: 23 new cases (the Tags page, tags on an account, the "Account
+  tag" condition in filters, route rules and price rules, tag prices and their order, tag filters on Usage
+  and Messages), each checked against what the gateway then routes and charges; and the whole existing
+  browser suite as a regression check.
 
 ### 0.16.5 with control panel 0.16.5.0
 
