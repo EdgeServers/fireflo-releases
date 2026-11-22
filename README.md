@@ -18,15 +18,15 @@ new box or one already running.
 
 | | |
 |---|---|
-| **Version** | 0.17.0, with control panel 0.17.0.0. **Schema 1.133.0** (two new, empty tables): update with `fireflo-install update --migrate`, gateway first, then the control panel. Account tags: the operator tags accounts and names a tag in routing rules, price rules and filters, with tag prices between an account's own price and the default. Nothing behaves differently until a tag is made and used. One manual `GRANT` when the control panel writes through its own database role — see [the 0.17.0 notes](#0170-with-control-panel-01700). Rolling back is the previous binary and control panel. No new configuration key |
-| **File** | `fireflo-0.17.0-linux-x86_64.tar.gz` |
-| **SHA-256** | `deb4303b7acc95e96b3c95aff739bfee7500d679e1101df5bf0f1c5bb201eb7a` |
-| **Built** | 2026-11-21, from gateway commit `8f57ae25` (tag `v0.17.0`) with control panel `v0.17.0.0`, see [the 0.17.0 notes](#0170-with-control-panel-01700) |
-| **Control panel** | 0.17.0.0, included at `panel/`, from commit `78d7aa8` (tag `v0.17.0.0`) |
+| **Version** | 0.17.1, with control panel 0.17.1.0. **No migration from 0.17.0** (schema stays 1.133.0): update with `fireflo-install update`, without `--migrate`. From 0.16.5 or earlier, update **with** `--migrate`, gateway first, then the control panel, and mind the one manual `GRANT` when the control panel writes through its own database role (see [the 0.17.0 notes](#0170-with-control-panel-01700)). Two fixes for Kafka mode: a stalled router clears a hanging transaction itself, and a message a vendor accepted twice is priced on one record. |
+| **File** | `fireflo-0.17.1-linux-x86_64.tar.gz` |
+| **SHA-256** | `9b6771e4bb764581d30982f5cc35569204338bfa9dc6e3c0e0104d5ac4fd36b5` |
+| **Built** | 2026-11-22, from gateway commit `38226e9a` (tag `v0.17.1`) with control panel `v0.17.1.0`, see [the 0.17.1 notes](#0171-with-control-panel-01710) |
+| **Control panel** | 0.17.1.0, included at `panel/`, from commit `6b8aadc` (tag `v0.17.1.0`) |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.17.0-linux-jvm.tar.gz`, SHA-256 `8d977b15cd9aa3a27c1d04c377e2424a26de6ed81b1d3310093971923801ac3a`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.17.1-linux-jvm.tar.gz`, SHA-256 `044aad5576445e0b63b89832f7ca87d57f5992e6214861ccc4ef888ea5e0b386`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 
 
@@ -56,7 +56,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.17.0-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.17.1-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -79,7 +79,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.17.0-linux-jvm.tar.gz && cd fireflo-0.17.0-linux-jvm
+tar xzf fireflo-0.17.1-linux-jvm.tar.gz && cd fireflo-0.17.1-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -134,7 +134,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.17.0-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.17.1-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -177,8 +177,8 @@ before anything else (the summary `setup.sh` prints has the lines).
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.17.0-linux-x86_64.tar.gz
-cd fireflo-0.17.0-linux-x86_64
+tar xzf fireflo-0.17.1-linux-x86_64.tar.gz
+cd fireflo-0.17.1-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -293,7 +293,7 @@ form of this — one box, an install already running, a broker on its own host �
 is in [Install and configure Kafka](#install-and-configure-kafka).
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.17.0 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.17.1 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -408,7 +408,7 @@ sudo -u postgres createuser --pwprompt fireflo
 sudo -u postgres createdb --owner=fireflo fireflo
 umask 077 && printf '%s' 'THE-DB-PASSWORD' > /root/fireflo-db.pw
 
-tar xzf fireflo-0.17.0-linux-x86_64.tar.gz      # after verifying it
+tar xzf fireflo-0.17.1-linux-x86_64.tar.gz      # after verifying it
 sudo ./setup.sh --role all --broker kafka --configure-gateway -- \
     --config-source db --bootstrap \
     --db-name fireflo --db-user fireflo --db-password-file /root/fireflo-db.pw
@@ -450,7 +450,7 @@ it for you on this path:
 
 ```
 sudo ./setup.sh --role all --broker kafka
-cd fireflo-0.17.0-linux-x86_64
+cd fireflo-0.17.1-linux-x86_64
 sudo ./scripts/fireflo-install update --from ./gateway --kafka-bootstrap 127.0.0.1:9092 --migrate
 ```
 
@@ -654,6 +654,45 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.17.1 with control panel 0.17.1.0
+
+**Two fixes found on an overload test of 0.17.0. No migration (schema stays 1.133.0): upgrade with
+`fireflo-install update`, without `--migrate`.** No new configuration key. The control panel changes only its
+version. Neither fix changes what a customer is charged, and neither fault is new in 0.17.0. Gateway
+`38226e9a` (tag `v0.17.1`), control panel 0.17.1.0 (`6b8aadc`, tag `v0.17.1.0`).
+
+**A stalled router clears a hanging transaction itself (Kafka mode)**
+
+A Kafka transaction can be left *hanging* on the router group's offsets — typically after a broker starved of
+memory or disk. The broker never ends it, the group's offsets stay unreadable, and the router partitions that
+need them stop: their messages are accepted and charged but not sent, until someone runs
+`kafka-transactions.sh find-hanging` and `abort` on the broker. The router's own recovery replaced its
+producer, which cannot end a transaction the broker has lost track of.
+
+The recovery now finds such a transaction and aborts it, with the same test `find-hanging` applies; a
+transaction the broker still tracks is left alone. It logs `kafka.router.hanging.aborted` (one line per
+transaction) and counts `fireflo_kafka_router_hanging_aborted_total`. It needs Kafka 3.0 or later; where ACLs
+are on, the gateway's principal needs `Describe` and `Write` on `__consumer_offsets`, `Describe` on
+transactional ids and `ClusterAction`. Without them it logs `kafka.router.hanging.failed` and the manual step
+in the troubleshooting guide applies as before.
+
+**A message a vendor accepted twice is priced on one record (Kafka mode)**
+
+When a vendor answers a submit after `request.tout` and the retry has already gone, the vendor accepts both
+copies — the documented case in which a message may arrive twice. The customer was always charged once, but
+both call records could carry the price, so revenue, margin and postpaid figures read from the records
+counted the message twice. Now only the first acceptance carries the price. Records already written are not
+changed. A vendor that produces `smpp.submit.resp.late` lines still needs a longer `request.tout`.
+
+**How it was checked**
+
+- The full test suite (3,333 tests), with new tests for both fixes.
+- Against a real Kafka broker: the gateway finds an open transaction on the right offsets partition and
+  leaves it alone while the broker still tracks it.
+- Not checked against a real hanging transaction: one cannot be made on purpose. If the broker refuses the
+  abort, the gateway says so in its log and the manual step still works.
+- The build ran on a staging gateway in Kafka mode before release.
 
 ### 0.17.0 with control panel 0.17.0.0
 
