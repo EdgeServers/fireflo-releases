@@ -18,15 +18,15 @@ new box or one already running.
 
 | | |
 |---|---|
-| **Version** | 0.17.2, with control panel 0.17.2.0. **Schema 1.134.0** (one migration: two rows in the settings registry, no table, no column): update with `fireflo-install update --migrate`, gateway first, then the control panel. A 0.17.1 gateway runs against 1.134.0 unchanged, so a rollback is the old binary alone. From 0.16.5 or earlier, also mind the one manual `GRANT` when the control panel writes through its own database role (see [the 0.17.0 notes](#0170-with-control-panel-01700)). A submit waits for its credit instead of being refused; the refusals that remain have their own names and codes (SMPP `0x58` by default for credit not confirmed in time, was `0x14`). |
-| **File** | `fireflo-0.17.2-linux-x86_64.tar.gz` |
-| **SHA-256** | `47c9cfd833cd9109fd24e2e7b9b1c39704b53a905ee4497efe25bb846ded4c3b` |
-| **Built** | 2026-11-28, from gateway commit `9db9f0fe` (tag `v0.17.2`) with control panel `v0.17.2.0`, see [the 0.17.2 notes](#0172-with-control-panel-01720) |
-| **Control panel** | 0.17.2.0, included at `panel/`, from commit `67ba154` (tag `v0.17.2.0`) |
+| **Version** | 0.17.3, with control panel 0.17.3.0. **Security release, no schema change (1.134.0)**: from 0.17.2 update with `fireflo-install update` without `--migrate`, gateway first, then the control panel; from 0.17.1 or earlier update with `--migrate` as the 0.17.2 notes say. Rollback to 0.17.2 is the binary alone. **Read [the 0.17.3 notes](#0173-with-control-panel-01730) before updating**: a proxy on another host, callbacks to private addresses, REST `/manage` callers that send no `ref`, and a TLS vendor dialled by a name its certificate does not carry each need a step. From 0.16.5 or earlier, also mind the one manual `GRANT` when the control panel writes through its own database role (see [the 0.17.0 notes](#0170-with-control-panel-01700)). |
+| **File** | `fireflo-0.17.3-linux-x86_64.tar.gz` |
+| **SHA-256** | `f66cf50152c5a079185c7e3fbf6da063262670009b10442ebc3171fcd2a5c060` |
+| **Built** | 2026-11-28, from gateway commit `eb901a47` (tag `v0.17.3`) with control panel `v0.17.3.0`, see [the 0.17.3 notes](#0173-with-control-panel-01730) |
+| **Control panel** | 0.17.3.0, included at `panel/`, from commit `9e9b122` (tag `v0.17.3.0`) |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.17.2-linux-jvm.tar.gz`, SHA-256 `f5896395b7b6af8ae56b1179f699de16f0f150a02ccb6de38e41efaabada0361`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.17.3-linux-jvm.tar.gz`, SHA-256 `0af8c83dd9668a56cb975226558467e2dcc414aeb0793bf7dc2ec68e7541b412`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 
 
@@ -56,7 +56,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.17.2-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.17.3-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -79,7 +79,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.17.2-linux-jvm.tar.gz && cd fireflo-0.17.2-linux-jvm
+tar xzf fireflo-0.17.3-linux-jvm.tar.gz && cd fireflo-0.17.3-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -134,7 +134,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.17.2-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.17.3-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -177,8 +177,8 @@ before anything else (the summary `setup.sh` prints has the lines).
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.17.2-linux-x86_64.tar.gz
-cd fireflo-0.17.2-linux-x86_64
+tar xzf fireflo-0.17.3-linux-x86_64.tar.gz
+cd fireflo-0.17.3-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -293,7 +293,7 @@ form of this — one box, an install already running, a broker on its own host �
 is in [Install and configure Kafka](#install-and-configure-kafka).
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.17.2 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.17.3 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -408,7 +408,7 @@ sudo -u postgres createuser --pwprompt fireflo
 sudo -u postgres createdb --owner=fireflo fireflo
 umask 077 && printf '%s' 'THE-DB-PASSWORD' > /root/fireflo-db.pw
 
-tar xzf fireflo-0.17.2-linux-x86_64.tar.gz      # after verifying it
+tar xzf fireflo-0.17.3-linux-x86_64.tar.gz      # after verifying it
 sudo ./setup.sh --role all --broker kafka --configure-gateway -- \
     --config-source db --bootstrap \
     --db-name fireflo --db-user fireflo --db-password-file /root/fireflo-db.pw
@@ -450,7 +450,7 @@ it for you on this path:
 
 ```
 sudo ./setup.sh --role all --broker kafka
-cd fireflo-0.17.2-linux-x86_64
+cd fireflo-0.17.3-linux-x86_64
 sudo ./scripts/fireflo-install update --from ./gateway --kafka-bootstrap 127.0.0.1:9092 --migrate
 ```
 
@@ -603,7 +603,8 @@ before another machine can take it.
 ## Earlier builds
 
 **Only the current release is published here.** Builds before 0.12.10 have been
-withdrawn and their tarballs removed from this tree. 0.16.2's tarballs (with control panel 0.16.2.0) are in this
+withdrawn and their tarballs removed from this tree. 0.17.2's tarballs (with control panel 0.17.2.0) are in this
+repository's history at commit `948ff23`. 0.16.2's tarballs (with control panel 0.16.2.0) are in this
 repository's history at commit `9633487`. 0.16.1's last tarballs (with control panel 0.16.1.1) are in this
 repository's history at commit `ec8df96`; its first (with control panel 0.16.1.0) are in this
 repository's history at commit `68e1715`. 0.16.0's tarballs (with control panel 0.16.0.0) are in this
@@ -654,6 +655,116 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.17.3 with control panel 0.17.3.0
+
+**Security: seven fixes from an audit of the REST, gRPC and platform APIs. No schema change (1.134.0 on both
+sides): update from 0.17.2 with `fireflo-install update` without `--migrate`, gateway first, then the control
+panel.** Rollback to 0.17.2 is the binary alone. Seventeen new configuration keys, every one with a default
+that needs no setting on a single-host install. Gateway `eb901a47` (tag `v0.17.3`), control panel 0.17.3.0
+(`9e9b122`, tag `v0.17.3.0`). 0.17.3 contains everything in 0.17.2.
+
+**Read before updating: four changes can stop something that works today**
+
+| If your install has | After the update | What to do |
+|---|---|---|
+| A proxy on **another host** in front of the REST or gRPC port, with proxy forwarding on | Every caller appears as the proxy: allowed-address lists fail, tokens bind to the proxy, fail2ban can ban it | List the proxy in `smsg.restapi.proxy.trusted`. The log line `proxy.untrusted` names the address to add |
+| Callbacks (`dlr-url`, batch callbacks, a connector's MO target) to a **private or loopback address** | They are refused; a send carrying such a URL gets 400 where it got 200 | List the network in `smsg.webhook.private.allowed` (for an application on the gateway's own host: `127.0.0.1/32`) |
+| Scripts calling REST `/manage` **without a `ref`** (`/token`, top-ups, debits, account read, tags, an account's quote) | 400 `REF_REQUIRED`; 404 for an account that does not carry the caller's reference | Send the account's reference. OMNI already does on every call |
+| A vendor bound over **TLS** by IP address, or by a name its certificate does not carry | The bind fails the TLS handshake | Dial the vendor by its certificate's name, or set `ssl.verify.hostname=false` for that vendor |
+
+A proxy on the gateway's own host, forwarding off, callbacks to public addresses, and vendors without TLS or
+with a public certificate for the configured name: nothing changes.
+
+**What was fixed**
+
+- **Forwarded client addresses are believed only from your own proxies.** `X-Forwarded-For` and
+  `X-Forwarded-Proto` (REST, gRPC) and an SMPP PROXY-protocol header were believed from any peer, so a client
+  reaching the port directly chose its own address. They are now read only when the peer is loopback or a
+  listed proxy; from anyone else the peer itself is the caller.
+- **An over-long `X-Forwarded-For` keeps its right-hand end.** It was cut to its first 512 characters while the
+  client address is counted from the right, so padding the header put a client-chosen address in the proxy's
+  place.
+- **A callback URL is judged when the message is accepted.** A URL the gateway would never call is refused
+  with 400, code `CALLBACK_URL_REFUSED` (gRPC `INVALID_ARGUMENT`), where it was accepted and its receipt
+  silently dropped. Only `http` and `https` are ever called. Never reachable, whatever is configured:
+  link-local addresses (which hold the cloud metadata service), the unspecified address, and the gateway's
+  own listening ports. A followed redirect is checked at each hop, at most 5 hops.
+- **A platform reference is a boundary.** A platform is in scope only for an account carrying exactly its
+  reference, on every platform GraphQL field and on REST `/manage`. An account with no reference belongs to
+  no platform until it is claimed. A platform can create a child account only under a parent carrying its
+  own reference.
+- **TLS to a vendor checks the host name.** The certificate was checked for its chain and never for its
+  name, so any valid certificate was accepted. A private CA can now be given in a truststore per vendor.
+- **gRPC calls held open are capped** per session, per connection and per client address; over a cap the
+  extra call is closed with `RESOURCE_EXHAUSTED`, code `TOO_MANY_CALLS`.
+- **A reseller's account writes are capped**: accounts per reseller, logins per account (409 `LIMIT_REACHED`)
+  and writes per minute (429 `RATE_LIMITED` with `Retry-After`). Concurrent writes share one configuration
+  reload; a write still returns only after its change is live.
+
+**New configuration keys**
+
+None is in the settings registry yet, so the control panel does not list them: enter one by name (Gateway
+settings → Add a key) or in the configuration file.
+
+| Key | Applies to | Default | What it sets |
+|---|---|---|---|
+| `smsg.restapi.proxy.trusted` | the gateway | empty (loopback only) | The proxies whose forwarded-address headers are believed on the REST port: addresses or CIDR blocks |
+| `smsg.grpc.proxy.trusted` | the gateway | unset (follows the REST list) | The same for the gRPC port |
+| `srv.proxy.trusted` | one SMPP listener | empty (loopback only) | The proxies whose PROXY-protocol header is believed on that listener |
+| `smsg.webhook.private.allowed` | the gateway | empty (no non-public target) | The non-public networks a callback may reach. Replaces `smsg.webhook.private.targets=allow`, which still works for private ranges but no longer opens loopback |
+| `smsg.manage.claim.enabled` | the gateway | `true` | Whether a platform may claim an account that carries no reference. `false` closes it once every platform has claimed what it runs |
+| `ssl.verify.hostname` | one vendor | `true` | Whether that vendor's certificate must name the host it is dialled by |
+| `ssl.truststore.path`, `.password`, `.type` | one vendor | empty (the JVM's truststore) | A truststore holding that vendor's CA or certificate |
+| `smsg.grpc.session.max.subscribes` | each gRPC session | 4 | Receipt streams one session may hold open at once |
+| `smsg.grpc.session.max.pulls` | each gRPC session | 8 | Long-poll pulls one session may have waiting at once |
+| `smsg.grpc.session.max.sendstreams` | each gRPC session | 16 | Send streams one session may hold open at once (messages inside a stream are not counted) |
+| `smsg.grpc.connection.max.calls` | each gRPC connection | 1000 | Calls of any kind open at once on one connection |
+| `smsg.grpc.ip.max.streams` | each client address | 256 | Receipt streams, pulls and send streams open at once from one address, all sessions together |
+| `smsg.reseller.max.children` | each reseller | 500 | Live accounts one reseller may hold (archived not counted). It limits creating accounts, not traffic |
+| `smsg.reseller.max.logins.per.account` | each reseller's account | 50 | Logins one such account may have (disabled ones counted) |
+| `smsg.reseller.writes.per.minute` | each reseller, per node | 120 | Account-management writes in one minute (create, change, password, recharge, withdraw). Reads and message traffic are not counted |
+
+The gRPC and reseller limits are read on each use, so a change needs no restart.
+
+**Known**
+
+- The new keys have no field or help in the control panel yet.
+- A callback's address is checked and then connected to through the JVM's resolver cache; the check is not
+  pinned to the connection. An egress firewall remains the real close for callbacks.
+- The answers 409 `LIMIT_REACHED` and 429 `RATE_LIMITED` are not yet in the OpenAPI contract.
+- The control panel is unchanged apart from its version.
+- While the deprecated `smsg.webhook.private.targets=allow` is set, a callback can still reach other services
+  on the gateway's own host through that host's private network address; only the gateway's own ports are
+  refused there. Move to `smsg.webhook.private.allowed` and list only the networks callbacks need.
+- A callback host written in a form that does not resolve when the message is accepted (a hexadecimal
+  address, for example) passes that check; the send-time check then refuses it, so nothing is called, but
+  the send was answered 200.
+
+**How it was checked**
+
+- The full test suite on the release commit: 3,433 tests, none failing (2,805 core, 470 REST and gRPC, 146
+  HTTP-level, 12 application), with new tests for every fix. The native binary's smoke test. The control
+  panel's type check, lint and 2,044 tests.
+- Live on a staging gateway running this release's Java build (Kafka mode, an SMPP simulator):
+  - Callback URLs: 17 refused forms (other schemes, loopback in five spellings, link-local, the unspecified
+    address, the gateway's own four ports) on REST send, a batch's `callback_url`, a batch message's
+    `dlr-url` and gRPC `Send`: every one refused with `CALLBACK_URL_REFUSED`; a public address and an allowed
+    private one accepted.
+  - Platform reference: no `ref` answered 400 `REF_REQUIRED`, and a made-up, foreign, unmarked or missing
+    account the same 404, on `/token`, top-ups, debits, account read, tags and quote; the account's own
+    reference worked. A reference prefix containing `_` or `%` matched nothing.
+  - gRPC caps: the 5th receipt stream, 9th pull and 17th send stream on one session refused
+    `TOO_MANY_CALLS`; closing one let a new one open.
+  - Reseller write limit: 120 writes answered 200, the 121st 429 `RATE_LIMITED` with `Retry-After`; reads
+    not counted.
+  - Forwarded addresses, with forwarding off: forged headers from a direct caller were not believed.
+  - Still working: 20 of 20 SMPP submits accepted with their receipts, a REST send, a platform sending over
+    gRPC (5 of 5 delivered), the control panel.
+- Not shown live, covered by unit tests only: the vendor TLS host-name check (no TLS vendor on staging), the
+  account and login caps, and trusted proxies with forwarding on.
+- Not run: the gateway's database-backed test classes for the reseller API and batch callbacks (they need a
+  container).
 
 ### 0.17.2 with control panel 0.17.2.0
 
