@@ -18,15 +18,15 @@ new box or one already running.
 
 | | |
 |---|---|
-| **Version** | 0.17.1, with control panel 0.17.1.0. **No migration from 0.17.0** (schema stays 1.133.0): update with `fireflo-install update`, without `--migrate`. From 0.16.5 or earlier, update **with** `--migrate`, gateway first, then the control panel, and mind the one manual `GRANT` when the control panel writes through its own database role (see [the 0.17.0 notes](#0170-with-control-panel-01700)). Two fixes for Kafka mode: a stalled router clears a hanging transaction itself, and a message a vendor accepted twice is priced on one record. |
-| **File** | `fireflo-0.17.1-linux-x86_64.tar.gz` |
-| **SHA-256** | `9b6771e4bb764581d30982f5cc35569204338bfa9dc6e3c0e0104d5ac4fd36b5` |
-| **Built** | 2026-11-22, from gateway commit `38226e9a` (tag `v0.17.1`) with control panel `v0.17.1.0`, see [the 0.17.1 notes](#0171-with-control-panel-01710) |
-| **Control panel** | 0.17.1.0, included at `panel/`, from commit `6b8aadc` (tag `v0.17.1.0`) |
+| **Version** | 0.17.2, with control panel 0.17.2.0. **Schema 1.134.0** (one migration: two rows in the settings registry, no table, no column): update with `fireflo-install update --migrate`, gateway first, then the control panel. A 0.17.1 gateway runs against 1.134.0 unchanged, so a rollback is the old binary alone. From 0.16.5 or earlier, also mind the one manual `GRANT` when the control panel writes through its own database role (see [the 0.17.0 notes](#0170-with-control-panel-01700)). A submit waits for its credit instead of being refused; the refusals that remain have their own names and codes (SMPP `0x58` by default for credit not confirmed in time, was `0x14`). |
+| **File** | `fireflo-0.17.2-linux-x86_64.tar.gz` |
+| **SHA-256** | `47c9cfd833cd9109fd24e2e7b9b1c39704b53a905ee4497efe25bb846ded4c3b` |
+| **Built** | 2026-11-28, from gateway commit `9db9f0fe` (tag `v0.17.2`) with control panel `v0.17.2.0`, see [the 0.17.2 notes](#0172-with-control-panel-01720) |
+| **Control panel** | 0.17.2.0, included at `panel/`, from commit `67ba154` (tag `v0.17.2.0`) |
 | **SMPPSim** | included at `smppsim/` — third-party test SMSC, GPL-2, its licence and source beside it; installed only with `--with-smppsim` |
 | **REST panel** | not included — unchanged at 0.11.0.0, see [the 0.11.3 notes](#earlier-builds) |
 | **Platform** | linux-x86_64 — a native image, it will not run on another architecture |
-| **ARM (aarch64)** | `fireflo-0.17.1-linux-jvm.tar.gz`, SHA-256 `044aad5576445e0b63b89832f7ca87d57f5992e6214861ccc4ef888ea5e0b386`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
+| **ARM (aarch64)** | `fireflo-0.17.2-linux-jvm.tar.gz`, SHA-256 `f5896395b7b6af8ae56b1179f699de16f0f150a02ccb6de38e41efaabada0361`, checksummed in `SHA256SUMS-jvm` — the same release with the Java build of the gateway. Needs Java 25 installed first; see [ARM servers](#arm-servers-the-java-build) |
 
 
 
@@ -56,7 +56,7 @@ If it names any other fingerprint, stop and ask us before installing.
 ## ARM servers: the Java build
 
 The native gateway is compiled for x86-64; on an ARM server it fails at once with
-`Exec format error`. `fireflo-0.17.1-linux-jvm.tar.gz` is the same release —
+`Exec format error`. `fireflo-0.17.2-linux-jvm.tar.gz` is the same release —
 control panel, SMPPSim, scripts — with the **Java build** of the gateway in
 `gateway/`, which runs on any 64-bit Linux.
 
@@ -79,7 +79,7 @@ Then verify it the same way, against its own checksum file:
 ```
 gpg --verify SHA256SUMS-jvm.asc SHA256SUMS-jvm
 sha256sum -c SHA256SUMS-jvm
-tar xzf fireflo-0.17.1-linux-jvm.tar.gz && cd fireflo-0.17.1-linux-jvm
+tar xzf fireflo-0.17.2-linux-jvm.tar.gz && cd fireflo-0.17.2-linux-jvm
 ```
 
 and follow [Install on a blank server](#install-on-a-blank-server) from step 3
@@ -134,7 +134,7 @@ licence stops is picking up configuration changes.
 ### 1. Put the release on the host
 
 ```
-scp fireflo-0.17.1-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
+scp fireflo-0.17.2-linux-x86_64.tar.gz SHA256SUMS SHA256SUMS.asc SIGNING-KEY.asc setup.sh root@newhost:/root/
 ```
 
 ### 2. Verify it before anything else
@@ -177,8 +177,8 @@ before anything else (the summary `setup.sh` prints has the lines).
 ### 5. Unpack
 
 ```
-tar xzf fireflo-0.17.1-linux-x86_64.tar.gz
-cd fireflo-0.17.1-linux-x86_64
+tar xzf fireflo-0.17.2-linux-x86_64.tar.gz
+cd fireflo-0.17.2-linux-x86_64
 ```
 
 Read `MANIFEST`. It names the version, the commit and the platform this binary
@@ -293,7 +293,7 @@ form of this — one box, an install already running, a broker on its own host �
 is in [Install and configure Kafka](#install-and-configure-kafka).
 
 **The customer-facing REST panel** is optional and installs the same way from
-`rest-panel/scripts/`. **0.17.1 does not carry it**: take it from the 0.11.0
+`rest-panel/scripts/`. **0.17.2 does not carry it**: take it from the 0.11.0
 tarball (commit `42d506e` of this repository), where it is 0.11.0.0 and
 unchanged since. It needs its **own** database — never the gateway's,
 whose schema is version-checked and would meet tables it does not know about.
@@ -408,7 +408,7 @@ sudo -u postgres createuser --pwprompt fireflo
 sudo -u postgres createdb --owner=fireflo fireflo
 umask 077 && printf '%s' 'THE-DB-PASSWORD' > /root/fireflo-db.pw
 
-tar xzf fireflo-0.17.1-linux-x86_64.tar.gz      # after verifying it
+tar xzf fireflo-0.17.2-linux-x86_64.tar.gz      # after verifying it
 sudo ./setup.sh --role all --broker kafka --configure-gateway -- \
     --config-source db --bootstrap \
     --db-name fireflo --db-user fireflo --db-password-file /root/fireflo-db.pw
@@ -450,7 +450,7 @@ it for you on this path:
 
 ```
 sudo ./setup.sh --role all --broker kafka
-cd fireflo-0.17.1-linux-x86_64
+cd fireflo-0.17.2-linux-x86_64
 sudo ./scripts/fireflo-install update --from ./gateway --kafka-bootstrap 127.0.0.1:9092 --migrate
 ```
 
@@ -654,6 +654,97 @@ this repository's history at commit `adf5cca`. 0.11.3's last tarball is in
 this repository's history at commit `2af1923`. 0.11.0's is still in this
 repository's history, at commit `42d506e`, and is where the REST panel lives
 for now.
+
+### 0.17.2 with control panel 0.17.2.0
+
+**A submit waits for its credit instead of being refused. Schema 1.134.0 (one migration: two rows in the
+settings registry, no table, no column): update with `fireflo-install update --migrate`, gateway first, then
+the control panel.** Two new configuration keys, both with defaults that need no setting. A 0.17.1 gateway
+runs against schema 1.134.0 unchanged, so a rollback is the old binary alone. Gateway `9db9f0fe` (tag
+`v0.17.2`), control panel 0.17.2.0 (`67ba154`, tag `v0.17.2.0`).
+
+**Why**
+
+Found on a customer's direct SMPP traffic: batches of about 1,000 submits a second every 30 seconds, with a
+quarter to a third of each batch refused "credit could not be reserved in time" while the database answered
+in 2 ms. Credit is reserved from the database in blocks and spent in memory; a submit that found the block
+in hand empty was refused when the next block had not landed within 2 seconds (at once on 0.15.6 and
+earlier), and refused at once when the last reservation could not reach the database. A busy or slow
+database therefore cost the customer submissions, and the refusal shared the queue-full status.
+
+**A funded account's submit is held until its credit is reserved**
+
+- It waits up to `smsg.balance.park.seconds` on SMPP (new; gateway-wide; the longest a submit waits for its
+  account's credit; default 10, from 1 to 30; keep it below your customers' SMPP response timer) and up to 5
+  seconds of it on REST, gRPC and platform sends.
+- While submits wait, a reservation that fails or lands short is retried, after 250 ms doubling to 2 s. When
+  the database connection itself is failing, one such retry runs at a time across all accounts, so the node
+  heartbeat always keeps a connection; a failure particular to one account does not hold others up.
+- Nothing is charged or sent before its credit is reserved; a balance still never goes below zero.
+- `smsg.balance.block.seconds` sizes blocks as before and no longer sets the wait.
+
+**The refusals that remain each have their own name and answer**
+
+| Case | Recorded as | SMPP | REST | gRPC / platform |
+|---|---|---|---|---|
+| Credit not confirmed within the wait | `creditPending` | `conf.status.creditPending` (new, per listener), default `0x58`; was `0x14` | `503`, code `CREDIT_PENDING`, `Retry-After: 2` | `UNAVAILABLE` / `CREDIT_PENDING`, retry after 2 s |
+| Too many of the account's messages already waiting (10,000 per account, 100,000 per gateway) | `creditQueueFull` (new) | `0x14` | `503`, as a full queue | as a full queue |
+| A real full queue | `queueFull` | `0x14` | unchanged | unchanged |
+
+The text says the cause: "Your credit could not be confirmed within 10 s (the database did not answer);
+nothing was charged. Send it again." REST, gRPC and platform refusals for credit are now recorded as
+`creditPending`; they were recorded as `queueFull`.
+
+**Also fixed**
+
+- **Every refusal at the door is recorded.** A refusal made before a message has an id (a stop's `0x58`
+  above all) was stored with an empty id, and since 0.15.1 two such refusals in the same microsecond were
+  stored as one row. Measured at a stop under load on 0.17.1: 42 of 846 rows lost. Nothing was charged for
+  them; only the record was missing.
+- **At a stop, submits waiting for credit are answered before the listeners unbind** (`0x58`, uncharged,
+  recorded `shuttingDown`); those answers used to be lost.
+- A repeat of a `client_ref` that arrives while the first attempt is still waiting for its credit is
+  answered from the first (the in-flight wait is 6.5 s, was 2 s).
+- The installer's help, the installing guide and the changelog use a generic example tenant (`acme`).
+- The warning `balance.credit.pending` names every refusal, and "Failed to reserve credit" carries its stack
+  once per run of failures.
+
+**What an install notices**
+
+- An SMPP customer refused for credit not confirmed in time sees `0x58` where it saw `0x14`. To keep `0x14`
+  on a listener, set `conf.status.creditPending` to `0x14` there.
+- A platform client can receive the new send status `CREDIT_PENDING`; REST clients get a `code` and a
+  `Retry-After` on this 503.
+- The Refused page and reports on `cdr_rejected.reason` show `creditPending` for REST and gRPC rows that
+  read `queueFull`, and the new `creditQueueFull`.
+- The control panel shows "Longest wait for credit" on Gateway settings and "Status when credit is not
+  confirmed in time" on a listener's Failure handling.
+
+**Known**
+
+- By default `0x58` on SMPP now means either the rate limit or credit not confirmed in time; the recorded
+  reason (`throttled` or `creditPending`) tells them apart.
+- A request-path send can take about 10.5 s in one rare case (its charge was taken and the answer is late on
+  a stalled host).
+- Units accounts wait and are refused exactly as in 0.17.1, except that at a stop they too are answered as
+  the stop.
+- Not changed by this release: a submit answered "outcome unknown" (the hand-off to Kafka timed out on an
+  overloaded host) is charged and refunded later by the resolver. On an overloaded staging box 866 such
+  submits were still unrefunded 100 minutes later.
+
+**How it was checked**
+
+- The full test suite (3,238 tests), with new tests for the hold, the retry, the caps, the stop, the
+  codes and the recording fix; an independent review of the balance engine, with every finding fixed.
+- Database-backed tests on PostgreSQL: 19 of 19 for the credit hold, the shutdown order and the migration.
+  Two account-tags tests fail the same way on 0.17.1 (one compares version numbers as text, one needs
+  routing data the scratch database lacks).
+- End to end on a staging gateway in Kafka mode with an SMPP simulator: 3 × 500/s after idle, 15,000 of
+  15,000 accepted; the balance row locked 8 s, every submit accepted after the lock; locked 15 s, the waiting
+  submits refused `0x58` and recorded `creditPending`, sending resumed by itself; a stop mid-wait, 194
+  answers and 194 records; a REST repeat answered as a duplicate; the REST 503 with its code and header; a
+  listener set to `0x14` and back. The charge equalled accepted × price in every credit scenario.
+- Not shown cleanly: 1,000/s on that staging box, which stalls at that rate for reasons unrelated to credit.
 
 ### 0.17.1 with control panel 0.17.1.0
 
